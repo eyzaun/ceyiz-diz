@@ -211,6 +211,7 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
             confirmColor: Colors.red,
           );
           
+          if (!context.mounted) return;
           if (confirmed == true) {
             final trousseauProvider =
                 Provider.of<TrousseauProvider>(context, listen: false);

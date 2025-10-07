@@ -4,8 +4,16 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/custom_dialog.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool _notificationsEnabled = true;
+  String _language = 'Türkçe';
 
   @override
   Widget build(BuildContext context) {
@@ -108,19 +116,57 @@ class SettingsScreen extends StatelessWidget {
                 title: const Text('Bildirimler'),
                 subtitle: const Text('Bildirim tercihlerinizi yönetin'),
                 trailing: Switch(
-                  value: true,
+                  value: _notificationsEnabled,
                   onChanged: (value) {
-                    // TODO: Implement notification settings
+                    setState(() {
+                      _notificationsEnabled = value;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Bildirimler ${value ? 'açık' : 'kapalı'}'),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
                   },
                 ),
               ),
               ListTile(
                 leading: const Icon(Icons.language),
                 title: const Text('Dil'),
-                subtitle: const Text('Türkçe'),
+                subtitle: Text(_language),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  // TODO: Implement language settings
+                  showModalBottomSheet(
+                    context: context,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    builder: (context) {
+                      return SafeArea(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.language),
+                              title: const Text('Türkçe'),
+                              onTap: () {
+                                setState(() => _language = 'Türkçe');
+                                Navigator.pop(context);
+                              },
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.language),
+                              title: const Text('English'),
+                              onTap: () {
+                                setState(() => _language = 'English');
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
                 },
               ),
             ],
@@ -141,14 +187,38 @@ class SettingsScreen extends StatelessWidget {
                 leading: const Icon(Icons.privacy_tip_outlined),
                 title: const Text('Gizlilik Politikası'),
                 onTap: () {
-                  // TODO: Show privacy policy
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Gizlilik Politikası'),
+                      content: const Text('Gizlilik politikası metni burada gösterilecektir.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Kapat'),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.description_outlined),
                 title: const Text('Kullanım Koşulları'),
                 onTap: () {
-                  // TODO: Show terms of service
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Kullanım Koşulları'),
+                      content: const Text('Kullanım koşulları metni burada gösterilecektir.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Kapat'),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             ],

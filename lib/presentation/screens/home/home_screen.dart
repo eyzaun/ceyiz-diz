@@ -236,11 +236,11 @@ class _HomeScreenState extends State<HomeScreen> {
     Color color,
   ) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    // Map role color to appropriate container/onContainer for readability
-    final bool isPrimary = color.value == cs.primary.value;
-    final bool isSecondary = color.value == cs.secondary.value;
-    final bool isTertiary = color.value == cs.tertiary.value;
+  final cs = theme.colorScheme;
+  // Map role color to appropriate container/onContainer for readability
+  final bool isPrimary = color.toARGB32() == cs.primary.toARGB32();
+  final bool isSecondary = color.toARGB32() == cs.secondary.toARGB32();
+  final bool isTertiary = color.toARGB32() == cs.tertiary.toARGB32();
 
     final Color backgroundColor = isPrimary
         ? cs.primaryContainer
@@ -342,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(

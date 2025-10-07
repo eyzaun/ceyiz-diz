@@ -85,7 +85,7 @@ class ThemeSettingsScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                 ),
               ],
@@ -150,7 +150,7 @@ class ThemeSettingsScreen extends StatelessWidget {
     bool isDark,
   ) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-  // final isSelected = themeProvider.currentThemeType == type;
+    final isSelected = themeProvider.currentThemeType == type;
     
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -232,15 +232,14 @@ class ThemeSettingsScreen extends StatelessWidget {
                 ),
               ),
               
-              // Selection Indicator
-              Radio<AppThemeType>(
-                value: type,
-                groupValue: themeProvider.currentThemeType,
-                onChanged: (value) {
-                  if (value != null) {
-                    themeProvider.setTheme(value);
-                  }
-                },
+              // Selection Indicator (avoid deprecated Radio API)
+              Icon(
+                isSelected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_off,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).iconTheme.color,
               ),
             ],
           ),

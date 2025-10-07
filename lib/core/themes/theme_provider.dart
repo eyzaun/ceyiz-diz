@@ -243,11 +243,11 @@ class ThemeProvider extends ChangeNotifier {
           ),
         ),
         labelStyle: TextStyle(
-          color: isDark ? AppColors.textLight.withOpacity(0.7) : AppColors.textSecondary,
+          color: isDark ? AppColors.textLight.withValues(alpha: 0.7) : AppColors.textSecondary,
           fontSize: 14,
         ),
         hintStyle: TextStyle(
-          color: isDark ? AppColors.textLight.withOpacity(0.5) : AppColors.textSecondary.withOpacity(0.7),
+          color: isDark ? AppColors.textLight.withValues(alpha: 0.5) : AppColors.textSecondary.withValues(alpha: 0.7),
           fontSize: 14,
         ),
       ),
@@ -263,9 +263,9 @@ class ThemeProvider extends ChangeNotifier {
       ),
       
       chipTheme: ChipThemeData(
-        backgroundColor: primaryColor.withOpacity(0.1),
+        backgroundColor: primaryColor.withValues(alpha: 0.1),
         deleteIconColor: primaryColor,
-        disabledColor: AppColors.grey.withOpacity(0.1),
+        disabledColor: AppColors.grey.withValues(alpha: 0.1),
         selectedColor: primaryColor,
         secondarySelectedColor: secondaryColor,
         labelStyle: TextStyle(
@@ -320,7 +320,7 @@ class ThemeProvider extends ChangeNotifier {
           fontWeight: FontWeight.w600,
         ),
         contentTextStyle: TextStyle(
-          color: isDark ? AppColors.textLight.withOpacity(0.8) : AppColors.textSecondary,
+          color: isDark ? AppColors.textLight.withValues(alpha: 0.8) : AppColors.textSecondary,
           fontSize: 14,
         ),
       ),
@@ -339,8 +339,8 @@ class ThemeProvider extends ChangeNotifier {
       
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: primaryColor,
-        linearTrackColor: primaryColor.withOpacity(0.2),
-        circularTrackColor: primaryColor.withOpacity(0.2),
+        linearTrackColor: primaryColor.withValues(alpha: 0.2),
+        circularTrackColor: primaryColor.withValues(alpha: 0.2),
       ),
       
       switchTheme: SwitchThemeData(
@@ -352,9 +352,9 @@ class ThemeProvider extends ChangeNotifier {
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return primaryColor.withOpacity(0.5);
+            return primaryColor.withValues(alpha: 0.5);
           }
-          return AppColors.grey.withOpacity(0.3);
+          return AppColors.grey.withValues(alpha: 0.3);
         }),
       ),
       
@@ -445,7 +445,7 @@ class ThemeProvider extends ChangeNotifier {
           fontFamily: 'Inter',
         ),
         bodySmall: TextStyle(
-          color: isDark ? AppColors.textLight.withOpacity(0.7) : AppColors.textSecondary,
+          color: isDark ? AppColors.textLight.withValues(alpha: 0.7) : AppColors.textSecondary,
           fontSize: 12,
           fontWeight: FontWeight.normal,
           fontFamily: 'Inter',
@@ -463,7 +463,7 @@ class ThemeProvider extends ChangeNotifier {
           fontFamily: 'Inter',
         ),
         labelSmall: TextStyle(
-          color: isDark ? AppColors.textLight.withOpacity(0.7) : AppColors.textSecondary,
+          color: isDark ? AppColors.textLight.withValues(alpha: 0.7) : AppColors.textSecondary,
           fontSize: 10,
           fontWeight: FontWeight.w600,
           fontFamily: 'Inter',

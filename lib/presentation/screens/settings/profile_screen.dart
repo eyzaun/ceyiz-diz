@@ -117,7 +117,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: Colors.white,
                             ),
                             onPressed: () {
-                              // TODO: Implement photo upload
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Profil fotoğrafı yükleme yakında eklenecek'),
+                                ),
+                              );
                             },
                           ),
                         ),

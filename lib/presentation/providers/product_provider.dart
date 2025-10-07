@@ -472,11 +472,11 @@ class ProductProvider extends ChangeNotifier {
   double getTotalSpent() {
     return _products
         .where((p) => p.isPurchased)
-        .fold(0.0, (sum, p) => sum + p.totalPrice);
+        .fold(0.0, (acc, p) => acc + p.totalPrice);
   }
   
   double getTotalPlanned() {
-    return _products.fold(0.0, (sum, p) => sum + p.totalPrice);
+    return _products.fold(0.0, (acc, p) => acc + p.totalPrice);
   }
   
   int getPurchasedCount() {

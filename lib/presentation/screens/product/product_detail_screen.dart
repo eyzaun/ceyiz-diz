@@ -89,7 +89,7 @@ class ProductDetailScreen extends StatelessWidget {
                         child: CircularProgressIndicator(),
                       ),
                       errorWidget: (context, url, error) => Container(
-                        color: category.color.withOpacity(0.1),
+                        color: category.color.withValues(alpha: 0.1),
                         child: Icon(
                           category.icon,
                           size: 64,
@@ -103,7 +103,7 @@ class ProductDetailScreen extends StatelessWidget {
             else
               Container(
                 height: 200,
-                color: category.color.withOpacity(0.1),
+                color: category.color.withValues(alpha: 0.1),
                 child: Center(
                   child: Icon(
                     category.icon,
@@ -134,7 +134,7 @@ class ProductDetailScreen extends StatelessWidget {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
+                            color: Colors.green.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: Colors.green),
                           ),
@@ -168,7 +168,7 @@ class ProductDetailScreen extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: category.color.withOpacity(0.1),
+                      color: category.color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -196,10 +196,10 @@ class ProductDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.05),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: theme.colorScheme.primary.withOpacity(0.2),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Row(
@@ -277,10 +277,10 @@ class ProductDetailScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.1),
+                        color: Colors.amber.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.amber.withOpacity(0.3),
+                          color: Colors.amber.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -312,7 +312,7 @@ class ProductDetailScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
+                        color: Colors.green.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -357,7 +357,7 @@ class ProductDetailScreen extends StatelessWidget {
                 color: theme.cardColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, -2),
                   ),

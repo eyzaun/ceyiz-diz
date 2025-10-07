@@ -28,7 +28,8 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       Provider.of<ProductProvider>(context, listen: false)
           .loadProducts(widget.trousseauId);
     });
@@ -331,7 +332,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                       color: theme.cardColor,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 3,
                           offset: const Offset(0, -1),
                         ),
@@ -416,9 +417,9 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.white.withOpacity(0.3)
-                    : chipColor.withOpacity(0.2),
+        color: isSelected
+          ? Colors.white.withValues(alpha: 0.3)
+          : chipColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -462,7 +463,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                 width: isCompact ? 64 : 80,
                 height: isCompact ? 64 : 80,
                 decoration: BoxDecoration(
-                  color: category.color.withOpacity(0.1),
+                  color: category.color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(isCompact ? 10 : 12),
                 ),
                 child: product.images.isNotEmpty
@@ -532,7 +533,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: category.color.withOpacity(0.1),
+                            color: category.color.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(isCompact ? 6 : 8),
                           ),
                           child: Row(
