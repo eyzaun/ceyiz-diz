@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -23,6 +24,8 @@ class ProductProvider extends ChangeNotifier {
   bool _isLoading = false;
   String _errorMessage = '';
   AuthProvider? _authProvider;
+  StreamSubscription<QuerySnapshot>? _productsSub;
+  String? _listeningTrousseauId;
   
   // Filter states
   ProductFilter _currentFilter = ProductFilter.all;
@@ -45,6 +48,8 @@ class ProductProvider extends ChangeNotifier {
   }
   
   void _clearData() {
+    _productsSub?.cancel();
+    _listeningTrousseauId = null;
     _products = [];
     _filteredProducts = [];
     _errorMessage = '';
@@ -61,21 +66,36 @@ class ProductProvider extends ChangeNotifier {
       _isLoading = true;
       _errorMessage = '';
       notifyListeners();
-      
-      final query = await _firestore
-          .collection('products')
-          .where('trousseauId', isEqualTo: trousseauId)
-          .orderBy('createdAt', descending: true)
-          .get();
-      
-      _products = query.docs
-          .map((doc) => ProductModel.fromFirestore(doc))
-          .toList();
-      
-      _applyFilters();
-      
-      _isLoading = false;
-      notifyListeners();
+
+      // Re-bind live listener if trousseau changed
+      if (_listeningTrousseauId != trousseauId) {
+        _productsSub?.cancel();
+        _listeningTrousseauId = trousseauId;
+        _productsSub = _firestore
+            .collection('products')
+            .where('trousseauId', isEqualTo: trousseauId)
+            .orderBy('createdAt', descending: true)
+            .snapshots()
+            .listen((snapshot) {
+          _products = snapshot.docs
+              .map((doc) => ProductModel.fromFirestore(doc))
+              .toList();
+          _applyFilters();
+          _isLoading = false;
+          notifyListeners();
+        }, onError: (e) {
+          _errorMessage = 'Ürünler dinlenemedi: $e';
+          _isLoading = false;
+          notifyListeners();
+        });
+      } else {
+        // Already listening to this trousseau; ensure UI leaves loading state.
+        if (_filteredProducts.isEmpty && _products.isNotEmpty) {
+          _applyFilters();
+        }
+        _isLoading = false;
+        notifyListeners();
+      }
     } catch (e) {
       _isLoading = false;
       _errorMessage = 'Ürünler yüklenemedi: ${e.toString()}';
@@ -210,9 +230,13 @@ class ProductProvider extends ChangeNotifier {
       // Update trousseau statistics
       await _updateTrousseauStats(trousseauId);
       
-      _products.insert(0, product);
-      _applyFilters();
-      notifyListeners();
+      // Avoid temporary duplicates when a live snapshot listener is active.
+      // If there's no active listener (edge/offline cases), update local state optimistically.
+      if (_productsSub == null || _listeningTrousseauId != trousseauId) {
+        _products.insert(0, product);
+        _applyFilters();
+        notifyListeners();
+      }
       
       return true;
     } catch (e) {

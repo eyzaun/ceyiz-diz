@@ -35,6 +35,8 @@ class UserModel {
   Map<String, dynamic> toFirestore() {
     return {
       'email': email,
+      // Store a normalized lowercased email to allow case-insensitive search
+      'emailLower': email.trim().toLowerCase(),
       'displayName': displayName,
       'createdAt': Timestamp.fromDate(createdAt),
       'lastLoginAt': Timestamp.fromDate(lastLoginAt),

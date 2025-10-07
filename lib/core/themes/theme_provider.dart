@@ -114,12 +114,11 @@ class ThemeProvider extends ChangeNotifier {
     }
     
   final brightness = isDark ? Brightness.dark : Brightness.light;
-  Color _onColorFor(Color c) => c.computeLuminance() > 0.5 ? AppColors.textDark : AppColors.textLight;
-  final onPrimaryColor = _onColorFor(primaryColor);
-  final onSecondaryColor = _onColorFor(secondaryColor);
-  final onTertiaryColor = _onColorFor(accentColor);
+  Color onColorFor(Color c) => c.computeLuminance() > 0.5 ? AppColors.textDark : AppColors.textLight;
+  final onPrimaryColor = onColorFor(primaryColor);
+  final onSecondaryColor = onColorFor(secondaryColor);
+  final onTertiaryColor = onColorFor(accentColor);
   final onSurfaceColor = isDark ? AppColors.textLight : AppColors.textDark;
-  final onBackgroundColor = onSurfaceColor;
     
     final baseScheme = ColorScheme.fromSeed(
       seedColor: primaryColor,
@@ -129,13 +128,11 @@ class ThemeProvider extends ChangeNotifier {
       tertiary: accentColor,
     ).copyWith(
       surface: surfaceColor,
-      background: backgroundColor,
       outline: borderColor,
       onPrimary: onPrimaryColor,
       onSecondary: onSecondaryColor,
       onTertiary: onTertiaryColor,
       onSurface: onSurfaceColor,
-      onBackground: onBackgroundColor,
     );
 
     return ThemeData(

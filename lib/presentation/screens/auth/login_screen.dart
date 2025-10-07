@@ -90,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
     final authProvider = Provider.of<AuthProvider>(context);
     
     return LoadingOverlay(

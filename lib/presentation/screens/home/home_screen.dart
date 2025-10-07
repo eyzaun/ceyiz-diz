@@ -5,7 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/custom_dialog.dart';
-import '../trousseau/trousseau_list_screen.dart';
+import '../../widgets/common/draggable_fab.dart';
 import '../../../data/models/category_model.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -27,7 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _selectedIndex,
         children: [
           _buildDashboard(context),
-          const TrousseauListScreen(),
           _buildStatistics(context),
           _buildProfile(context),
         ],
@@ -43,10 +42,6 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: 'Özet',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2),
-            label: 'Çeyizler',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.analytics),
@@ -78,62 +73,87 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: allTrousseaus.isEmpty
-          ? EmptyStateWidget(
-              icon: Icons.home_work_outlined,
-              title: 'Henüz çeyiz oluşturmadınız',
-              subtitle: 'Hayalinizdeki çeyizi planlamaya başlayın',
-              action: ElevatedButton.icon(
-                onPressed: () => context.push('/trousseau/create'),
-                icon: const Icon(Icons.add),
-                label: const Text('İlk Çeyizi Oluştur'),
-              ),
+          ? Stack(
+              children: [
+                EmptyStateWidget(
+                  icon: Icons.home_work_outlined,
+                  title: 'Henüz çeyiz oluşturmadınız',
+                  subtitle: 'Hayalinizdeki çeyizi planlamaya başlayın',
+                  action: ElevatedButton.icon(
+                    onPressed: () => context.push('/trousseau/create'),
+                    icon: const Icon(Icons.add),
+                    label: const Text('İlk Çeyizi Oluştur'),
+                  ),
+                ),
+                Positioned.fill(
+                  child: DraggableFAB(
+                    heroTag: 'fab-home-create',
+                    tooltip: 'Yeni Çeyiz',
+                    icon: Icons.add,
+                    onPressed: () => context.push('/trousseau/create'),
+                  ),
+                ),
+              ],
             )
-          : RefreshIndicator(
-              onRefresh: () => trousseauProvider.loadTrousseaus(),
-              child: CustomScrollView(
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.all(16),
-                    sliver: SliverToBoxAdapter(
-                      child: _buildSummaryCards(context),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    sliver: SliverToBoxAdapter(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Son Çeyizler',
-                            style: theme.textTheme.headlineSmall,
+          : Stack(
+              children: [
+                RefreshIndicator(
+                  onRefresh: () => trousseauProvider.loadTrousseaus(),
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.all(16),
+                        sliver: SliverToBoxAdapter(
+                          child: _buildSummaryCards(context),
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        sliver: SliverToBoxAdapter(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Son Çeyizler',
+                                style: theme.textTheme.headlineSmall,
+                              ),
+                              TextButton.icon(
+                                onPressed: () => context.push('/trousseau/create'),
+                                icon: const Icon(Icons.add),
+                                label: const Text('Yeni Çeyiz'),
+                              ),
+                            ],
                           ),
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _selectedIndex = 1;
-                              });
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.all(16),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final trousseau = allTrousseaus[index];
+                              return _buildTrousseauCard(context, trousseau);
                             },
-                            child: const Text('Tümü'),
+                            childCount: allTrousseaus.length > 3 ? 3 : allTrousseaus.length,
                           ),
-                        ],
+                        ),
                       ),
+                    ],
+                  ),
+                ),
+                // Draggable FAB for quick create
+                Positioned.fill(
+                  child: IgnorePointer(
+                    ignoring: false,
+                    child: DraggableFAB(
+                      heroTag: 'fab-home-create',
+                      tooltip: 'Yeni Çeyiz',
+                      icon: Icons.add,
+                      onPressed: () => context.push('/trousseau/create'),
                     ),
                   ),
-                  SliverPadding(
-                    padding: const EdgeInsets.all(16),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final trousseau = allTrousseaus[index];
-                          return _buildTrousseauCard(context, trousseau);
-                        },
-                        childCount: allTrousseaus.length > 3 ? 3 : allTrousseaus.length,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
     );
   }

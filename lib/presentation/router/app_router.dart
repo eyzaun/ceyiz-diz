@@ -1,12 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/home/home_screen.dart';
-import '../screens/trousseau/trousseau_list_screen.dart';
 import '../screens/trousseau/trousseau_detail_screen.dart';
 import '../screens/trousseau/create_trousseau_screen.dart';
 import '../screens/trousseau/edit_trousseau_screen.dart';
@@ -26,9 +25,13 @@ class AppRouter {
   static final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    // Re-evaluate redirects whenever auth state changes
+    refreshListenable: GoRouterRefreshStream(
+      FirebaseAuth.instance.authStateChanges(),
+    ),
     redirect: (context, state) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final isAuthenticated = authProvider.isAuthenticated;
+      // Determine auth from Firebase to avoid relying on provider rebuilds
+      final isAuthenticated = FirebaseAuth.instance.currentUser != null;
       final isAuthRoute = state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
           state.matchedLocation == '/forgot-password';
@@ -48,72 +51,67 @@ class AppRouter {
         path: '/',
         builder: (context, state) => const HomeScreen(),
         routes: [
+          // Trousseau routes (list page removed; direct access to create/detail)
           GoRoute(
-            path: 'trousseau',
-            builder: (context, state) => const TrousseauListScreen(),
+            path: 'trousseau/create',
+            builder: (context, state) => const CreateTrousseauScreen(),
+          ),
+          GoRoute(
+            path: 'trousseau/:id',
+            builder: (context, state) {
+              final trousseauId = state.pathParameters['id']!;
+              return TrousseauDetailScreen(trousseauId: trousseauId);
+            },
             routes: [
               GoRoute(
-                path: 'create',
-                builder: (context, state) => const CreateTrousseauScreen(),
-              ),
-              GoRoute(
-                path: ':id',
+                path: 'edit',
                 builder: (context, state) {
                   final trousseauId = state.pathParameters['id']!;
-                  return TrousseauDetailScreen(trousseauId: trousseauId);
+                  return EditTrousseauScreen(trousseauId: trousseauId);
+                },
+              ),
+              GoRoute(
+                path: 'share',
+                builder: (context, state) {
+                  final trousseauId = state.pathParameters['id']!;
+                  return ShareTrousseauScreen(trousseauId: trousseauId);
+                },
+              ),
+              GoRoute(
+                path: 'products',
+                builder: (context, state) {
+                  final trousseauId = state.pathParameters['id']!;
+                  return ProductListScreen(trousseauId: trousseauId);
                 },
                 routes: [
                   GoRoute(
-                    path: 'edit',
+                    path: 'add',
                     builder: (context, state) {
                       final trousseauId = state.pathParameters['id']!;
-                      return EditTrousseauScreen(trousseauId: trousseauId);
+                      return AddProductScreen(trousseauId: trousseauId);
                     },
                   ),
                   GoRoute(
-                    path: 'share',
+                    path: ':productId',
                     builder: (context, state) {
                       final trousseauId = state.pathParameters['id']!;
-                      return ShareTrousseauScreen(trousseauId: trousseauId);
-                    },
-                  ),
-                  GoRoute(
-                    path: 'products',
-                    builder: (context, state) {
-                      final trousseauId = state.pathParameters['id']!;
-                      return ProductListScreen(trousseauId: trousseauId);
+                      final productId = state.pathParameters['productId']!;
+                      return ProductDetailScreen(
+                        trousseauId: trousseauId,
+                        productId: productId,
+                      );
                     },
                     routes: [
                       GoRoute(
-                        path: 'add',
-                        builder: (context, state) {
-                          final trousseauId = state.pathParameters['id']!;
-                          return AddProductScreen(trousseauId: trousseauId);
-                        },
-                      ),
-                      GoRoute(
-                        path: ':productId',
+                        path: 'edit',
                         builder: (context, state) {
                           final trousseauId = state.pathParameters['id']!;
                           final productId = state.pathParameters['productId']!;
-                          return ProductDetailScreen(
+                          return EditProductScreen(
                             trousseauId: trousseauId,
                             productId: productId,
                           );
                         },
-                        routes: [
-                          GoRoute(
-                            path: 'edit',
-                            builder: (context, state) {
-                              final trousseauId = state.pathParameters['id']!;
-                              final productId = state.pathParameters['productId']!;
-                              return EditProductScreen(
-                                trousseauId: trousseauId,
-                                productId: productId,
-                              );
-                            },
-                          ),
-                        ],
                       ),
                     ],
                   ),
@@ -185,4 +183,18 @@ class AppRouter {
       ),
     ),
   );
+}
+
+class GoRouterRefreshStream extends ChangeNotifier {
+  late final StreamSubscription<dynamic> _subscription;
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    _subscription = stream.asBroadcastStream().listen((_) {
+      notifyListeners();
+    });
+  }
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
@@ -16,6 +17,11 @@ class TrousseauProvider extends ChangeNotifier {
   String _errorMessage = '';
   AuthProvider? _authProvider;
   
+  // Live listeners
+  StreamSubscription<QuerySnapshot>? _ownedSub;
+  StreamSubscription<QuerySnapshot>? _sharedSub;
+  StreamSubscription<QuerySnapshot>? _editorsSub;
+  
   List<TrousseauModel> get trousseaus => _trousseaus;
   List<TrousseauModel> get sharedTrousseaus => _sharedTrousseaus;
   TrousseauModel? get selectedTrousseau => _selectedTrousseau;
@@ -28,18 +34,104 @@ class TrousseauProvider extends ChangeNotifier {
   void updateAuth(AuthProvider authProvider) {
     _authProvider = authProvider;
     if (_authProvider?.isAuthenticated == true) {
-      loadTrousseaus();
+      _bindStreams();
     } else {
       _clearData();
     }
   }
   
   void _clearData() {
+    _cancelStreams();
     _trousseaus = [];
     _sharedTrousseaus = [];
     _selectedTrousseau = null;
     _errorMessage = '';
     notifyListeners();
+  }
+
+  void _cancelStreams() {
+    _ownedSub?.cancel();
+    _sharedSub?.cancel();
+    _editorsSub?.cancel();
+    _ownedSub = null;
+    _sharedSub = null;
+    _editorsSub = null;
+  }
+
+  void _bindStreams() {
+    final userId = _authProvider?.currentUser?.uid;
+    if (userId == null) return;
+    _cancelStreams();
+    _isLoading = true;
+    _errorMessage = '';
+    notifyListeners();
+    
+    _ownedSub = _firestore
+        .collection('trousseaus')
+        .where('ownerId', isEqualTo: userId)
+        .orderBy('updatedAt', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      _trousseaus = snapshot.docs
+          .map((doc) => TrousseauModel.fromFirestore(doc))
+          .toList();
+      _syncSelected();
+      _isLoading = false;
+      notifyListeners();
+    }, onError: (e) {
+      _errorMessage = 'Çeyizler dinlenemedi: $e';
+      _isLoading = false;
+      notifyListeners();
+    });
+
+    _sharedSub = _firestore
+        .collection('trousseaus')
+        .where('sharedWith', arrayContains: userId)
+        .orderBy('updatedAt', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      final sharedList = snapshot.docs
+          .map((doc) => TrousseauModel.fromFirestore(doc))
+          .toList();
+      _mergeSharedLists(sharedList: sharedList);
+      _syncSelected();
+      notifyListeners();
+    });
+
+    _editorsSub = _firestore
+        .collection('trousseaus')
+        .where('editors', arrayContains: userId)
+        .orderBy('updatedAt', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      final editorList = snapshot.docs
+          .map((doc) => TrousseauModel.fromFirestore(doc))
+          .toList();
+      _mergeSharedLists(editorsList: editorList);
+      _syncSelected();
+      notifyListeners();
+    });
+  }
+
+  void _mergeSharedLists({List<TrousseauModel>? sharedList, List<TrousseauModel>? editorsList}) {
+    final map = <String, TrousseauModel>{ for (var t in _sharedTrousseaus) t.id: t };
+    if (sharedList != null) {
+      for (var t in sharedList) { map[t.id] = t; }
+    }
+    if (editorsList != null) {
+      for (var t in editorsList) { map[t.id] = t; }
+    }
+    _sharedTrousseaus = map.values.toList()
+      ..sort((a,b) => b.updatedAt.compareTo(a.updatedAt));
+  }
+
+  void _syncSelected() {
+    if (_selectedTrousseau == null) return;
+    final id = _selectedTrousseau!.id;
+    final newer = getTrousseauById(id);
+    if (newer != null) {
+      _selectedTrousseau = newer;
+    }
   }
   
   Future<void> loadTrousseaus() async {
@@ -132,8 +224,12 @@ class TrousseauProvider extends ChangeNotifier {
         'trousseauIds': FieldValue.arrayUnion([trousseauId]),
       });
       
-      _trousseaus.insert(0, trousseau);
-      notifyListeners();
+      // If live listeners are not yet active, update local list optimistically;
+      // otherwise, let the snapshot listeners populate to avoid duplicates.
+      if (_ownedSub == null) {
+        _trousseaus.insert(0, trousseau);
+        notifyListeners();
+      }
       
       return true;
     } catch (e) {
@@ -295,10 +391,19 @@ class TrousseauProvider extends ChangeNotifier {
         return false;
       }
       
-      // Find user by email
+      // Normalize and find user by email (case-insensitive)
+      final normalizedEmail = email.trim().toLowerCase();
+      // Prevent sharing to self
+      if (_authProvider!.currentUser!.email.toLowerCase() == normalizedEmail) {
+        _errorMessage = 'Kendinize paylaşım yapamazsınız';
+        notifyListeners();
+        return false;
+      }
+
+      // Find user by normalized email (requires 'emailLower' in user docs)
       final userQuery = await _firestore
           .collection('users')
-          .where('email', isEqualTo: email)
+          .where('emailLower', isEqualTo: normalizedEmail)
           .limit(1)
           .get();
       
@@ -309,23 +414,36 @@ class TrousseauProvider extends ChangeNotifier {
       
       final targetUser = UserModel.fromFirestore(userQuery.docs.first);
       
-      // Check if already shared
-      if (trousseau.sharedWith.contains(targetUser.uid) ||
-          trousseau.editors.contains(targetUser.uid)) {
-        _errorMessage = 'Bu kullanıcı ile zaten paylaşılmış';
-        return false;
-      }
-      
+      // Prepare updates to switch or grant permissions
       Map<String, dynamic> updates = {
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       };
-      
-      if (canEdit) {
-        updates['editors'] = FieldValue.arrayUnion([targetUser.uid]);
-      } else {
+
+      final alreadyViewer = trousseau.sharedWith.contains(targetUser.uid);
+      final alreadyEditor = trousseau.editors.contains(targetUser.uid);
+
+      if (alreadyEditor && !canEdit) {
+        // Downgrade: editor -> viewer
+        updates['editors'] = FieldValue.arrayRemove([targetUser.uid]);
         updates['sharedWith'] = FieldValue.arrayUnion([targetUser.uid]);
+      } else if (alreadyViewer && canEdit) {
+        // Upgrade: viewer -> editor
+        updates['sharedWith'] = FieldValue.arrayRemove([targetUser.uid]);
+        updates['editors'] = FieldValue.arrayUnion([targetUser.uid]);
+      } else if (!alreadyViewer && !alreadyEditor) {
+        // New share
+        if (canEdit) {
+          updates['editors'] = FieldValue.arrayUnion([targetUser.uid]);
+        } else {
+          updates['sharedWith'] = FieldValue.arrayUnion([targetUser.uid]);
+        }
+      } else {
+        // No change needed
+        _errorMessage = 'Bu kullanıcı için paylaşım durumu zaten geçerli';
+        notifyListeners();
+        return false;
       }
-      
+
       await _firestore
           .collection('trousseaus')
           .doc(trousseauId)
@@ -339,26 +457,7 @@ class TrousseauProvider extends ChangeNotifier {
         'sharedTrousseauIds': FieldValue.arrayUnion([trousseauId]),
       });
       
-      // Update local data
-      final index = _trousseaus.indexWhere((t) => t.id == trousseauId);
-      if (index != -1) {
-        final updatedTrousseau = _trousseaus[index].copyWith(
-          sharedWith: canEdit
-              ? _trousseaus[index].sharedWith
-              : [..._trousseaus[index].sharedWith, targetUser.uid],
-          editors: canEdit
-              ? [..._trousseaus[index].editors, targetUser.uid]
-              : _trousseaus[index].editors,
-          updatedAt: DateTime.now(),
-        );
-        _trousseaus[index] = updatedTrousseau;
-        
-        if (_selectedTrousseau?.id == trousseauId) {
-          _selectedTrousseau = updatedTrousseau;
-        }
-      }
-      
-      notifyListeners();
+      // Let live snapshots update local lists; no optimistic local mutation to avoid inconsistencies
       return true;
     } catch (e) {
       _errorMessage = 'Paylaşım yapılamadı: ${e.toString()}';
@@ -405,26 +504,7 @@ class TrousseauProvider extends ChangeNotifier {
         'sharedTrousseauIds': FieldValue.arrayRemove([trousseauId]),
       });
       
-      // Update local data
-      final index = _trousseaus.indexWhere((t) => t.id == trousseauId);
-      if (index != -1) {
-        final updatedTrousseau = _trousseaus[index].copyWith(
-          sharedWith: _trousseaus[index].sharedWith
-              .where((id) => id != userId)
-              .toList(),
-          editors: _trousseaus[index].editors
-              .where((id) => id != userId)
-              .toList(),
-          updatedAt: DateTime.now(),
-        );
-        _trousseaus[index] = updatedTrousseau;
-        
-        if (_selectedTrousseau?.id == trousseauId) {
-          _selectedTrousseau = updatedTrousseau;
-        }
-      }
-      
-      notifyListeners();
+      // Live snapshots will update local data; no manual local mutation required
       return true;
     } catch (e) {
       _errorMessage = 'Paylaşım kaldırılamadı: ${e.toString()}';

@@ -201,7 +201,7 @@ class AuthProvider extends ChangeNotifier {
         await _firestore
             .collection('users')
             .doc(result.user!.uid)
-            .set(userModel.toFirestore());
+        .set(userModel.toFirestore());
         
         _currentUser = userModel;
         _status = AuthStatus.authenticated;
