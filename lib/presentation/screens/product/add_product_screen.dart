@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../../providers/product_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
 import '../../widgets/common/image_picker_widget.dart';
@@ -29,7 +29,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _notesController = TextEditingController();
   
   String _selectedCategory = 'other';
-  List<File> _selectedImages = [];
+  List<XFile> _selectedImages = [];
   bool _isLoading = false;
 
   @override
@@ -87,7 +87,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  // final theme = Theme.of(context);
 
     return LoadingOverlay(
       isLoading: _isLoading,
@@ -195,7 +195,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 
                 // Category Selection
                 DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   decoration: const InputDecoration(
                     labelText: 'Kategori',
                     prefixIcon: Icon(Icons.category_outlined),

@@ -43,7 +43,7 @@ class TrousseauListScreen extends StatelessWidget {
                     itemCount: trousseauProvider.allTrousseaus.length,
                     itemBuilder: (context, index) {
                       final trousseau = trousseauProvider.allTrousseaus[index];
-                      final isOwner = trousseau.ownerId == trousseauProvider._authProvider?.currentUser?.uid;
+                      final isOwner = trousseau.ownerId == trousseauProvider.currentUserId;
                       
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -103,11 +103,11 @@ class TrousseauListScreen extends StatelessWidget {
                                         ],
                                       ),
                                     ),
-                                    PopupMenuButton(
-                                      itemBuilder: (context) => [
-                                        PopupMenuItem(
+                                    PopupMenuButton<String>(
+                                      itemBuilder: (context) => <PopupMenuEntry<String>>[
+                                        const PopupMenuItem<String>(
                                           value: 'view',
-                                          child: const Row(
+                                          child: Row(
                                             children: [
                                               Icon(Icons.visibility, size: 20),
                                               SizedBox(width: 8),
@@ -116,11 +116,11 @@ class TrousseauListScreen extends StatelessWidget {
                                           ),
                                         ),
                                         if (trousseau.canEdit(
-                                          trousseauProvider._authProvider?.currentUser?.uid ?? '',
+                                          trousseauProvider.currentUserId ?? '',
                                         )) ...[
-                                          PopupMenuItem(
+                                          const PopupMenuItem<String>(
                                             value: 'edit',
-                                            child: const Row(
+                                            child: Row(
                                               children: [
                                                 Icon(Icons.edit, size: 20),
                                                 SizedBox(width: 8),
@@ -130,9 +130,9 @@ class TrousseauListScreen extends StatelessWidget {
                                           ),
                                         ],
                                         if (isOwner) ...[
-                                          PopupMenuItem(
+                                          const PopupMenuItem<String>(
                                             value: 'share',
-                                            child: const Row(
+                                            child: Row(
                                               children: [
                                                 Icon(Icons.share, size: 20),
                                                 SizedBox(width: 8),
@@ -141,7 +141,7 @@ class TrousseauListScreen extends StatelessWidget {
                                             ),
                                           ),
                                           const PopupMenuDivider(),
-                                          PopupMenuItem(
+                                          PopupMenuItem<String>(
                                             value: 'delete',
                                             child: Row(
                                               children: [

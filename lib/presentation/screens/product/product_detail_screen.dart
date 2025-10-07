@@ -7,7 +7,6 @@ import '../../providers/product_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/custom_dialog.dart';
 import '../../../data/models/category_model.dart';
-import '../../../data/models/product_model.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final String trousseauId;
@@ -36,9 +35,7 @@ class ProductDetailScreen extends StatelessWidget {
       );
     }
 
-    final canEdit = trousseau.canEdit(
-      trousseauProvider._authProvider?.currentUser?.uid ?? '',
-    );
+    final canEdit = trousseau.canEdit(trousseauProvider.currentUserId ?? '');
     final category = CategoryModel.getCategoryById(product.category);
 
     return Scaffold(

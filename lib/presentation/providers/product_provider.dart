@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
-import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import 'package:image_picker/image_picker.dart';
 import '../../data/models/product_model.dart';
-import '../../data/models/trousseau_model.dart';
 import 'auth_provider.dart';
 
 enum ProductFilter {
@@ -15,9 +15,7 @@ enum ProductFilter {
 
 class ProductProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instanceFor(
-    bucket: 'ceyiz-diz.firebasestorage.app',
-  );
+  final FirebaseStorage _storage = FirebaseStorage.instance;
   final Uuid _uuid = const Uuid();
   
   List<ProductModel> _products = [];
@@ -148,25 +146,42 @@ class ProductProvider extends ChangeNotifier {
     String description = '',
     required double price,
     required String category,
-    List<File>? imageFiles,
+    List<XFile>? imageFiles,
     String link = '',
     int quantity = 1,
     String notes = '',
   }) async {
     if (_authProvider?.currentUser == null) return false;
+    final fbUser = fb_auth.FirebaseAuth.instance.currentUser;
+    if (fbUser == null) {
+      _errorMessage = 'Oturum bulunamadı. Lütfen yeniden giriş yapın.';
+      notifyListeners();
+      return false;
+    }
     
     try {
       _errorMessage = '';
-      final userId = _authProvider!.currentUser!.uid;
+  final userId = _authProvider!.currentUser!.uid;
       final productId = _uuid.v4();
+      // Ensure auth is established (avoid race where token isn't attached yet)
+      try { await fb_auth.FirebaseAuth.instance.authStateChanges().firstWhere((u) => u != null); } catch (_) {}
+      // Ensure fresh auth token (helps with web/App Check preflights)
+      try {
+        await fb_auth.FirebaseAuth.instance.currentUser?.getIdToken(true);
+        await Future.delayed(const Duration(milliseconds: 400));
+      } catch (_) {}
       
       // Upload images if provided
       List<String> imageUrls = [];
       if (imageFiles != null && imageFiles.isNotEmpty) {
-        for (var imageFile in imageFiles) {
-          final ref = _storage.ref().child('products/$productId/${_uuid.v4()}.jpg');
-          final uploadTask = await ref.putFile(imageFile);
-          final url = await uploadTask.ref.getDownloadURL();
+        final uid = _authProvider!.currentUser!.uid;
+        for (var xfile in imageFiles) {
+          final bytes = await xfile.readAsBytes();
+          final path = 'products/$uid/${DateTime.now().millisecondsSinceEpoch}_${_uuid.v4()}${_extensionFor(xfile.path)}';
+          final ref = _storage.ref().child(path);
+          final metadata = SettableMetadata(contentType: _mimeTypeFor(xfile.path));
+          final task = await ref.putData(bytes, metadata);
+          final url = await task.ref.getDownloadURL();
           imageUrls.add(url);
         }
       }
@@ -213,7 +228,7 @@ class ProductProvider extends ChangeNotifier {
     String? description,
     double? price,
     String? category,
-    List<File>? newImageFiles,
+    List<XFile>? newImageFiles,
     List<String>? existingImages,
     String? link,
     int? quantity,
@@ -224,6 +239,13 @@ class ProductProvider extends ChangeNotifier {
     
     try {
       _errorMessage = '';
+      // Ensure auth is established
+      try { await fb_auth.FirebaseAuth.instance.authStateChanges().firstWhere((u) => u != null); } catch (_) {}
+      // Ensure fresh auth token before upload
+      try {
+        await fb_auth.FirebaseAuth.instance.currentUser?.getIdToken(true);
+        await Future.delayed(const Duration(milliseconds: 400));
+      } catch (_) {}
       
       final product = getProductById(productId);
       if (product == null) {
@@ -234,10 +256,14 @@ class ProductProvider extends ChangeNotifier {
       // Upload new images if provided
       List<String> imageUrls = existingImages ?? product.images;
       if (newImageFiles != null && newImageFiles.isNotEmpty) {
-        for (var imageFile in newImageFiles) {
-          final ref = _storage.ref().child('products/${product.id}/${_uuid.v4()}.jpg');
-          final uploadTask = await ref.putFile(imageFile);
-          final url = await uploadTask.ref.getDownloadURL();
+        final uid = _authProvider!.currentUser!.uid;
+        for (var xfile in newImageFiles) {
+          final bytes = await xfile.readAsBytes();
+          final path = 'products/$uid/${DateTime.now().millisecondsSinceEpoch}_${_uuid.v4()}${_extensionFor(xfile.path)}';
+          final ref = _storage.ref().child(path);
+          final metadata = SettableMetadata(contentType: _mimeTypeFor(xfile.path));
+          final task = await ref.putData(bytes, metadata);
+          final url = await task.ref.getDownloadURL();
           imageUrls.add(url);
         }
       }
@@ -451,5 +477,22 @@ class ProductProvider extends ChangeNotifier {
         .map((snapshot) => snapshot.docs
             .map((doc) => ProductModel.fromFirestore(doc))
             .toList());
+  }
+
+  String _extensionFor(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.png')) return '.png';
+    if (lower.endsWith('.webp')) return '.webp';
+    if (lower.endsWith('.gif')) return '.gif';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return '.jpg';
+    return '.jpg';
+  }
+
+  String _mimeTypeFor(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    return 'image/jpeg';
   }
 }

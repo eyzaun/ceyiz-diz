@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../widgets/common/empty_state_widget.dart';
-import '../../widgets/common/custom_dialog.dart';
 import '../../../data/models/category_model.dart';
 import '../../../data/models/trousseau_model.dart';
 
@@ -57,12 +56,12 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
       appBar: AppBar(
         title: Text(trousseau.name),
         actions: [
-          if (trousseau.canEdit(trousseauProvider._authProvider?.currentUser?.uid ?? ''))
+          if (trousseau.canEdit(trousseauProvider.currentUserId ?? ''))
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () => context.push('/trousseau/${widget.trousseauId}/edit'),
             ),
-          if (trousseau.ownerId == trousseauProvider._authProvider?.currentUser?.uid)
+          if (trousseau.ownerId == trousseauProvider.currentUserId)
             IconButton(
               icon: const Icon(Icons.share),
               onPressed: () => context.push('/trousseau/${widget.trousseauId}/share'),
@@ -161,8 +160,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
           ],
         ),
       ),
-      floatingActionButton: trousseau.canEdit(
-              trousseauProvider._authProvider?.currentUser?.uid ?? '')
+      floatingActionButton: trousseau.canEdit(trousseauProvider.currentUserId ?? '')
           ? FloatingActionButton(
               onPressed: () => context.push('/trousseau/${widget.trousseauId}/products/add'),
               child: const Icon(Icons.add),

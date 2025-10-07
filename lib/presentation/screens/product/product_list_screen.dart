@@ -55,9 +55,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
       );
     }
 
-    final canEdit = trousseau.canEdit(
-      trousseauProvider._authProvider?.currentUser?.uid ?? '',
-    );
+    final canEdit = trousseau.canEdit(trousseauProvider.currentUserId ?? '');
 
     return Scaffold(
       appBar: AppBar(

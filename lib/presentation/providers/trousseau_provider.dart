@@ -21,6 +21,7 @@ class TrousseauProvider extends ChangeNotifier {
   TrousseauModel? get selectedTrousseau => _selectedTrousseau;
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
+  String? get currentUserId => _authProvider?.currentUser?.uid;
   
   List<TrousseauModel> get allTrousseaus => [..._trousseaus, ..._sharedTrousseaus];
   

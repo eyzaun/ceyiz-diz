@@ -1,3 +1,47 @@
+## Firestore Rules (öneri)
+
+```
+rules_version = '2';
+service cloud.firestore {
+	match /databases/{database}/documents {
+		match /users/{userId} {
+			allow read, write: if request.auth != null && request.auth.uid == userId;
+		}
+
+		match /trousseaus/{trousseauId} {
+			allow read: if request.auth != null && (
+				resource.data.ownerId == request.auth.uid ||
+				request.auth.uid in resource.data.sharedWith ||
+				request.auth.uid in resource.data.editors
+			);
+			allow create: if request.auth != null;
+			allow update: if request.auth != null && (
+				resource.data.ownerId == request.auth.uid ||
+				request.auth.uid in resource.data.editors
+			);
+			allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+		}
+
+			match /products/{productId} {
+				// For reads, use resource.data since the document already exists
+				allow read: if request.auth != null &&
+					exists(/databases/$(database)/documents/trousseaus/$(resource.data.trousseauId)) &&
+					(
+						get(/databases/$(database)/documents/trousseaus/$(resource.data.trousseauId)).data.ownerId == request.auth.uid ||
+						request.auth.uid in get(/databases/$(database)/documents/trousseaus/$(resource.data.trousseauId)).data.sharedWith ||
+						request.auth.uid in get(/databases/$(database)/documents/trousseaus/$(resource.data.trousseauId)).data.editors
+					);
+				// For writes, use request.resource.data (the incoming document)
+				allow create, update, delete: if request.auth != null &&
+					(
+						get(/databases/$(database)/documents/trousseaus/$(request.resource.data.trousseauId)).data.ownerId == request.auth.uid ||
+						request.auth.uid in get(/databases/$(database)/documents/trousseaus/$(request.resource.data.trousseauId)).data.editors
+					);
+			}
+	}
+}
+```
+
 # ceyiz_diz
 
 A new Flutter project.

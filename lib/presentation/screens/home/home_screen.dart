@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/empty_state_widget.dart';
+import '../../widgets/common/custom_dialog.dart';
+import '../trousseau/trousseau_list_screen.dart';
 import '../../../data/models/category_model.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -18,9 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final authProvider = Provider.of<AuthProvider>(context);
-    final trousseauProvider = Provider.of<TrousseauProvider>(context);
+  // Keep build light; use values inside sub-widgets
     
     return Scaffold(
       body: IndexedStack(
@@ -139,8 +139,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSummaryCards(BuildContext context) {
-    final theme = Theme.of(context);
-    final trousseauProvider = Provider.of<TrousseauProvider>(context);
+  final theme = Theme.of(context);
+  final trousseauProvider = Provider.of<TrousseauProvider>(context);
     final allTrousseaus = trousseauProvider.allTrousseaus;
     
     double totalBudget = 0;
@@ -335,8 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
     final allTrousseaus = trousseauProvider.allTrousseaus;
     
-    Map<String, int> categoryStats = {};
-    Map<String, double> categorySpending = {};
+  Map<String, int> categoryStats = {};
     
     for (var trousseau in allTrousseaus) {
       trousseau.categoryCounts.forEach((category, count) {
@@ -423,7 +422,7 @@ class _HomeScreenState extends State<HomeScreen> {
             radius: 50,
             backgroundColor: Theme.of(context).colorScheme.primary,
             child: Text(
-              authProvider.currentUser?.displayName?.substring(0, 1).toUpperCase() ?? 'K',
+              (authProvider.currentUser?.displayName ?? 'K').substring(0, 1).toUpperCase(),
               style: const TextStyle(fontSize: 36, color: Colors.white),
             ),
           ),

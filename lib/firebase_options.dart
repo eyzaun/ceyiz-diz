@@ -43,7 +43,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '95358046515',
     projectId: 'ceyiz-diz',
     authDomain: 'ceyiz-diz.firebaseapp.com',
-    storageBucket: 'ceyiz-diz.firebasestorage.app',
+    storageBucket: "ceyiz-diz.firebasestorage.app",
     measurementId: 'G-PCWFGR1GWC',
   );
 
@@ -52,6 +52,6 @@ class DefaultFirebaseOptions {
     appId: '1:95358046515:android:c33a8249cb1e88f6902e46',
     messagingSenderId: '95358046515',
     projectId: 'ceyiz-diz',
-    storageBucket: 'ceyiz-diz.firebasestorage.app',
+    storageBucket: "ceyiz-diz.firebasestorage.app",
   );
 }

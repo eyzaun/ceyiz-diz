@@ -95,7 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         radius: 60,
                         backgroundColor: theme.colorScheme.primary,
                         child: Text(
-                          authProvider.currentUser?.displayName?.substring(0, 1).toUpperCase() ?? 'K',
+                          authProvider.currentUser?.displayName.substring(0, 1).toUpperCase() ?? 'K',
                           style: const TextStyle(
                             fontSize: 48,
                             color: Colors.white,

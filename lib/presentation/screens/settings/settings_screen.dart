@@ -28,7 +28,7 @@ class SettingsScreen extends StatelessWidget {
                   radius: 35,
                   backgroundColor: theme.colorScheme.primary,
                   child: Text(
-                    authProvider.currentUser?.displayName?.substring(0, 1).toUpperCase() ?? 'K',
+                    authProvider.currentUser?.displayName.substring(0, 1).toUpperCase() ?? 'K',
                     style: const TextStyle(
                       fontSize: 28,
                       color: Colors.white,

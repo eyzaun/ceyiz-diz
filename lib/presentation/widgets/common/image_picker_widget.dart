@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'dart:typed_data';
 
 class ImagePickerWidget extends StatelessWidget {
-  final List<File> selectedImages;
-  final Function(List<File>) onImagesSelected;
+  final List<XFile> selectedImages;
+  final Function(List<XFile>) onImagesSelected;
   final int maxImages;
 
   const ImagePickerWidget({
@@ -26,10 +26,10 @@ class ImagePickerWidget extends StatelessWidget {
     }
 
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
+  final pickedFile = await picker.pickImage(source: source, imageQuality: 85);
 
     if (pickedFile != null) {
-      final newImages = [...selectedImages, File(pickedFile.path)];
+      final newImages = [...selectedImages, pickedFile];
       onImagesSelected(newImages);
     }
   }
@@ -96,7 +96,7 @@ class ImagePickerWidget extends StatelessWidget {
             children: [
               ...selectedImages.asMap().entries.map((entry) {
                 final index = entry.key;
-                final image = entry.value;
+                final xfile = entry.value;
                 
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
@@ -107,10 +107,21 @@ class ImagePickerWidget extends StatelessWidget {
                         height: 120,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          image: DecorationImage(
-                            image: FileImage(image),
-                            fit: BoxFit.cover,
-                          ),
+                        ),
+                        clipBehavior: Clip.hardEdge,
+                        child: FutureBuilder<Uint8List>(
+                          future: xfile.readAsBytes(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                            }
+                            return Image.memory(
+                              snapshot.data!,
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                            );
+                          },
                         ),
                       ),
                       Positioned(

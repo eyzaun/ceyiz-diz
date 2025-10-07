@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../../providers/product_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
 import '../../widgets/common/image_picker_widget.dart';
@@ -31,7 +31,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   late TextEditingController _notesController;
   
   String _selectedCategory = 'other';
-  List<File> _selectedImages = [];
+  List<XFile> _selectedImages = [];
   List<String> _existingImages = [];
   bool _isLoading = false;
   bool _isPurchased = false;
@@ -218,7 +218,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 const SizedBox(height: 16),
                 
                 DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   decoration: const InputDecoration(
                     labelText: 'Kategori',
                     prefixIcon: Icon(Icons.category_outlined),

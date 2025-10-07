@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
@@ -16,6 +18,13 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // Optionally initialize Firebase App Check on web if a site key is provided at build time
+  const appCheckSiteKey = String.fromEnvironment('APP_CHECK_RECAPTCHA_V3_SITE_KEY');
+  if (kIsWeb && appCheckSiteKey.isNotEmpty) {
+    await FirebaseAppCheck.instance.activate(
+      webProvider: ReCaptchaV3Provider(appCheckSiteKey),
+    );
+  }
   
   final prefs = await SharedPreferences.getInstance();
   

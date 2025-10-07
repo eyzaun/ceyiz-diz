@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/models/user_model.dart';
 
@@ -30,6 +31,12 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   
   void _init() async {
+    // Ensure web persistence is LOCAL so auth survives reloads and headers attach
+    if (kIsWeb) {
+      try {
+        await _auth.setPersistence(Persistence.LOCAL);
+      } catch (_) {}
+    }
     _auth.authStateChanges().listen((User? user) async {
       if (user == null) {
         _status = AuthStatus.unauthenticated;
