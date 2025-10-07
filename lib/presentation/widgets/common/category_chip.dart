@@ -27,12 +27,12 @@ class CategoryChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected
-              ? category.color.withOpacity(0.2)
-              : theme.cardColor,
+      color: isSelected
+        ? category.color.withValues(alpha: 0.15)
+        : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? category.color : theme.dividerColor,
+            color: isSelected ? category.color : theme.colorScheme.outline,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -57,9 +57,9 @@ class CategoryChip extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? category.color.withOpacity(0.3)
-                      : theme.dividerColor.withOpacity(0.5),
+          color: isSelected
+            ? category.color.withValues(alpha: 0.25)
+            : theme.colorScheme.outline.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(

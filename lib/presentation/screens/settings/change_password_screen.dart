@@ -117,10 +117,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.1),
+                    color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.amber.withOpacity(0.3),
+                      color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
                     ),
                   ),
                   child: const Row(

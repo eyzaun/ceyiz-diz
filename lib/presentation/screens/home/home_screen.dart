@@ -199,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Tamamlanan',
                 '$purchasedProducts/$totalProducts',
                 Icons.check_circle,
-                Colors.green,
+                theme.colorScheme.tertiary,
               ),
             ),
           ],
@@ -216,25 +216,70 @@ class _HomeScreenState extends State<HomeScreen> {
     Color color,
   ) {
     final theme = Theme.of(context);
-    
+    final cs = theme.colorScheme;
+    // Map role color to appropriate container/onContainer for readability
+    final bool isPrimary = color.value == cs.primary.value;
+    final bool isSecondary = color.value == cs.secondary.value;
+    final bool isTertiary = color.value == cs.tertiary.value;
+
+    final Color backgroundColor = isPrimary
+        ? cs.primaryContainer
+        : isSecondary
+            ? cs.secondaryContainer
+            : isTertiary
+                ? cs.tertiaryContainer
+                : color.withValues(alpha: 0.12);
+
+    final Color borderColor = isPrimary
+        ? cs.primary
+        : isSecondary
+            ? cs.secondary
+            : isTertiary
+                ? cs.tertiary
+                : color.withValues(alpha: 0.35);
+
+    final Color titleColor = isPrimary
+        ? cs.onPrimaryContainer
+        : isSecondary
+            ? cs.onSecondaryContainer
+            : isTertiary
+                ? cs.onTertiaryContainer
+                : cs.onSurface.withValues(alpha: 0.9);
+
+    final Color valueColor = isPrimary
+        ? cs.onPrimaryContainer
+        : isSecondary
+            ? cs.onSecondaryContainer
+            : isTertiary
+                ? cs.onTertiaryContainer
+                : cs.onSurface;
+
+    final Color iconColor = isPrimary
+        ? cs.primary
+        : isSecondary
+            ? cs.secondary
+            : isTertiary
+                ? cs.tertiary
+                : color;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: borderColor,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 28),
+          Icon(icon, color: iconColor, size: 28),
           const SizedBox(height: 8),
           Text(
             title,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.textTheme.bodySmall?.color,
+              color: titleColor,
             ),
           ),
           const SizedBox(height: 4),
@@ -242,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
             value,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: color,
+              color: valueColor,
             ),
           ),
         ],

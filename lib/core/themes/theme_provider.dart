@@ -25,7 +25,14 @@ class ThemeProvider extends ChangeNotifier {
   
   void _loadTheme() {
     final themeIndex = _prefs.getInt('theme_index') ?? 0;
-    _currentThemeType = AppThemeType.values[themeIndex];
+    var loaded = AppThemeType.values[themeIndex];
+    // Map old themes to new palettes to keep selection valid in UI
+    if (loaded == AppThemeType.rose) {
+      loaded = AppThemeType.modern; // Gece Mavisi
+    } else if (loaded == AppThemeType.night) {
+      loaded = AppThemeType.ocean; // Monokrom
+    }
+    _currentThemeType = loaded;
     notifyListeners();
   }
   
@@ -40,6 +47,10 @@ class ThemeProvider extends ChangeNotifier {
     late Color secondaryColor;
     late Color accentColor;
     late bool isDark;
+    // Per-theme surfaces
+    late Color backgroundColor;
+    late Color surfaceColor;
+    late Color borderColor;
     
     switch (type) {
       case AppThemeType.defaultTheme:
@@ -47,59 +58,98 @@ class ThemeProvider extends ChangeNotifier {
         secondaryColor = AppColors.secondaryDefault;
         accentColor = AppColors.accentDefault;
         isDark = false;
+        backgroundColor = AppColors.backgroundLight;
+        surfaceColor = AppColors.surfaceLight;
+        borderColor = AppColors.borderLight;
         break;
       case AppThemeType.modern:
-        primaryColor = AppColors.primaryModern;
-        secondaryColor = AppColors.secondaryModern;
-        accentColor = AppColors.accentModern;
+        // Midnight Blue (dark)
+        primaryColor = const Color(0xFF3B82F6); // primary action
+        secondaryColor = const Color(0xFF60A5FA); // links
+        accentColor = const Color(0xFF334155); // tertiary/accent
         isDark = true;
+        backgroundColor = const Color(0xFF0F172A); // bg
+        surfaceColor = const Color(0xFF1E293B); // card
+        borderColor = const Color(0xFF334155); // border
         break;
       case AppThemeType.ocean:
-        primaryColor = AppColors.primaryOcean;
-        secondaryColor = AppColors.secondaryOcean;
-        accentColor = AppColors.accentOcean;
-        isDark = false;
+        // Monochrome Dark (pure black system)
+        primaryColor = const Color(0xFFFFFFFF); // CTA on black
+        secondaryColor = const Color(0xFFCCCCCC);
+        accentColor = const Color(0xFF1A1A1A);
+        isDark = true;
+        backgroundColor = const Color(0xFF000000); // pure black
+        surfaceColor = const Color(0xFF0A0A0A); // cards
+        borderColor = const Color(0xFF1A1A1A);
         break;
       case AppThemeType.rose:
-        primaryColor = AppColors.primaryRose;
-        secondaryColor = AppColors.secondaryRose;
-        accentColor = AppColors.accentRose;
-        isDark = false;
+        // Use Midnight Blue palette as an alternative to previous Rose
+        primaryColor = const Color(0xFF3B82F6);
+        secondaryColor = const Color(0xFF60A5FA);
+        accentColor = const Color(0xFF334155);
+        isDark = true;
+        backgroundColor = const Color(0xFF0F172A);
+        surfaceColor = const Color(0xFF1E293B);
+        borderColor = const Color(0xFF334155);
         break;
       case AppThemeType.forest:
         primaryColor = AppColors.primaryForest;
         secondaryColor = AppColors.secondaryForest;
         accentColor = AppColors.accentForest;
         isDark = true;
+        backgroundColor = AppColors.backgroundDark;
+        surfaceColor = AppColors.surfaceDark;
+        borderColor = AppColors.borderDark;
         break;
       case AppThemeType.night:
-        primaryColor = AppColors.primaryNight;
-        secondaryColor = AppColors.secondaryNight;
-        accentColor = AppColors.accentNight;
+        // Monochrome (dark)
+        primaryColor = const Color(0xFFFFFFFF);
+        secondaryColor = const Color(0xFFCCCCCC);
+        accentColor = const Color(0xFF1A1A1A);
         isDark = true;
+        backgroundColor = const Color(0xFF000000);
+        surfaceColor = const Color(0xFF0A0A0A);
+        borderColor = const Color(0xFF1A1A1A);
         break;
     }
     
-    final brightness = isDark ? Brightness.dark : Brightness.light;
+  final brightness = isDark ? Brightness.dark : Brightness.light;
+  Color _onColorFor(Color c) => c.computeLuminance() > 0.5 ? AppColors.textDark : AppColors.textLight;
+  final onPrimaryColor = _onColorFor(primaryColor);
+  final onSecondaryColor = _onColorFor(secondaryColor);
+  final onTertiaryColor = _onColorFor(accentColor);
+  final onSurfaceColor = isDark ? AppColors.textLight : AppColors.textDark;
+  final onBackgroundColor = onSurfaceColor;
     
+    final baseScheme = ColorScheme.fromSeed(
+      seedColor: primaryColor,
+      brightness: brightness,
+      primary: primaryColor,
+      secondary: secondaryColor,
+      tertiary: accentColor,
+    ).copyWith(
+      surface: surfaceColor,
+      background: backgroundColor,
+      outline: borderColor,
+      onPrimary: onPrimaryColor,
+      onSecondary: onSecondaryColor,
+      onTertiary: onTertiaryColor,
+      onSurface: onSurfaceColor,
+      onBackground: onBackgroundColor,
+    );
+
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        brightness: brightness,
-        primary: primaryColor,
-        secondary: secondaryColor,
-        tertiary: accentColor,
-      ),
-      scaffoldBackgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      cardColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-      dividerColor: isDark ? AppColors.borderDark : AppColors.borderLight,
+      colorScheme: baseScheme,
+      scaffoldBackgroundColor: backgroundColor,
+      cardColor: surfaceColor,
+      dividerColor: borderColor,
       
       appBarTheme: AppBarTheme(
         centerTitle: true,
         elevation: 0,
-        backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        backgroundColor: surfaceColor,
         foregroundColor: isDark ? AppColors.textLight : AppColors.textDark,
         shadowColor: AppColors.shadow,
         scrolledUnderElevation: 4,
@@ -114,7 +164,7 @@ class ThemeProvider extends ChangeNotifier {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
-          foregroundColor: AppColors.white,
+          foregroundColor: onPrimaryColor,
           elevation: 2,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
@@ -210,7 +260,7 @@ class ThemeProvider extends ChangeNotifier {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        color: surfaceColor,
         shadowColor: AppColors.shadow,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
@@ -237,9 +287,9 @@ class ThemeProvider extends ChangeNotifier {
       ),
       
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        backgroundColor: surfaceColor,
         selectedItemColor: primaryColor,
-        unselectedItemColor: AppColors.grey,
+        unselectedItemColor: onSurfaceColor.withValues(alpha: 0.6),
         selectedLabelStyle: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
@@ -254,7 +304,7 @@ class ThemeProvider extends ChangeNotifier {
       
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: primaryColor,
-        foregroundColor: AppColors.white,
+        foregroundColor: onPrimaryColor,
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -262,7 +312,7 @@ class ThemeProvider extends ChangeNotifier {
       ),
       
       dialogTheme: DialogThemeData(
-        backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        backgroundColor: surfaceColor,
         elevation: 8,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -279,7 +329,7 @@ class ThemeProvider extends ChangeNotifier {
       ),
       
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: isDark ? AppColors.surfaceDark : AppColors.darkGrey,
+        backgroundColor: isDark ? surfaceColor : AppColors.darkGrey,
         contentTextStyle: const TextStyle(
           color: AppColors.white,
           fontSize: 14,
@@ -430,15 +480,15 @@ class ThemeProvider extends ChangeNotifier {
       case AppThemeType.defaultTheme:
         return 'Varsayılan';
       case AppThemeType.modern:
-        return 'Modern';
+        return 'Gece Mavisi'; // Midnight Blue
       case AppThemeType.ocean:
-        return 'Okyanus';
+        return 'Monokrom'; // Monochrome
       case AppThemeType.rose:
-        return 'Gül';
+        return 'Gece Mavisi';
       case AppThemeType.forest:
         return 'Orman';
       case AppThemeType.night:
-        return 'Gece';
+        return 'Monokrom';
     }
   }
 }

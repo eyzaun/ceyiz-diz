@@ -76,7 +76,7 @@ class TrousseauListScreen extends StatelessWidget {
                                                     vertical: 4,
                                                   ),
                                                   decoration: BoxDecoration(
-                                                    color: Colors.blue.withOpacity(0.1),
+                                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                                     borderRadius: BorderRadius.circular(8),
                                                   ),
                                                   child: Text(

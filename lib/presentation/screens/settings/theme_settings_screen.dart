@@ -9,7 +9,8 @@ class ThemeSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final themeProvider = Provider.of<ThemeProvider>(context);
+  // ignore: unused_local_variable
+  final themeProvider = Provider.of<ThemeProvider>(context);
     
     return Scaffold(
       appBar: AppBar(
@@ -44,33 +45,23 @@ class ThemeSettingsScreen extends StatelessWidget {
           ),
           _buildThemeOption(
             context,
-            'Modern',
-            'Koyu ve şık görünüm',
-            AppColors.primaryModern,
-            AppColors.secondaryModern,
-            AppColors.accentModern,
+            'Gece Mavisi',
+            'Koyu ve şık: lacivert-mavi tonlar',
+            const Color(0xFF3B82F6), // primary
+            const Color(0xFF60A5FA), // secondary
+            const Color(0xFF334155), // accent
             AppThemeType.modern,
             true,
           ),
           _buildThemeOption(
             context,
-            'Okyanus',
-            'Sakinleştirici mavi tonlar',
-            AppColors.primaryOcean,
-            AppColors.secondaryOcean,
-            AppColors.accentOcean,
+            'Monokrom',
+            'Saf siyah üzerine beyaz vurgu',
+            const Color(0xFFFFFFFF), // primary on black
+            const Color(0xFFCCCCCC), // secondary
+            const Color(0xFF1A1A1A), // accent/border
             AppThemeType.ocean,
-            false,
-          ),
-          _buildThemeOption(
-            context,
-            'Gül',
-            'Romantik pembe tonlar',
-            AppColors.primaryRose,
-            AppColors.secondaryRose,
-            AppColors.accentRose,
-            AppThemeType.rose,
-            false,
+            true,
           ),
           _buildThemeOption(
             context,
@@ -82,16 +73,7 @@ class ThemeSettingsScreen extends StatelessWidget {
             AppThemeType.forest,
             true,
           ),
-          _buildThemeOption(
-            context,
-            'Gece',
-            'Karanlık ve gizemli',
-            AppColors.primaryNight,
-            AppColors.secondaryNight,
-            AppColors.accentNight,
-            AppThemeType.night,
-            true,
-          ),
+          // Not showing additional duplicates (rose/night) to keep the list concise
           
           const SizedBox(height: 32),
           
@@ -168,7 +150,7 @@ class ThemeSettingsScreen extends StatelessWidget {
     bool isDark,
   ) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final isSelected = themeProvider.currentThemeType == type;
+  // final isSelected = themeProvider.currentThemeType == type;
     
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -231,7 +213,7 @@ class ThemeSettingsScreen extends StatelessWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.grey.withOpacity(0.2),
+                              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: const Text(

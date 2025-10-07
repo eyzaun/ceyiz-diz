@@ -130,13 +130,13 @@ class ImagePickerWidget extends StatelessWidget {
                         child: IconButton(
                           icon: Container(
                             padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.error,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.close,
-                              color: Colors.white,
+                              color: theme.colorScheme.onError,
                               size: 16,
                             ),
                           ),
@@ -155,10 +155,10 @@ class ImagePickerWidget extends StatelessWidget {
                     width: 120,
                     height: 120,
                     decoration: BoxDecoration(
-                      color: theme.dividerColor.withOpacity(0.3),
+                      color: theme.colorScheme.outline.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: theme.dividerColor,
+                        color: theme.colorScheme.outline,
                         width: 2,
                         style: BorderStyle.solid,
                       ),
