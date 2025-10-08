@@ -1,14 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:uuid/uuid.dart';
 import '../../data/models/trousseau_model.dart';
 import '../../data/models/user_model.dart';
 import 'auth_provider.dart';
 
 class TrousseauProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final Uuid _uuid = const Uuid();
   
   List<TrousseauModel> _trousseaus = [];
   List<TrousseauModel> _sharedTrousseaus = [];
@@ -194,49 +192,10 @@ class TrousseauProvider extends ChangeNotifier {
     String description = '',
     double totalBudget = 0.0,
   }) async {
-    if (_authProvider?.currentUser == null) return false;
-    
-    try {
-      _errorMessage = '';
-      final userId = _authProvider!.currentUser!.uid;
-      final trousseauId = _uuid.v4();
-      
-      final trousseau = TrousseauModel(
-        id: trousseauId,
-        name: name,
-        description: description,
-        ownerId: userId,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        totalBudget: totalBudget,
-      );
-      
-      await _firestore
-          .collection('trousseaus')
-          .doc(trousseauId)
-          .set(trousseau.toFirestore());
-      
-      // Update user's trousseau list
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .update({
-        'trousseauIds': FieldValue.arrayUnion([trousseauId]),
-      });
-      
-      // If live listeners are not yet active, update local list optimistically;
-      // otherwise, let the snapshot listeners populate to avoid duplicates.
-      if (_ownedSub == null) {
-        _trousseaus.insert(0, trousseau);
-        notifyListeners();
-      }
-      
-      return true;
-    } catch (e) {
-      _errorMessage = 'Çeyiz oluşturulamadı: ${e.toString()}';
-      notifyListeners();
-      return false;
-    }
+    // Single-trousseau policy: block manual creation
+    _errorMessage = 'Her kullanıcı için yalnızca 1 çeyiz oluşturulabilir.';
+    notifyListeners();
+    return false;
   }
   
   Future<bool> updateTrousseau({
@@ -324,49 +283,21 @@ class TrousseauProvider extends ChangeNotifier {
         return false;
       }
       
-      // Only owner can delete
-      if (trousseau.ownerId != _authProvider!.currentUser!.uid) {
-        _errorMessage = 'Sadece çeyiz sahibi silebilir';
-        return false;
-      }
-      
-      // Delete all products in the trousseau
-      final productsQuery = await _firestore
-          .collection('products')
-          .where('trousseauId', isEqualTo: trousseauId)
-          .get();
-      
-      final batch = _firestore.batch();
-      
-      for (var doc in productsQuery.docs) {
-        batch.delete(doc.reference);
-      }
-      
-      // Delete trousseau
-      batch.delete(_firestore.collection('trousseaus').doc(trousseauId));
-      
-      // Update user's trousseau list
-      batch.update(
-        _firestore.collection('users').doc(_authProvider!.currentUser!.uid),
-        {
-          'trousseauIds': FieldValue.arrayRemove([trousseauId]),
-        },
-      );
-      
-      await batch.commit();
-      
-      _trousseaus.removeWhere((t) => t.id == trousseauId);
-      if (_selectedTrousseau?.id == trousseauId) {
-        _selectedTrousseau = null;
-      }
-      
+      // Single-trousseau policy: prevent deleting the only trousseau
+      _errorMessage = 'Çeyiz silinemez. Her kullanıcı için bir çeyiz zorunludur.';
       notifyListeners();
-      return true;
+      return false;
     } catch (e) {
-      _errorMessage = 'Çeyiz silinemedi: ${e.toString()}';
+      _errorMessage = 'İşlem başarısız: ${e.toString()}';
       notifyListeners();
       return false;
     }
+  }
+
+  /// Convenience to get the current user's single trousseau id.
+  String? myTrousseauId() {
+    if (_trousseaus.isNotEmpty) return _trousseaus.first.id;
+    return null;
   }
   
   Future<bool> shareTrousseau({

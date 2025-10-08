@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    function trousseauPath(trousseauId) {
+      return /databases/$(database)/documents/trousseaus/$(trousseauId);
+    }
+
+    function canReadTrousseau(trousseauId) {
+      return exists(trousseauPath(trousseauId)) && (
+        get(trousseauPath(trousseauId)).data.ownerId == request.auth.uid ||
+        request.auth.uid in get(trousseauPath(trousseauId)).data.get('sharedWith', []) ||
+        request.auth.uid in get(trousseauPath(trousseauId)).data.get('editors', [])
+      );
+    }
+
+    function canWriteTrousseau(trousseauId) {
+      return exists(trousseauPath(trousseauId)) && (
+        get(trousseauPath(trousseauId)).data.ownerId == request.auth.uid ||
+        request.auth.uid in get(trousseauPath(trousseauId)).data.get('editors', [])
+      );
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isAuthed();
+      allow create, delete: if isAuthed() && request.auth.uid == userId;
+      allow update: if isAuthed() && (
+        request.auth.uid == userId ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sharedTrousseauIds'])
+      );
+    }
+
+    // Trousseaus
+    match /trousseaus/{trousseauId} {
+      // Read directly checks the current document's data via resource
+      allow read: if isAuthed() && (
+        resource.data.ownerId == request.auth.uid ||
+        request.auth.uid in resource.data.get('sharedWith', []) ||
+        request.auth.uid in resource.data.get('editors', [])
+      );
+      allow create: if isAuthed() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isAuthed() && canWriteTrousseau(trousseauId);
+      allow delete: if isAuthed() && get(trousseauPath(trousseauId)).data.ownerId == request.auth.uid;
+
+      // Subcollection: categories
+      match /categories/{categoryId} {
+        allow read: if isAuthed() && canReadTrousseau(trousseauId);
+        allow create, update, delete: if isAuthed() && canWriteTrousseau(trousseauId);
+      }
+    }
+
+    // Products (kept permissive for now, as in current project rules)
+    match /products/{productId} {
+      allow read, write: if isAuthed();
+    }
+  }
+}

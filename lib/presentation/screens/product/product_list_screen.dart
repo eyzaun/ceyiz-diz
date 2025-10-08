@@ -5,8 +5,8 @@ import '../../providers/product_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/category_chip.dart';
-import '../../../data/models/category_model.dart';
 import '../../../data/models/product_model.dart';
+import '../../providers/category_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class ProductListScreen extends StatefulWidget {
@@ -29,8 +29,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      Provider.of<ProductProvider>(context, listen: false)
-          .loadProducts(widget.trousseauId);
+      final productProv = Provider.of<ProductProvider>(context, listen: false);
+      productProv.loadProducts(widget.trousseauId);
+      // Bind category provider for dynamic categories of this trousseau
+      final catProv = Provider.of<CategoryProvider>(context, listen: false);
+      catProv.bind(widget.trousseauId);
     });
   }
 
@@ -45,7 +48,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
     final theme = Theme.of(context);
     final productProvider = Provider.of<ProductProvider>(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
-    final trousseau = trousseauProvider.getTrousseauById(widget.trousseauId);
+  final trousseau = trousseauProvider.getTrousseauById(widget.trousseauId);
+  final categoryProvider = Provider.of<CategoryProvider>(context);
 
     if (trousseau == null) {
       return Scaffold(
@@ -62,6 +66,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
       appBar: AppBar(
         title: const Text('Ürünler'),
         actions: [
+          if (canEdit)
+            IconButton(
+              tooltip: 'Kategorileri Yönet',
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () => context.push('/trousseau/${widget.trousseauId}/products/categories'),
+            ),
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: () => _showFilterDialog(context),
@@ -128,42 +138,30 @@ class _ProductListScreenState extends State<ProductListScreen> {
               ],
             ),
           ),
-          
-          // Category Filters
-          if (productProvider.selectedCategories.isNotEmpty)
-            Container(
-              height: 40,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Text(
-                    'Kategoriler:',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: productProvider.selectedCategories.map((categoryId) {
-                        final category = CategoryModel.getCategoryById(categoryId);
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: CategoryChip(
-                            category: category,
-                            isSelected: true,
-                            onTap: () => productProvider.toggleCategory(categoryId),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: productProvider.clearCategoryFilter,
-                    child: const Text('Temizle'),
-                  ),
-                ],
-              ),
+
+          // Category filter row (only categories; grey when inactive, colored when active)
+          Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: categoryProvider.allCategories.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final category = categoryProvider.allCategories[index];
+                final isSelected = productProvider.selectedCategories.contains(category.id);
+                final count = productProvider.products.where((p) => p.category == category.id).length;
+                return CategoryChip(
+                  category: category,
+                  isSelected: isSelected,
+                  onTap: () => productProvider.toggleCategory(category.id),
+                  colorful: isSelected, // inactive grey, active colorful
+                  showCount: count > 0,
+                  count: count,
+                );
+              },
             ),
+          ),
           
           // Products List
           Expanded(
@@ -299,7 +297,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   Widget _buildProductCard(BuildContext context, ProductModel product, bool canEdit) {
     final theme = Theme.of(context);
-    final category = CategoryModel.getCategoryById(product.category);
+  final category = Provider.of<CategoryProvider>(context, listen: false)
+    .getById(product.category);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -496,6 +495,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   void _showFilterDialog(BuildContext context) {
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
+    final trousseauProvider = Provider.of<TrousseauProvider>(context, listen: false);
+    final trousseau = trousseauProvider.getTrousseauById(widget.trousseauId);
+    final canEdit = trousseau != null && trousseau.canEdit(trousseauProvider.currentUserId ?? '');
     
     showModalBottomSheet(
       context: context,
@@ -511,25 +514,64 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Kategoriler',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Kategoriler',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                      ),
+                      if (canEdit)
+                        IconButton(
+                          tooltip: 'Kategori Ekle',
+                          onPressed: () async {
+                            final result = await _promptAddCategory(context, categoryProvider);
+                            if (result) setState(() {});
+                          },
+                          icon: const Icon(Icons.add),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: CategoryModel.defaultCategories.map((category) {
+                    children: categoryProvider.allCategories.map((category) {
                       final isSelected = productProvider.selectedCategories
                           .contains(category.id);
-                      return CategoryChip(
-                        category: category,
-                        isSelected: isSelected,
-                        onTap: () {
-                          setState(() {
-                            productProvider.toggleCategory(category.id);
-                          });
-                        },
+                      return Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          CategoryChip(
+                            category: category,
+                            isSelected: isSelected,
+                            onTap: () {
+                              setState(() {
+                                productProvider.toggleCategory(category.id);
+                              });
+                            },
+                          ),
+                          if (canEdit && category.isCustom)
+                            Positioned(
+                              right: -6,
+                              top: -6,
+                              child: IconButton(
+                                icon: const Icon(Icons.close, size: 16),
+                                splashRadius: 14,
+                                onPressed: () async {
+                                  final confirmed = await _confirmDeleteCategory(context, category.displayName);
+                                  if (confirmed) {
+                                    await categoryProvider.removeCustom(category.id);
+                                    if (productProvider.selectedCategories.contains(category.id)) {
+                                      productProvider.toggleCategory(category.id);
+                                    }
+                                    setState(() {});
+                                  }
+                                },
+                              ),
+                            ),
+                        ],
                       );
                     }).toList(),
                   ),
@@ -561,5 +603,73 @@ class _ProductListScreenState extends State<ProductListScreen> {
         );
       },
     );
+  }
+
+  Future<bool> _promptAddCategory(BuildContext context, CategoryProvider provider) async {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Yeni Kategori'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            decoration: const InputDecoration(hintText: 'Kategori adı (örn. Balkon)'),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'Ad gerekli';
+              if (provider.allCategories.any((c) => c.displayName.toLowerCase() == v.trim().toLowerCase())) {
+                return 'Bu ad kullanılıyor';
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          ElevatedButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              final name = controller.text.trim();
+              final id = _slugify(name, provider);
+              final ok = await provider.addCustom(id, name);
+              if (!ctx.mounted) return;
+              Navigator.pop(ctx, ok);
+            },
+            child: const Text('Ekle'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  String _slugify(String name, CategoryProvider provider) {
+    String slug = name.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9ğüşöçı\s-]', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\s+'), '-');
+    if (slug.isEmpty) slug = 'kategori';
+    var base = slug;
+    int i = 1;
+    while (provider.allCategories.any((c) => c.id == slug)) {
+      slug = '$base-$i';
+      i++;
+    }
+    return slug;
+  }
+
+  Future<bool> _confirmDeleteCategory(BuildContext context, String displayName) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Kategoriyi Sil'),
+        content: Text('"$displayName" kategorisini silmek istediğinize emin misiniz? Ürünler silinmez, kategori görünümü Diğer olarak değişebilir.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('İptal')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sil')),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 }

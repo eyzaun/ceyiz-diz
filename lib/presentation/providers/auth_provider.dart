@@ -60,6 +60,8 @@ class AuthProvider extends ChangeNotifier {
       
       if (doc.exists) {
         _currentUser = UserModel.fromFirestore(doc);
+        // Ensure a single trousseau exists for this user
+        await _ensureSingleTrousseau(_currentUser!);
         await _updateLastLogin();
       } else {
         await _createUserDocument();
@@ -90,9 +92,64 @@ class AuthProvider extends ChangeNotifier {
           .set(userModel.toFirestore());
       
       _currentUser = userModel;
+      // Create initial trousseau for this new user
+      await _ensureSingleTrousseau(_currentUser!);
     } catch (e) {
       _errorMessage = 'Kullanıcı belgesi oluşturulamadı: ${e.toString()}';
       notifyListeners();
+    }
+  }
+
+  /// Ensure the user has exactly one trousseau; if none exists, create a default one.
+  Future<void> _ensureSingleTrousseau(UserModel user) async {
+    try {
+      // If already has 1+, keep the first as canonical and do not create more
+      if (user.trousseauIds.isNotEmpty) return;
+
+      // Check in Firestore if any existing trousseau with ownerId (defensive)
+      final existing = await _firestore
+          .collection('trousseaus')
+          .where('ownerId', isEqualTo: user.uid)
+          .limit(1)
+          .get();
+      if (existing.docs.isNotEmpty) {
+        // Sync the id into user.trousseauIds for consistency
+        final id = existing.docs.first.id;
+        await _firestore.collection('users').doc(user.uid).update({
+          'trousseauIds': FieldValue.arrayUnion([id]),
+        });
+        _currentUser = _currentUser?.copyWith(
+          trousseauIds: [..._currentUser!.trousseauIds, id],
+        );
+        return;
+      }
+
+      // Create a default trousseau
+      final trousseauRef = _firestore.collection('trousseaus').doc();
+      await trousseauRef.set({
+        'name': 'Benim Çeyizim',
+        'description': 'İlk çeyiziniz otomatik oluşturuldu',
+        'ownerId': user.uid,
+        'sharedWith': <String>[],
+        'editors': <String>[],
+        'createdAt': Timestamp.fromDate(DateTime.now()),
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+        'categoryCounts': <String, int>{},
+        'totalProducts': 0,
+        'purchasedProducts': 0,
+        'totalBudget': 0.0,
+        'spentAmount': 0.0,
+        'coverImage': '',
+        'settings': <String, dynamic>{},
+      });
+      await _firestore.collection('users').doc(user.uid).update({
+        'trousseauIds': FieldValue.arrayUnion([trousseauRef.id]),
+      });
+      _currentUser = _currentUser?.copyWith(
+        trousseauIds: [..._currentUser!.trousseauIds, trousseauRef.id],
+      );
+    } catch (e) {
+      debugPrint('İlk çeyiz oluşturulamadı: $e');
     }
   }
   

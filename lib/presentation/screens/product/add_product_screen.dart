@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../providers/product_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
 import '../../widgets/common/image_picker_widget.dart';
-import '../../../data/models/category_model.dart';
+import '../../providers/category_provider.dart';
 
 class AddProductScreen extends StatefulWidget {
   final String trousseauId;
@@ -55,7 +55,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       trousseauId: widget.trousseauId,
       name: _nameController.text,
       description: _descriptionController.text,
-      price: double.parse(_priceController.text),
+      price: double.tryParse(_priceController.text.trim()) ?? 0.0,
       category: _selectedCategory,
       imageFiles: _selectedImages,
       link: _linkController.text,
@@ -88,6 +88,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
   @override
   Widget build(BuildContext context) {
   // final theme = Theme.of(context);
+    final categoryProvider = Provider.of<CategoryProvider>(context);
+    // Ensure bound (idempotent)
+    if (categoryProvider.currentTrousseauId != widget.trousseauId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Provider.of<CategoryProvider>(context, listen: false)
+              .bind(widget.trousseauId);
+        }
+      });
+    }
 
     return LoadingOverlay(
       isLoading: _isLoading,
@@ -157,11 +167,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           labelText: 'Fiyat (₺)',
                           prefixIcon: Icon(Icons.attach_money),
                         ),
+                        // Opsiyonel fiyat: boş bırakılabilir, doluysa sayı olmalı
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Fiyat gereklidir';
-                          }
-                          if (double.tryParse(value) == null) {
+                          if (value == null || value.trim().isEmpty) return null;
+                          if (double.tryParse(value.trim()) == null) {
                             return 'Geçerli bir fiyat girin';
                           }
                           return null;
@@ -200,22 +209,38 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     labelText: 'Kategori',
                     prefixIcon: Icon(Icons.category_outlined),
                   ),
-                  items: CategoryModel.defaultCategories.map((category) {
-                    return DropdownMenuItem(
-                      value: category.id,
+                  items: [
+                    ...categoryProvider.allCategories.map((category) {
+                      return DropdownMenuItem(
+                        value: category.id,
+                        child: Row(
+                          children: [
+                            Icon(category.icon, size: 20, color: category.color),
+                            const SizedBox(width: 8),
+                            Text(category.displayName),
+                          ],
+                        ),
+                      );
+                    }),
+                    const DropdownMenuItem(
+                      value: '__add_new__',
                       child: Row(
                         children: [
-                          Icon(category.icon, size: 20, color: category.color),
-                          const SizedBox(width: 8),
-                          Text(category.displayName),
+                          Icon(Icons.add),
+                          SizedBox(width: 8),
+                          Text('Yeni kategori ekle...'),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ],
                   onChanged: (value) {
-                    setState(() {
-                      _selectedCategory = value!;
-                    });
+                    if (value == '__add_new__') {
+                      _promptAddQuickCategory(context, categoryProvider);
+                    } else if (value != null) {
+                      setState(() {
+                        _selectedCategory = value;
+                      });
+                    }
                   },
                 ),
                 const SizedBox(height: 16),
@@ -259,5 +284,59 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _promptAddQuickCategory(BuildContext context, CategoryProvider provider) async {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Yeni Kategori'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            decoration: const InputDecoration(hintText: 'Kategori adı'),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'Ad gerekli';
+              if (provider.allCategories.any((c) => c.displayName.toLowerCase() == v.trim().toLowerCase())) {
+                return 'Bu ad kullanılıyor';
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Vazgeç')),
+          ElevatedButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              final name = controller.text.trim();
+              String id = name
+                  .toLowerCase()
+                  .replaceAll(RegExp(r'[^a-z0-9ğüşöçı\s-]', caseSensitive: false), '')
+                  .replaceAll(RegExp(r'\s+'), '-');
+              if (id.isEmpty) id = 'kategori';
+              var base = id;
+              int i = 1;
+              while (provider.allCategories.any((c) => c.id == id)) {
+                id = '$base-$i';
+                i++;
+              }
+              final ok = await provider.addCustom(id, name);
+              if (!ctx.mounted) return;
+              if (ok) Navigator.pop(ctx, id);
+            },
+            child: const Text('Ekle'),
+          ),
+        ],
+      ),
+    );
+    if (result != null) {
+      setState(() {
+        _selectedCategory = result;
+      });
+    }
   }
 }

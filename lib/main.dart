@@ -10,6 +10,7 @@ import 'core/themes/theme_provider.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/trousseau_provider.dart';
 import 'presentation/providers/product_provider.dart';
+import 'presentation/providers/category_provider.dart';
 import 'presentation/router/app_router.dart';
 
 void main() async {
@@ -53,6 +54,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProxyProvider<AuthProvider, ProductProvider>(
           create: (_) => ProductProvider(),
           update: (_, auth, product) => product!..updateAuth(auth),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => CategoryProvider(),
         ),
       ],
       child: Consumer<ThemeProvider>(

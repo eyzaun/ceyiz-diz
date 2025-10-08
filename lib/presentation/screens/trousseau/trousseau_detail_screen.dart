@@ -7,8 +7,8 @@ import '../../providers/product_provider.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/category_chip.dart';
 import '../../widgets/common/draggable_fab.dart';
-import '../../../data/models/category_model.dart';
 import '../../../data/models/trousseau_model.dart';
+import '../../providers/category_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class TrousseauDetailScreen extends StatefulWidget {
@@ -32,6 +32,9 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
       if (!mounted) return;
       Provider.of<ProductProvider>(context, listen: false)
           .loadProducts(widget.trousseauId);
+      // Bind dynamic categories to this trousseau
+      Provider.of<CategoryProvider>(context, listen: false)
+          .bind(widget.trousseauId);
     });
   }
 
@@ -46,6 +49,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
     final theme = Theme.of(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
     final productProvider = Provider.of<ProductProvider>(context);
+  final categoryProvider = Provider.of<CategoryProvider>(context);
 
     return StreamBuilder<TrousseauModel?>(
       stream: trousseauProvider.getSingleTrousseauStream(widget.trousseauId),
@@ -64,16 +68,8 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
           );
         }
 
-        final progress = trousseau.totalProducts > 0
-            ? trousseau.purchasedProducts / trousseau.totalProducts
-            : 0.0;
-        final budgetProgress = trousseau.totalBudget > 0
-            ? trousseau.spentAmount / trousseau.totalBudget
-            : 0.0;
-
-        // Compact spacing on web/wide screens
-  final isCompact = kIsWeb || MediaQuery.of(context).size.width >= 1000;
-  final sectionGap = isCompact ? 6.0 : 10.0;
+    // Compact spacing on web/wide screens
+    final isCompact = kIsWeb || MediaQuery.of(context).size.width >= 1000;
 
         return Scaffold(
           appBar: AppBar(
@@ -97,37 +93,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                 onRefresh: () => productProvider.loadProducts(widget.trousseauId),
                 child: CustomScrollView(
                   slivers: [
-                SliverPadding(
-                  padding: EdgeInsets.all(isCompact ? 12 : 16),
-                  sliver: SliverToBoxAdapter(
-                    child: _constrain(
-                      context,
-                      _buildProgressSection(context, trousseau, progress, budgetProgress),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(child: SizedBox(height: sectionGap, key: UniqueKey())),
-                SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),
-                  sliver: SliverToBoxAdapter(
-                    child: _constrain(
-                      context,
-                      _buildStatisticsGrid(context, trousseau),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(child: SizedBox(height: sectionGap, key: UniqueKey())),
-                SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),
-                  sliver: SliverToBoxAdapter(
-                    child: _constrain(
-                      context,
-                      _buildCategoriesSection(context, trousseau),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(child: SizedBox(height: sectionGap, key: UniqueKey())),
-                // Header row (kept as is)
+                // Header row
                 SliverPadding(
                   padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),
                   sliver: SliverToBoxAdapter(
@@ -136,141 +102,121 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Ürünler', style: isCompact ? theme.textTheme.titleLarge : theme.textTheme.headlineSmall),
-                          TextButton.icon(
-                            onPressed: () => context.push('/trousseau/${widget.trousseauId}/products'),
-                            icon: const Icon(Icons.arrow_forward),
-                            label: const Text('Tümünü Gör'),
+                          Text(
+                            'Ürünler',
+                            style: isCompact
+                                ? theme.textTheme.titleLarge
+                                : theme.textTheme.headlineSmall,
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-                // Search bar (same as ProductListScreen)
+                // Search bar
                 SliverToBoxAdapter(
                   child: _constrain(
                     context,
                     Container(
-                    padding: EdgeInsets.all(isCompact ? 6 : 10),
-                    color: theme.cardColor,
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Ürün ara...',
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: isCompact ? 8 : 10),
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  productProvider.setSearchQuery('');
-                                  setState(() {});
-                                },
-                              )
-                            : null,
+                      padding: EdgeInsets.all(isCompact ? 6 : 10),
+                      color: theme.cardColor,
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Ürün ara...',
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12, vertical: isCompact ? 8 : 10),
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    productProvider.setSearchQuery('');
+                                    setState(() {});
+                                  },
+                                )
+                              : null,
+                        ),
+                        onChanged: (v) {
+                          productProvider.setSearchQuery(v);
+                          setState(() {});
+                        },
                       ),
-                      onChanged: (v) {
-                        productProvider.setSearchQuery(v);
-                        // trigger rebuild to update clear icon visibility
-                        setState(() {});
-                      },
                     ),
                   ),
                 ),
-                ),
-                // Filter chips row
+                // Filter chips row (Tümü/Alınanlar/Alınmayanlar)
                 SliverToBoxAdapter(
                   child: _constrain(
                     context,
                     Container(
-                    height: isCompact ? 32 : 40,
-                    padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        _buildFilterChip(
-                          context,
-                          'Tümü',
-                          productProvider.currentFilter == ProductFilter.all,
-                          () => productProvider.setFilter(ProductFilter.all),
-                          count: productProvider.products.length,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildFilterChip(
-                          context,
-                          'Alınanlar',
-                          productProvider.currentFilter == ProductFilter.purchased,
-                          () => productProvider.setFilter(ProductFilter.purchased),
-                          count: productProvider.getPurchasedCount(),
-                          color: theme.colorScheme.tertiary,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildFilterChip(
-                          context,
-                          'Alınmayanlar',
-                          productProvider.currentFilter == ProductFilter.notPurchased,
-                          () => productProvider.setFilter(ProductFilter.notPurchased),
-                          count: productProvider.getNotPurchasedCount(),
-                          color: theme.colorScheme.secondary,
-                        ),
-                        const SizedBox(width: 8),
-                        // Open same filter dialog used on list screen
-                        OutlinedButton.icon(
-                          onPressed: () => _showFilterDialog(context),
-                          icon: const Icon(Icons.filter_list, size: 18),
-                          label: const Text('Filtreler'),
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: isCompact ? 4 : 6),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            minimumSize: const Size(0, 0),
-                            visualDensity: const VisualDensity(horizontal: -3, vertical: -3),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-                // Selected categories row (if any)
-                if (productProvider.selectedCategories.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: _constrain(
-                      context,
-                      Container(
-                      height: isCompact ? 28 : 32,
+                      height: isCompact ? 32 : 40,
                       padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),
-                      child: Row(
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
                         children: [
-                          Text('Kategoriler:', style: theme.textTheme.bodySmall),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ListView(
-                              scrollDirection: Axis.horizontal,
-                              children: productProvider.selectedCategories.map((categoryId) {
-                                final category = CategoryModel.getCategoryById(categoryId);
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: CategoryChip(
-                                    category: category,
-                                    isSelected: true,
-                                    onTap: () => productProvider.toggleCategory(categoryId),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
+                          _buildFilterChip(
+                            context,
+                            'Tümü',
+                            productProvider.currentFilter == ProductFilter.all,
+                            () => productProvider.setFilter(ProductFilter.all),
+                            count: productProvider.products.length,
                           ),
-                          TextButton(
-                            onPressed: productProvider.clearCategoryFilter,
-                            child: const Text('Temizle'),
+                          const SizedBox(width: 8),
+                          _buildFilterChip(
+                            context,
+                            'Alınanlar',
+                            productProvider.currentFilter == ProductFilter.purchased,
+                            () => productProvider.setFilter(ProductFilter.purchased),
+                            count: productProvider.getPurchasedCount(),
+                            color: theme.colorScheme.tertiary,
+                          ),
+                          const SizedBox(width: 8),
+                          _buildFilterChip(
+                            context,
+                            'Alınmayanlar',
+                            productProvider.currentFilter == ProductFilter.notPurchased,
+                            () => productProvider.setFilter(ProductFilter.notPurchased),
+                            count: productProvider.getNotPurchasedCount(),
+                            color: theme.colorScheme.secondary,
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                ),
+                // Dynamic category chips row (inactive grey, active colored)
+                SliverToBoxAdapter(
+                  child: _constrain(
+                    context,
+                    Container(
+                      height: isCompact ? 36 : 44,
+                      padding: EdgeInsets.symmetric(horizontal: isCompact ? 10 : 12),
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: categoryProvider.allCategories.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final category = categoryProvider.allCategories[index];
+                          final isSelected = productProvider.selectedCategories.contains(category.id);
+                          final count = productProvider.products
+                              .where((p) => p.category == category.id)
+                              .length;
+                          return CategoryChip(
+                            category: category,
+                            isSelected: isSelected,
+                            colorful: isSelected,
+                            showCount: count > 0,
+                            count: count,
+                            onTap: () => productProvider.toggleCategory(category.id),
+                          );
+                        },
                       ),
                     ),
                   ),
+                ),
                 // Product list / empty / loading
                 if (productProvider.isLoading)
                   const SliverFillRemaining(
@@ -443,7 +389,8 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
 
   Widget _buildProductCard(BuildContext context, dynamic product, bool canEdit) {
     final theme = Theme.of(context);
-    final category = CategoryModel.getCategoryById(product.category);
+    final category = Provider.of<CategoryProvider>(context, listen: false)
+        .getById(product.category);
 
     final isCompact = kIsWeb || MediaQuery.of(context).size.width >= 1000;
 
@@ -641,278 +588,5 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
     );
   }
 
-  void _showFilterDialog(BuildContext context) {
-    final productProvider = Provider.of<ProductProvider>(context, listen: false);
-    
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Container(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Kategoriler',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: CategoryModel.defaultCategories.map((category) {
-                      final isSelected = productProvider.selectedCategories
-                          .contains(category.id);
-                      return CategoryChip(
-                        category: category,
-                        isSelected: isSelected,
-                        onTap: () {
-                          setState(() {
-                            productProvider.toggleCategory(category.id);
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            productProvider.clearCategoryFilter();
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Temizle'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Uygula'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildProgressSection(
-      BuildContext context, TrousseauModel trousseau, double progress, double budgetProgress) {
-    final theme = Theme.of(context);
-    final isCompact = kIsWeb || MediaQuery.of(context).size.width >= 1000;
-    
-    Widget buildBlock({
-      required String title,
-      required double percent,
-      required Color color,
-      required String subtitle,
-    }) {
-      return Container(
-        padding: EdgeInsets.all(isCompact ? 8 : 10),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(isCompact ? 10 : 12),
-          border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.25)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(child: Text(title, style: theme.textTheme.titleSmall)),
-                Text(
-                  '${(percent * 100).toInt()}%',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: isCompact ? 4 : 6),
-            LinearProgressIndicator(
-              value: percent > 1 ? 1 : percent,
-              minHeight: isCompact ? 4 : 5,
-              backgroundColor: theme.dividerColor,
-              color: percent > 1 && title == 'Bütçe' ? theme.colorScheme.error : color,
-            ),
-            SizedBox(height: isCompact ? 2 : 4),
-            Text(subtitle, style: theme.textTheme.bodySmall),
-          ],
-        ),
-      );
-    }
-
-    if (isCompact) {
-      return Row(
-        children: [
-          Expanded(
-            child: buildBlock(
-              title: 'İlerleme',
-              percent: progress,
-              color: theme.colorScheme.primary,
-              subtitle: '${trousseau.purchasedProducts} alındı • ${trousseau.totalProducts - trousseau.purchasedProducts} kaldı',
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: buildBlock(
-              title: 'Bütçe',
-              percent: budgetProgress,
-              color: budgetProgress > 1 ? theme.colorScheme.error : theme.colorScheme.secondary,
-              subtitle: '₺${trousseau.spentAmount.toStringAsFixed(0)} harcandı • ₺${trousseau.totalBudget.toStringAsFixed(0)} bütçe',
-            ),
-          ),
-        ],
-      );
-    }
-
-    // Fallback vertical stack for narrow screens
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        buildBlock(
-          title: 'İlerleme',
-          percent: progress,
-          color: theme.colorScheme.primary,
-          subtitle: '${trousseau.purchasedProducts} alındı • ${trousseau.totalProducts - trousseau.purchasedProducts} kaldı',
-        ),
-        const SizedBox(height: 8),
-        buildBlock(
-          title: 'Bütçe',
-          percent: budgetProgress,
-          color: budgetProgress > 1 ? theme.colorScheme.error : theme.colorScheme.secondary,
-          subtitle: '₺${trousseau.spentAmount.toStringAsFixed(0)} harcandı • ₺${trousseau.totalBudget.toStringAsFixed(0)} bütçe',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatisticsGrid(BuildContext context, TrousseauModel trousseau) {
-    // Replace large cards with compact pills to reduce both horizontal and vertical space.
-    final theme = Theme.of(context);
-    final isCompact = kIsWeb || MediaQuery.of(context).size.width >= 1000;
-    final pillPadding = EdgeInsets.symmetric(horizontal: isCompact ? 10 : 12, vertical: isCompact ? 6 : 8);
-    final spacing = isCompact ? 8.0 : 10.0;
-
-    Widget pill(IconData icon, Color color, String label, String value) {
-      return Container(
-        padding: pillPadding,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: isCompact ? 16 : 18, color: color),
-            SizedBox(width: isCompact ? 6 : 8),
-            Text(label, style: theme.textTheme.bodySmall),
-            SizedBox(width: isCompact ? 6 : 8),
-            Text(
-              value,
-              style: theme.textTheme.titleSmall?.copyWith(color: color, fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Wrap(
-      spacing: spacing,
-      runSpacing: spacing,
-      children: [
-        pill(Icons.inventory, theme.colorScheme.primary, 'Toplam', trousseau.totalProducts.toString()),
-        pill(Icons.check_circle, theme.colorScheme.tertiary, 'Alınan', trousseau.purchasedProducts.toString()),
-        pill(Icons.shopping_cart, theme.colorScheme.secondary, 'Harcanan', '₺${trousseau.spentAmount.toStringAsFixed(0)}'),
-        pill(Icons.savings, theme.colorScheme.secondaryContainer, 'Kalan', '₺${(trousseau.totalBudget - trousseau.spentAmount).toStringAsFixed(0)}'),
-      ],
-    );
-  }
-
-  // Removed old _buildStatCard; stats now use compact pills.
-
-  Widget _buildCategoriesSection(BuildContext context, TrousseauModel trousseau) {
-    final theme = Theme.of(context);
-    final isCompact = kIsWeb || MediaQuery.of(context).size.width >= 1000;
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Kategoriler',
-          style: theme.textTheme.headlineSmall,
-        ),
-        SizedBox(height: isCompact ? 8 : 12),
-        Wrap(
-          spacing: isCompact ? 6 : 8,
-          runSpacing: isCompact ? 6 : 8,
-          children: CategoryModel.defaultCategories.map((category) {
-            final count = trousseau.categoryCounts[category.id] ?? 0;
-            
-            return Container(
-              padding: EdgeInsets.symmetric(horizontal: isCompact ? 10 : 12, vertical: isCompact ? 4 : 6),
-              decoration: BoxDecoration(
-                color: category.color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: category.color.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    category.icon,
-                    size: isCompact ? 14 : 16,
-                    color: category.color,
-                  ),
-                  SizedBox(width: isCompact ? 4 : 6),
-                  Text(
-                    category.displayName,
-                    style: TextStyle(
-                      fontSize: isCompact ? 11 : 12,
-                      color: category.color,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(width: isCompact ? 3 : 4),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: isCompact ? 5 : 6, vertical: isCompact ? 1.5 : 2),
-                    decoration: BoxDecoration(
-                      color: category.color.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      count.toString(),
-                      style: TextStyle(
-                        fontSize: isCompact ? 9 : 10,
-                        color: category.color,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
+  // removed legacy filter dialog (dynamic category chips are inline now)
 }

@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/trousseau_provider.dart';
-import '../../widgets/common/empty_state_widget.dart';
+import '../../providers/product_provider.dart';
 import '../../widgets/common/custom_dialog.dart';
-import '../../widgets/common/draggable_fab.dart';
-import '../../../data/models/category_model.dart';
+// import '../../widgets/common/draggable_fab.dart';
+import 'statistics_screen.dart';
+import '../trousseau/trousseau_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,6 +20,15 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    // After first frame, ensure home tab binds to the user's own trousseau products
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ensureHomeTrousseauBound();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
   // Keep build light; use values inside sub-widgets
     
@@ -26,8 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          _buildDashboard(context),
-          _buildStatistics(context),
+          _buildTrousseauTab(context),
+          const StatisticsScreen(),
           _buildProfile(context),
         ],
       ),
@@ -37,11 +47,15 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _selectedIndex = index;
           });
+          if (index == 0) {
+            // Re-bind to user's own trousseau when returning to home tab
+            _ensureHomeTrousseauBound();
+          }
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Özet',
+            icon: Icon(Icons.inventory_2_outlined),
+            label: 'Çeyiz',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.analytics),
@@ -56,415 +70,26 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDashboard(BuildContext context) {
-    final theme = Theme.of(context);
-    final authProvider = Provider.of<AuthProvider>(context);
+  Widget _buildTrousseauTab(BuildContext context) {
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
-    final allTrousseaus = trousseauProvider.allTrousseaus;
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Hoş Geldin, ${authProvider.currentUser?.displayName ?? 'Kullanıcı'}'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: allTrousseaus.isEmpty
-          ? Stack(
-              children: [
-                EmptyStateWidget(
-                  icon: Icons.home_work_outlined,
-                  title: 'Henüz çeyiz oluşturmadınız',
-                  subtitle: 'Hayalinizdeki çeyizi planlamaya başlayın',
-                  action: ElevatedButton.icon(
-                    onPressed: () => context.push('/trousseau/create'),
-                    icon: const Icon(Icons.add),
-                    label: const Text('İlk Çeyizi Oluştur'),
-                  ),
-                ),
-                Positioned.fill(
-                  child: DraggableFAB(
-                    heroTag: 'fab-home-create',
-                    tooltip: 'Yeni Çeyiz',
-                    icon: Icons.add,
-                    onPressed: () => context.push('/trousseau/create'),
-                  ),
-                ),
-              ],
-            )
-          : Stack(
-              children: [
-                RefreshIndicator(
-                  onRefresh: () => trousseauProvider.loadTrousseaus(),
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverPadding(
-                        padding: const EdgeInsets.all(16),
-                        sliver: SliverToBoxAdapter(
-                          child: _buildSummaryCards(context),
-                        ),
-                      ),
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        sliver: SliverToBoxAdapter(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Son Çeyizler',
-                                style: theme.textTheme.headlineSmall,
-                              ),
-                              TextButton.icon(
-                                onPressed: () => context.push('/trousseau/create'),
-                                icon: const Icon(Icons.add),
-                                label: const Text('Yeni Çeyiz'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SliverPadding(
-                        padding: const EdgeInsets.all(16),
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              final trousseau = allTrousseaus[index];
-                              return _buildTrousseauCard(context, trousseau);
-                            },
-                            childCount: allTrousseaus.length > 3 ? 3 : allTrousseaus.length,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Draggable FAB for quick create
-                Positioned.fill(
-                  child: IgnorePointer(
-                    ignoring: false,
-                    child: DraggableFAB(
-                      heroTag: 'fab-home-create',
-                      tooltip: 'Yeni Çeyiz',
-                      icon: Icons.add,
-                      onPressed: () => context.push('/trousseau/create'),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-    );
-  }
-
-  Widget _buildSummaryCards(BuildContext context) {
-  final theme = Theme.of(context);
-  final trousseauProvider = Provider.of<TrousseauProvider>(context);
-    final allTrousseaus = trousseauProvider.allTrousseaus;
-    
-    double totalBudget = 0;
-    double totalSpent = 0;
-    int totalProducts = 0;
-    int purchasedProducts = 0;
-    
-    for (var trousseau in allTrousseaus) {
-      totalBudget += trousseau.totalBudget;
-      totalSpent += trousseau.spentAmount;
-      totalProducts += trousseau.totalProducts;
-      purchasedProducts += trousseau.purchasedProducts;
+    final id = trousseauProvider.myTrousseauId();
+    if (id == null) {
+      // Henüz stream bağlanmadı veya ilk çeyiz oluşturuluyor
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
-    
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildSummaryCard(
-                context,
-                'Toplam Bütçe',
-                '₺${totalBudget.toStringAsFixed(0)}',
-                Icons.account_balance_wallet,
-                theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildSummaryCard(
-                context,
-                'Harcanan',
-                '₺${totalSpent.toStringAsFixed(0)}',
-                Icons.shopping_cart,
-                theme.colorScheme.secondary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildSummaryCard(
-                context,
-                'Toplam Ürün',
-                totalProducts.toString(),
-                Icons.inventory,
-                theme.colorScheme.tertiary,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildSummaryCard(
-                context,
-                'Tamamlanan',
-                '$purchasedProducts/$totalProducts',
-                Icons.check_circle,
-                theme.colorScheme.tertiary,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
+    // Çeyiz detay sayfasını ana tabda göster
+    return TrousseauDetailScreen(trousseauId: id);
   }
 
-  Widget _buildSummaryCard(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    final theme = Theme.of(context);
-  final cs = theme.colorScheme;
-  // Map role color to appropriate container/onContainer for readability
-  final bool isPrimary = color.toARGB32() == cs.primary.toARGB32();
-  final bool isSecondary = color.toARGB32() == cs.secondary.toARGB32();
-  final bool isTertiary = color.toARGB32() == cs.tertiary.toARGB32();
-
-    final Color backgroundColor = isPrimary
-        ? cs.primaryContainer
-        : isSecondary
-            ? cs.secondaryContainer
-            : isTertiary
-                ? cs.tertiaryContainer
-                : color.withValues(alpha: 0.12);
-
-    final Color borderColor = isPrimary
-        ? cs.primary
-        : isSecondary
-            ? cs.secondary
-            : isTertiary
-                ? cs.tertiary
-                : color.withValues(alpha: 0.35);
-
-    final Color titleColor = isPrimary
-        ? cs.onPrimaryContainer
-        : isSecondary
-            ? cs.onSecondaryContainer
-            : isTertiary
-                ? cs.onTertiaryContainer
-                : cs.onSurface.withValues(alpha: 0.9);
-
-    final Color valueColor = isPrimary
-        ? cs.onPrimaryContainer
-        : isSecondary
-            ? cs.onSecondaryContainer
-            : isTertiary
-                ? cs.onTertiaryContainer
-                : cs.onSurface;
-
-    final Color iconColor = isPrimary
-        ? cs.primary
-        : isSecondary
-            ? cs.secondary
-            : isTertiary
-                ? cs.tertiary
-                : color;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: borderColor,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: iconColor, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: titleColor,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: valueColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTrousseauCard(BuildContext context, trousseau) {
-    final theme = Theme.of(context);
-    final progress = trousseau.totalProducts > 0
-        ? trousseau.purchasedProducts / trousseau.totalProducts
-        : 0.0;
-    
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () => context.push('/trousseau/${trousseau.id}'),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      trousseau.name,
-                      style: theme.textTheme.titleLarge,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${trousseau.totalProducts} ürün',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (trousseau.description.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  trousseau.description,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.textTheme.bodySmall?.color,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              const SizedBox(height: 12),
-              LinearProgressIndicator(
-                value: progress,
-                backgroundColor: theme.dividerColor,
-                minHeight: 6,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${(progress * 100).toInt()}% Tamamlandı',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  Text(
-                    '₺${trousseau.spentAmount.toStringAsFixed(0)} / ₺${trousseau.totalBudget.toStringAsFixed(0)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatistics(BuildContext context) {
-    final theme = Theme.of(context);
-    final trousseauProvider = Provider.of<TrousseauProvider>(context);
-    final allTrousseaus = trousseauProvider.allTrousseaus;
-    
-  Map<String, int> categoryStats = {};
-    
-    for (var trousseau in allTrousseaus) {
-      trousseau.categoryCounts.forEach((category, count) {
-        categoryStats[category] = (categoryStats[category] ?? 0) + count;
-      });
+  void _ensureHomeTrousseauBound() {
+    final trousseauProvider = context.read<TrousseauProvider>();
+    final productProvider = context.read<ProductProvider>();
+    final id = trousseauProvider.myTrousseauId();
+    if (id != null) {
+      productProvider.loadProducts(id);
     }
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('İstatistikler'),
-      ),
-      body: allTrousseaus.isEmpty
-          ? const EmptyStateWidget(
-              icon: Icons.bar_chart,
-              title: 'İstatistik bulunmuyor',
-              subtitle: 'Çeyiz oluşturduktan sonra istatistiklerinizi görebilirsiniz',
-            )
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(
-                  'Kategori Dağılımı',
-                  style: theme.textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-                ...CategoryModel.defaultCategories.map((category) {
-                  final count = categoryStats[category.id] ?? 0;
-                  final total = categoryStats.values.fold(0, (a, b) => a + b);
-                  final percentage = total > 0 ? (count / total * 100) : 0.0;
-                  
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        Icon(category.icon, color: category.color),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(category.displayName),
-                                  Text('$count ürün'),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              LinearProgressIndicator(
-                                value: percentage / 100,
-                                backgroundColor: theme.dividerColor,
-                                color: category.color,
-                                minHeight: 8,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ],
-            ),
-    );
   }
 
   Widget _buildProfile(BuildContext context) {
@@ -503,6 +128,14 @@ class _HomeScreenState extends State<HomeScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
+          ListTile(
+            leading: const Icon(Icons.group_outlined),
+            title: const Text('Benimle Paylaşılan Çeyizler'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/shared-trousseaus'),
+          ),
+          const Divider(),
+          
           ListTile(
             leading: const Icon(Icons.person_outline),
             title: const Text('Profili Düzenle'),

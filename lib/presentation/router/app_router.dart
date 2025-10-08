@@ -7,17 +7,18 @@ import '../screens/auth/register_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/trousseau/trousseau_detail_screen.dart';
-import '../screens/trousseau/create_trousseau_screen.dart';
 import '../screens/trousseau/edit_trousseau_screen.dart';
 import '../screens/trousseau/share_trousseau_screen.dart';
 import '../screens/product/product_list_screen.dart';
 import '../screens/product/add_product_screen.dart';
 import '../screens/product/edit_product_screen.dart';
 import '../screens/product/product_detail_screen.dart';
+import '../screens/product/category_management_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/settings/profile_screen.dart';
 import '../screens/settings/theme_settings_screen.dart';
 import '../screens/settings/change_password_screen.dart';
+import '../screens/trousseau/shared_trousseau_list_screen.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -51,11 +52,7 @@ class AppRouter {
         path: '/',
         builder: (context, state) => const HomeScreen(),
         routes: [
-          // Trousseau routes (list page removed; direct access to create/detail)
-          GoRoute(
-            path: 'trousseau/create',
-            builder: (context, state) => const CreateTrousseauScreen(),
-          ),
+          // Trousseau routes (create disabled: single trousseau per user)
           GoRoute(
             path: 'trousseau/:id',
             builder: (context, state) {
@@ -84,6 +81,13 @@ class AppRouter {
                   return ProductListScreen(trousseauId: trousseauId);
                 },
                 routes: [
+                  GoRoute(
+                    path: 'categories',
+                    builder: (context, state) {
+                      final trousseauId = state.pathParameters['id']!;
+                      return CategoryManagementScreen(trousseauId: trousseauId);
+                    },
+                  ),
                   GoRoute(
                     path: 'add',
                     builder: (context, state) {
@@ -136,6 +140,10 @@ class AppRouter {
                 builder: (context, state) => const ChangePasswordScreen(),
               ),
             ],
+          ),
+          GoRoute(
+            path: 'shared-trousseaus',
+            builder: (context, state) => const SharedTrousseauListScreen(),
           ),
         ],
       ),

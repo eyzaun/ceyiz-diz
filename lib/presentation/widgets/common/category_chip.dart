@@ -7,6 +7,7 @@ class CategoryChip extends StatelessWidget {
   final VoidCallback? onTap;
   final bool showCount;
   final int? count;
+  final bool colorful; // when true, show tinted colors even when not selected
 
   const CategoryChip({
     super.key,
@@ -15,6 +16,7 @@ class CategoryChip extends StatelessWidget {
     this.onTap,
     this.showCount = false,
     this.count,
+    this.colorful = false,
   });
 
   @override
@@ -29,10 +31,16 @@ class CategoryChip extends StatelessWidget {
         decoration: BoxDecoration(
       color: isSelected
         ? category.color.withValues(alpha: 0.15)
-        : theme.colorScheme.surface,
+        : colorful
+          ? category.color.withValues(alpha: 0.08)
+          : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? category.color : theme.colorScheme.outline,
+            color: isSelected
+                ? category.color
+                : colorful
+                    ? category.color.withValues(alpha: 0.6)
+                    : theme.colorScheme.outline,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -42,13 +50,21 @@ class CategoryChip extends StatelessWidget {
             Icon(
               category.icon,
               size: 18,
-              color: isSelected ? category.color : theme.iconTheme.color,
+              color: isSelected
+                  ? category.color
+                  : colorful
+                      ? category.color
+                      : theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 6),
             Text(
               category.displayName,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: isSelected ? category.color : null,
+                color: isSelected
+                    ? category.color
+                    : colorful
+                        ? category.color
+                        : theme.colorScheme.onSurfaceVariant,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
@@ -57,15 +73,21 @@ class CategoryChip extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-          color: isSelected
-            ? category.color.withValues(alpha: 0.25)
-            : theme.colorScheme.outline.withValues(alpha: 0.4),
+                  color: isSelected
+                      ? category.color.withValues(alpha: 0.25)
+                      : colorful
+                          ? category.color.withValues(alpha: 0.15)
+                          : theme.colorScheme.outline.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   count.toString(),
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: isSelected ? category.color : null,
+                    color: isSelected
+                        ? category.color
+                        : colorful
+                            ? category.color
+                            : theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

@@ -1,1 +1,0 @@
-// File removed: Trousseau list screen is no longer used.
