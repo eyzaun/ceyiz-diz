@@ -20,6 +20,13 @@ class ProductDetailScreen extends StatelessWidget {
     required this.productId,
   });
 
+  String _normalizeUrl(String url) {
+    final trimmed = url.trim();
+    if (trimmed.isEmpty) return trimmed;
+    final hasScheme = RegExp(r'^[a-zA-Z][a-zA-Z0-9+.-]*://').hasMatch(trimmed);
+    return hasScheme ? trimmed : 'https://$trimmed';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -310,9 +317,29 @@ class ProductDetailScreen extends StatelessWidget {
                       width: double.infinity,
                       child: OutlinedButton.icon(
                         onPressed: () async {
-                          final uri = Uri.parse(product.link);
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri);
+                          try {
+                            final normalized = _normalizeUrl(product.link);
+                            if (normalized.isEmpty) return;
+                            final uri = Uri.parse(normalized);
+                            final launched = await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                            if (!launched && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Link açılamadı'),
+                                ),
+                              );
+                            }
+                          } catch (_) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Geçersiz link'),
+                                ),
+                              );
+                            }
                           }
                         },
                         icon: const Icon(Icons.open_in_new),

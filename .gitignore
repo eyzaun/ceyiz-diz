@@ -44,3 +44,30 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 **/build/
+
+# Sensitive/secrets (global)
+# Android signing
+**/key.properties
+**/*.jks
+**/*.keystore
+
+# Firebase config (prefer storing locally/CI secrets)
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Apple / signing assets
+**/*.p8
+**/*.pem
+**/*.cer
+**/*.mobileprovision
+**/*.provisionprofile
+
+# Environment files
+.env
+.env.*
+*.env
+
+# Service account keys (Firebase/Google)
+**/*serviceAccount*.json
+**/*service-account*.json
+**/*firebase-adminsdk*.json

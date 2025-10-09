@@ -1,13 +1,15 @@
 name: ceyiz_diz
 description: Çeyiz yönetim uygulaması
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+6
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
+    sdk: flutter
+  flutter_localizations:
     sdk: flutter
   
   # Firebase
@@ -30,7 +32,7 @@ dependencies:
   image_picker: ^1.1.2
   uuid: ^4.5.1
   shared_preferences: ^2.3.3
-  intl: ^0.19.0
+  intl: ^0.20.2
   url_launcher: ^6.3.1
   
   # UI Components
@@ -45,6 +47,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
+  assets:
+    # Use the existing app icons as in-app image assets
+    - web/icons/
 
 flutter_launcher_icons:
   android: true

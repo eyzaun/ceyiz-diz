@@ -117,10 +117,22 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             color: theme.colorScheme.primary.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            Icons.home_filled,
-                            size: 60,
-                            color: theme.colorScheme.primary,
+                          alignment: Alignment.center,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(60),
+                            child: Image.asset(
+                              'web/icons/Icon-192.png',
+                              width: 72,
+                              height: 72,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stack) {
+                                return Icon(
+                                  Icons.home_filled,
+                                  size: 60,
+                                  color: theme.colorScheme.primary,
+                                );
+                              },
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24),

@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 import 'core/themes/theme_provider.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/trousseau_provider.dart';
 import 'presentation/providers/product_provider.dart';
@@ -67,6 +68,8 @@ class MyApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: themeProvider.currentTheme,
             routerConfig: AppRouter.router,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             builder: (context, child) => WebAppFrame(child: child ?? const SizedBox.shrink()),
           );
         },
