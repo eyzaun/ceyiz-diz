@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../../data/models/category_model.dart';
+import '../../../core/themes/design_system.dart';
+import '../../widgets/common/responsive_container.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -65,6 +67,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        ResponsiveContainer(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
         Row(
           children: [
             Expanded(
@@ -72,7 +78,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 context,
                 'Toplam Bütçe',
                 '₺${totalBudget.toStringAsFixed(0)}',
-                theme.colorScheme.primary,
+                theme.extension<AppStatsColors>()?.budget ?? theme.colorScheme.primary,
                 Icons.account_balance_wallet,
               ),
             ),
@@ -82,7 +88,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 context,
                 'Harcanan',
                 '₺${totalSpent.toStringAsFixed(0)}',
-                theme.colorScheme.tertiary,
+                theme.extension<AppStatsColors>()?.spent ?? theme.colorScheme.secondary,
                 Icons.shopping_cart,
               ),
             ),
@@ -96,7 +102,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 context,
                 'Toplam Ürün',
                 totalProducts.toString(),
-                theme.colorScheme.tertiary,
+                theme.extension<AppStatsColors>()?.total ?? theme.colorScheme.tertiary,
                 Icons.inventory,
               ),
             ),
@@ -106,7 +112,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 context,
                 'Tamamlanan',
                 '$purchasedProducts/$totalProducts',
-                theme.colorScheme.tertiary,
+                theme.extension<AppStatsColors>()?.completed ?? theme.colorScheme.primary,
                 Icons.check_circle,
               ),
             ),
@@ -116,6 +122,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         Text('Kategori Dağılımı', style: theme.textTheme.headlineSmall),
         const SizedBox(height: 12),
         ..._buildCategoryBreakdown(context, categoryStats, categoryProvider),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -216,33 +225,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   ) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final bool isPrimary = color.toARGB32() == cs.primary.toARGB32();
-    final bool isSecondary = color.toARGB32() == cs.secondary.toARGB32();
-    final bool isTertiary = color.toARGB32() == cs.tertiary.toARGB32();
+    final bool dark = theme.brightness == Brightness.dark;
 
-    final Color backgroundColor = isPrimary
-        ? cs.primaryContainer
-        : isSecondary
-            ? cs.secondaryContainer
-            : isTertiary
-                ? cs.tertiaryContainer
-                : color.withValues(alpha: 0.12);
-
-    final Color borderColor = isPrimary
-        ? cs.primary
-        : isSecondary
-            ? cs.secondary
-            : isTertiary
-                ? cs.tertiary
-                : color.withValues(alpha: 0.35);
-
-    final Color textColor = isPrimary
-        ? cs.onPrimaryContainer
-        : isSecondary
-            ? cs.onSecondaryContainer
-            : isTertiary
-                ? cs.onTertiaryContainer
-                : cs.onSurface;
+    final Color backgroundColor = color.withValues(
+      alpha: dark ? DesignTokens.statsBgAlphaDark : DesignTokens.statsBgAlphaLight,
+    );
+    final Color borderColor = color.withValues(alpha: DesignTokens.statsBorderAlpha);
+    final Color textColor = cs.onSurface;
 
     return Container(
       padding: const EdgeInsets.all(16),

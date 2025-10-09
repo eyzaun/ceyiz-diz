@@ -8,6 +8,9 @@ import '../../widgets/common/category_chip.dart';
 import '../../../data/models/product_model.dart';
 import '../../providers/category_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../core/themes/design_system.dart';
+import '../../widgets/common/filter_pill.dart';
+import '../../widgets/common/responsive_container.dart';
 
 class ProductListScreen extends StatefulWidget {
   final String trousseauId;
@@ -46,6 +49,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final semantics = theme.extension<AppSemanticColors>();
     final productProvider = Provider.of<ProductProvider>(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
   final trousseau = trousseauProvider.getTrousseauById(widget.trousseauId);
@@ -81,69 +85,69 @@ class _ProductListScreenState extends State<ProductListScreen> {
       body: Column(
         children: [
           // Search Bar
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: theme.cardColor,
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Ürün ara...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          productProvider.setSearchQuery('');
-                        },
-                      )
-                    : null,
+          ResponsiveContainer(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              color: theme.cardColor,
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Ürün ara...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            productProvider.setSearchQuery('');
+                          },
+                        )
+                      : null,
+                ),
+                onChanged: productProvider.setSearchQuery,
               ),
-              onChanged: productProvider.setSearchQuery,
             ),
           ),
           
           // Filter Chips
-          Container(
-            height: 50,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ListView(
+          ResponsiveContainer(
+            child: SizedBox(
+              height: 50,
+              child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                _buildFilterChip(
-                  context,
-                  'Tümü',
-                  productProvider.currentFilter == ProductFilter.all,
-                  () => productProvider.setFilter(ProductFilter.all),
+                FilterPill(
+                  label: 'Tümü',
+                  selected: productProvider.currentFilter == ProductFilter.all,
+                  onTap: () => productProvider.setFilter(ProductFilter.all),
                   count: productProvider.products.length,
                 ),
                 const SizedBox(width: 8),
-                _buildFilterChip(
-                  context,
-                  'Alınanlar',
-                  productProvider.currentFilter == ProductFilter.purchased,
-                  () => productProvider.setFilter(ProductFilter.purchased),
+                FilterPill(
+                  label: 'Alınanlar',
+                  selected: productProvider.currentFilter == ProductFilter.purchased,
+                  onTap: () => productProvider.setFilter(ProductFilter.purchased),
                   count: productProvider.getPurchasedCount(),
-              color: theme.colorScheme.tertiary,
+                  color: semantics?.success ?? theme.colorScheme.tertiary,
                 ),
                 const SizedBox(width: 8),
-                _buildFilterChip(
-                  context,
-                  'Alınmayanlar',
-                  productProvider.currentFilter == ProductFilter.notPurchased,
-                  () => productProvider.setFilter(ProductFilter.notPurchased),
+                FilterPill(
+                  label: 'Alınmayanlar',
+                  selected: productProvider.currentFilter == ProductFilter.notPurchased,
+                  onTap: () => productProvider.setFilter(ProductFilter.notPurchased),
                   count: productProvider.getNotPurchasedCount(),
-              color: theme.colorScheme.secondary,
+                  color: semantics?.warning ?? theme.colorScheme.secondary,
                 ),
               ],
+            ),
             ),
           ),
 
           // Category filter row (only categories; grey when inactive, colored when active)
-          Container(
-            height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: ListView.separated(
+          ResponsiveContainer(
+            child: SizedBox(
+              height: 48,
+              child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: categoryProvider.allCategories.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
@@ -151,15 +155,18 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 final category = categoryProvider.allCategories[index];
                 final isSelected = productProvider.selectedCategories.contains(category.id);
                 final count = productProvider.products.where((p) => p.category == category.id).length;
-                return CategoryChip(
-                  category: category,
-                  isSelected: isSelected,
+                return FilterPill(
+                  label: category.displayName,
+                  selected: isSelected,
                   onTap: () => productProvider.toggleCategory(category.id),
-                  colorful: isSelected, // inactive grey, active colorful
-                  showCount: count > 0,
-                  count: count,
+                  count: count > 0 ? count : null,
+                  color: category.color,
+                  leadingIcon: category.icon,
+                  neutralWhenUnselected: true,
+                  dense: true,
                 );
               },
+            ),
             ),
           ),
           
@@ -193,7 +200,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           itemCount: productProvider.filteredProducts.length,
                           itemBuilder: (context, index) {
                             final product = productProvider.filteredProducts[index];
-                            return _buildProductCard(context, product, canEdit);
+                            return Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 1100),
+                                child: _buildProductCard(context, product, canEdit),
+                              ),
+                            );
                           },
                         ),
                       ),
@@ -250,53 +262,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
     );
   }
 
-  Widget _buildFilterChip(
-    BuildContext context,
-    String label,
-    bool isSelected,
-    VoidCallback onTap, {
-    int? count,
-    Color? color,
-  }) {
-    final theme = Theme.of(context);
-    final chipColor = color ?? theme.colorScheme.primary;
-
-    return FilterChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label),
-          if (count != null) ...[
-            const SizedBox(width: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-        color: isSelected
-          ? Colors.white.withValues(alpha: 0.3)
-          : chipColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                count.toString(),
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isSelected ? Colors.white : chipColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-      selected: isSelected,
-      onSelected: (_) => onTap(),
-      selectedColor: chipColor,
-      checkmarkColor: Colors.white,
-    );
-  }
+  // Filter chips are now unified via FilterPill for consistent visuals.
 
   Widget _buildProductCard(BuildContext context, ProductModel product, bool canEdit) {
     final theme = Theme.of(context);
+    final semantics = theme.extension<AppSemanticColors>();
   final category = Provider.of<CategoryProvider>(context, listen: false)
     .getById(product.category);
 
@@ -361,9 +331,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           ),
                         ),
                         if (product.isPurchased)
-                          const Icon(
+                          Icon(
                             Icons.check_circle,
-                            color: Colors.green,
+                            color: semantics?.success ?? theme.colorScheme.tertiary,
                             size: 20,
                           ),
                       ],
@@ -447,7 +417,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         product.isPurchased
                             ? Icons.check_box
                             : Icons.check_box_outline_blank,
-                        color: product.isPurchased ? Colors.green : null,
+                        color: product.isPurchased
+                            ? (semantics?.success ?? theme.colorScheme.tertiary)
+                            : null,
                       ),
                       onPressed: () async {
                         final provider = Provider.of<ProductProvider>(

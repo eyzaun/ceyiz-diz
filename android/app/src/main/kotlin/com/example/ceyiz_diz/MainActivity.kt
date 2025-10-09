@@ -1,4 +1,4 @@
-package com.example.ceyiz_diz
+package com.Loncagames.ceyizdiz
 
 import io.flutter.embedding.android.FlutterActivity
 

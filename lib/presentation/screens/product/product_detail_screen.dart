@@ -7,6 +7,8 @@ import '../../providers/product_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/custom_dialog.dart';
 import '../../providers/category_provider.dart';
+import '../../../core/themes/design_system.dart';
+import '../../widgets/common/responsive_container.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final String trousseauId;
@@ -21,6 +23,7 @@ class ProductDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final semantics = theme.extension<AppSemanticColors>();
     final productProvider = Provider.of<ProductProvider>(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
     final product = productProvider.getProductById(productId);
@@ -72,21 +75,30 @@ class ProductDetailScreen extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        child: Column(
+        child: ResponsiveContainer(
+          padding: EdgeInsets.zero,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image Gallery
             if (product.images.isNotEmpty)
-              SizedBox(
-                height: 300,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // Make image taller on large screens for better presence
+                  final isWide = constraints.maxWidth >= 900;
+                  final height = isWide ? 460.0 : 300.0;
+                  return SizedBox(
+                    height: height,
                 child: PageView.builder(
                   itemCount: product.images.length,
                   itemBuilder: (context, index) {
                     return CachedNetworkImage(
                       imageUrl: product.images[index],
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(
-                        child: CircularProgressIndicator(),
+                      placeholder: (context, url) => Center(
+                        child: CircularProgressIndicator(
+                          color: category.color,
+                        ),
                       ),
                       errorWidget: (context, url, error) => Container(
                         color: category.color.withValues(alpha: 0.1),
@@ -99,6 +111,8 @@ class ProductDetailScreen extends StatelessWidget {
                     );
                   },
                 ),
+                  );
+                },
               )
             else
               Container(
@@ -134,9 +148,9 @@ class ProductDetailScreen extends StatelessWidget {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.1),
+                            color: (semantics?.success ?? theme.colorScheme.tertiary).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.green),
+                            border: Border.all(color: semantics?.success ?? theme.colorScheme.tertiary),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
@@ -195,13 +209,13 @@ class ProductDetailScreen extends StatelessWidget {
                   // Price and Quantity
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                        ),
                       ),
-                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -277,10 +291,10 @@ class ProductDetailScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.1),
+                        color: (semantics?.warning ?? theme.colorScheme.secondary).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.3),
+                          color: (semantics?.warning ?? theme.colorScheme.secondary).withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -312,14 +326,14 @@ class ProductDetailScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.1),
+                        color: (semantics?.success ?? theme.colorScheme.tertiary).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.check_circle,
-                            color: Colors.green,
+                            color: semantics?.success ?? theme.colorScheme.tertiary,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -329,7 +343,7 @@ class ProductDetailScreen extends StatelessWidget {
                                 Text(
                                   'Satın Alındı',
                                   style: theme.textTheme.titleSmall?.copyWith(
-                                    color: Colors.green,
+                                    color: semantics?.success ?? theme.colorScheme.tertiary,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -350,6 +364,7 @@ class ProductDetailScreen extends StatelessWidget {
           ],
         ),
       ),
+      ),
       bottomNavigationBar: canEdit
           ? Container(
               padding: const EdgeInsets.all(16),
@@ -369,15 +384,15 @@ class ProductDetailScreen extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: product.isPurchased
-                      ? Colors.orange
-                      : Colors.green,
+                      ? (semantics?.warning ?? theme.colorScheme.secondary)
+                      : (semantics?.success ?? theme.colorScheme.tertiary),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(
                   product.isPurchased
                       ? 'Alınmadı Olarak İşaretle'
                       : 'Alındı Olarak İşaretle',
-                  style: const TextStyle(fontSize: 16),
+                  style: TextStyle(fontSize: 16, color: theme.colorScheme.onPrimary),
                 ),
               ),
             )

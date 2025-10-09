@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
+import '../../../core/themes/design_system.dart';
 
 class ImagePickerWidget extends StatelessWidget {
   final List<XFile> selectedImages;
@@ -16,10 +17,11 @@ class ImagePickerWidget extends StatelessWidget {
 
   Future<void> _pickImage(BuildContext context, ImageSource source) async {
     if (selectedImages.length >= maxImages) {
+      final semantics = Theme.of(context).extension<AppSemanticColors>();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('En fazla $maxImages fotoğraf ekleyebilirsiniz'),
-          backgroundColor: Colors.orange,
+          backgroundColor: semantics?.warning ?? Theme.of(context).colorScheme.secondary,
         ),
       );
       return;

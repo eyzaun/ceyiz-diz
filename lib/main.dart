@@ -12,6 +12,7 @@ import 'presentation/providers/trousseau_provider.dart';
 import 'presentation/providers/product_provider.dart';
 import 'presentation/providers/category_provider.dart';
 import 'presentation/router/app_router.dart';
+import 'presentation/widgets/common/web_frame.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,6 +67,7 @@ class MyApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: themeProvider.currentTheme,
             routerConfig: AppRouter.router,
+            builder: (context, child) => WebAppFrame(child: child ?? const SizedBox.shrink()),
           );
         },
       ),

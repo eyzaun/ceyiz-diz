@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
 import '../../widgets/common/custom_dialog.dart';
+import '../../../core/themes/design_system.dart';
 
 class ShareTrousseauScreen extends StatefulWidget {
   final String trousseauId;
@@ -29,10 +30,11 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
 
   Future<void> _shareTrousseau() async {
     if (_emailController.text.isEmpty) {
+      final semantics = Theme.of(context).extension<AppSemanticColors>();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('E-posta adresi girin'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: const Text('E-posta adresi girin'),
+          backgroundColor: semantics?.warning ?? Theme.of(context).colorScheme.secondary,
         ),
       );
       return;
@@ -54,10 +56,11 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
     });
 
     if (success && mounted) {
+      final semantics = Theme.of(context).extension<AppSemanticColors>();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Çeyiz başarıyla paylaşıldı'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Çeyiz başarıyla paylaşıldı'),
+          backgroundColor: semantics?.success ?? Theme.of(context).colorScheme.tertiary,
         ),
       );
       _emailController.clear();
@@ -68,7 +71,7 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(trousseauProvider.errorMessage),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     }
@@ -196,19 +199,19 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: theme.colorScheme.primary,
-        child: const Icon(Icons.person, color: Colors.white),
+        child: Icon(Icons.person, color: theme.colorScheme.onPrimary),
       ),
       title: Text(userId), // In production, fetch user details
       subtitle: Text(canEdit ? 'Düzenleme yetkisi var' : 'Sadece görüntüleme'),
       trailing: IconButton(
-        icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+        icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.error),
         onPressed: () async {
           final confirmed = await CustomDialog.showConfirmation(
             context: context,
             title: 'Paylaşımı Kaldır',
             subtitle: 'Bu kişinin erişimini kaldırmak istediğinizden emin misiniz?',
             confirmText: 'Kaldır',
-            confirmColor: Colors.red,
+            confirmColor: theme.colorScheme.error,
           );
           
           if (!context.mounted) return;

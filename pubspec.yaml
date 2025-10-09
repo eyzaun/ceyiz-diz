@@ -24,6 +24,7 @@ dependencies:
   go_router: ^14.6.2
   flutter_svg: ^2.0.10
   cached_network_image: ^3.4.1
+  cupertino_icons: ^1.0.8
   
   # Utilities
   image_picker: ^1.1.2
@@ -40,6 +41,14 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "web/icons/Icon-512.png"
+  adaptive_icon_background: "#111418" # fallback background for adaptive icon
+  adaptive_icon_foreground: "web/icons/Icon-192.png"

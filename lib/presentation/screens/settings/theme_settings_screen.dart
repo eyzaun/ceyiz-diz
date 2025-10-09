@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/themes/theme_provider.dart';
-import '../../../core/constants/app_colors.dart';
+import '../../../core/themes/design_system.dart';
 
 class ThemeSettingsScreen extends StatelessWidget {
   const ThemeSettingsScreen({super.key});
@@ -37,9 +37,9 @@ class ThemeSettingsScreen extends StatelessWidget {
             context,
             'Varsayılan',
             'Modern ve canlı renkler',
-            AppColors.primaryDefault,
-            AppColors.secondaryDefault,
-            AppColors.accentDefault,
+            DesignSystem.palettes[AppThemeType.defaultTheme]!.primary,
+            DesignSystem.palettes[AppThemeType.defaultTheme]!.secondary,
+            DesignSystem.palettes[AppThemeType.defaultTheme]!.tertiary,
             AppThemeType.defaultTheme,
             false,
           ),
@@ -67,9 +67,9 @@ class ThemeSettingsScreen extends StatelessWidget {
             context,
             'Orman',
             'Doğal yeşil tonlar',
-            AppColors.primaryForest,
-            AppColors.secondaryForest,
-            AppColors.accentForest,
+            DesignSystem.palettes[AppThemeType.forest]!.primary,
+            DesignSystem.palettes[AppThemeType.forest]!.secondary,
+            DesignSystem.palettes[AppThemeType.forest]!.tertiary,
             AppThemeType.forest,
             true,
           ),
