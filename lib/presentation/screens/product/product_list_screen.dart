@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/product_provider.dart';
@@ -11,6 +12,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/themes/design_system.dart';
 import '../../widgets/common/filter_pill.dart';
 import '../../widgets/common/responsive_container.dart';
+import '../../widgets/common/icon_color_picker.dart';
 
 class ProductListScreen extends StatefulWidget {
   final String trousseauId;
@@ -26,6 +28,9 @@ class ProductListScreen extends StatefulWidget {
 
 class _ProductListScreenState extends State<ProductListScreen> {
   final _searchController = TextEditingController();
+  Timer? _debounce;
+  final FocusNode _searchFocusNode = FocusNode();
+  final ScrollController _listController = ScrollController();
 
   @override
   void initState() {
@@ -35,13 +40,16 @@ class _ProductListScreenState extends State<ProductListScreen> {
       final productProv = Provider.of<ProductProvider>(context, listen: false);
       productProv.loadProducts(widget.trousseauId);
       // Bind category provider for dynamic categories of this trousseau
-      final catProv = Provider.of<CategoryProvider>(context, listen: false);
-      catProv.bind(widget.trousseauId);
+  final catProv = Provider.of<CategoryProvider>(context, listen: false);
+  final trProv = Provider.of<TrousseauProvider>(context, listen: false);
+  catProv.bind(widget.trousseauId, userId: trProv.currentUserId ?? '');
     });
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
+    _searchFocusNode.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -89,22 +97,43 @@ class _ProductListScreenState extends State<ProductListScreen> {
             child: Container(
               padding: const EdgeInsets.all(16),
               color: theme.cardColor,
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Ürün ara...',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            productProvider.setSearchQuery('');
-                          },
-                        )
-                      : null,
-                ),
-                onChanged: productProvider.setSearchQuery,
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _searchController,
+                builder: (context, value, _) {
+                  return TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    decoration: InputDecoration(
+                      hintText: 'Ürün ara...',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: value.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                productProvider.setSearchQuery('');
+                                // keep focus to avoid keyboard dismissal
+                                if (!_searchFocusNode.hasFocus) {
+                                  _searchFocusNode.requestFocus();
+                                }
+                                _searchController.selection = const TextSelection.collapsed(offset: 0);
+                              },
+                            )
+                          : null,
+                    ),
+                    onChanged: (v) {
+                      _debounce?.cancel();
+                      _debounce = Timer(const Duration(milliseconds: 300), () {
+                        if (!mounted) return;
+                        productProvider.setSearchQuery(v);
+                        // keep keyboard open by re-requesting focus if lost
+                        if (!_searchFocusNode.hasFocus) {
+                          _searchFocusNode.requestFocus();
+                        }
+                      });
+                    },
+                  );
+                },
               ),
             ),
           ),
@@ -170,35 +199,54 @@ class _ProductListScreenState extends State<ProductListScreen> {
             ),
           ),
           
-          // Products List
+          // Products List (kept constant to preserve scroll position)
           Expanded(
-            child: productProvider.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : productProvider.filteredProducts.isEmpty
-                    ? EmptyStateWidget(
-                        icon: Icons.shopping_bag_outlined,
-                        title: productProvider.products.isEmpty
-                            ? 'Henüz ürün eklenmemiş'
-                            : 'Ürün bulunamadı',
-                        subtitle: productProvider.products.isEmpty
-                            ? 'İlk ürününüzü ekleyerek başlayın'
-                            : 'Farklı filtreler deneyebilirsiniz',
-                        action: productProvider.products.isEmpty && canEdit
-                            ? ElevatedButton.icon(
-                                onPressed: () => context.push(
-                                  '/trousseau/${widget.trousseauId}/products/add',
-                                ),
-                                icon: const Icon(Icons.add),
-                                label: const Text('Ürün Ekle'),
-                              )
-                            : null,
-                      )
-                    : RefreshIndicator(
+            child: productProvider.products.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: EmptyStateWidget(
+                      icon: Icons.shopping_bag_outlined,
+                      title: 'Henüz ürün eklenmemiş',
+                      subtitle: 'İlk ürününüzü ekleyerek başlayın',
+                      action: canEdit
+                          ? ElevatedButton.icon(
+                              onPressed: () => context.push(
+                                '/trousseau/${widget.trousseauId}/products/add',
+                              ),
+                              icon: const Icon(Icons.add),
+                              label: const Text('Ürün Ekle'),
+                            )
+                          : null,
+                    ),
+                  )
+                : Stack(
+                    children: [
+                      RefreshIndicator(
                         onRefresh: () => productProvider.loadProducts(widget.trousseauId),
                         child: ListView.builder(
+                          controller: _listController,
+                          physics: const AlwaysScrollableScrollPhysics(),
                           padding: const EdgeInsets.all(16),
-                          itemCount: productProvider.filteredProducts.length,
+                          itemCount: productProvider.filteredProducts.isEmpty
+                              ? 1
+                              : productProvider.filteredProducts.length,
                           itemBuilder: (context, index) {
+                            if (productProvider.filteredProducts.isEmpty) {
+                              // Inline empty placeholder (filters yield zero results)
+                              return Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 700),
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 32),
+                                    child: EmptyStateWidget(
+                                      icon: Icons.search_off,
+                                      title: 'Ürün bulunamadı',
+                                      subtitle: 'Farklı filtreler deneyebilirsiniz',
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
                             final product = productProvider.filteredProducts[index];
                             return Center(
                               child: ConstrainedBox(
@@ -209,6 +257,19 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           },
                         ),
                       ),
+                      if (productProvider.isLoading)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: LinearProgressIndicator(
+                            minHeight: 2,
+                            color: theme.colorScheme.primary,
+                            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          ),
+                        ),
+                    ],
+                  ),
           ),
           
           // Summary Bar
@@ -580,38 +641,66 @@ class _ProductListScreenState extends State<ProductListScreen> {
   Future<bool> _promptAddCategory(BuildContext context, CategoryProvider provider) async {
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    IconData selIcon = Icons.category;
+    Color selColor = const Color(0xFF607D8B);
     final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Yeni Kategori'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            decoration: const InputDecoration(hintText: 'Kategori adı (örn. Balkon)'),
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Ad gerekli';
-              if (provider.allCategories.any((c) => c.displayName.toLowerCase() == v.trim().toLowerCase())) {
-                return 'Bu ad kullanılıyor';
-              }
-              return null;
-            },
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocalState) => AlertDialog(
+          title: const Text('Yeni Kategori'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: controller,
+                  decoration: const InputDecoration(hintText: 'Kategori adı (örn. Balkon)'),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Ad gerekli';
+                    if (provider.allCategories.any((c) => c.displayName.toLowerCase() == v.trim().toLowerCase())) {
+                      return 'Bu ad kullanılıyor';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    CircleAvatar(backgroundColor: selColor.withValues(alpha: 0.15), child: Icon(selIcon, color: selColor)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.palette_outlined),
+                        label: const Text('Sembol ve Renk Seç'),
+                        onPressed: () async {
+                          final res = await IconColorPicker.pick(context, icon: selIcon, color: selColor);
+                          if (res != null) {
+                            setLocalState(() { selIcon = res.icon; selColor = res.color; });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                final name = controller.text.trim();
+                final id = _slugify(name, provider);
+                final ok = await provider.addCustom(id, name, icon: selIcon, color: selColor);
+                if (!ctx.mounted) return;
+                Navigator.pop(ctx, ok);
+              },
+              child: const Text('Ekle'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              final name = controller.text.trim();
-              final id = _slugify(name, provider);
-              final ok = await provider.addCustom(id, name);
-              if (!ctx.mounted) return;
-              Navigator.pop(ctx, ok);
-            },
-            child: const Text('Ekle'),
-          ),
-        ],
       ),
     );
     return result ?? false;
@@ -623,7 +712,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     if (slug.isEmpty) slug = 'kategori';
     var base = slug;
     int i = 1;
-    while (provider.allCategories.any((c) => c.id == slug)) {
+    while (provider.allCategories.any((c) => c.displayName.toLowerCase() == slug.toLowerCase())) {
       slug = '$base-$i';
       i++;
     }

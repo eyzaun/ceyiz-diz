@@ -134,6 +134,13 @@ class _HomeScreenState extends State<HomeScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/shared-trousseaus'),
           ),
+          ListTile(
+            leading: const Icon(Icons.feedback_outlined),
+            title: const Text('Geri Bildirim Gönder'),
+            subtitle: const Text('Görüş ve önerilerinizi bizimle paylaşın'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/feedback'),
+          ),
           const Divider(),
           
           ListTile(

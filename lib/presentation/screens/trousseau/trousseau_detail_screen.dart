@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -25,6 +26,9 @@ class TrousseauDetailScreen extends StatefulWidget {
 
 class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
   final _searchController = TextEditingController();
+  Timer? _debounce;
+  final FocusNode _searchFocusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
   @override
   void initState() {
     super.initState();
@@ -33,13 +37,16 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
       Provider.of<ProductProvider>(context, listen: false)
           .loadProducts(widget.trousseauId);
       // Bind dynamic categories to this trousseau
-      Provider.of<CategoryProvider>(context, listen: false)
-          .bind(widget.trousseauId);
+    final trProv = Provider.of<TrousseauProvider>(context, listen: false);
+    Provider.of<CategoryProvider>(context, listen: false)
+      .bind(widget.trousseauId, userId: trProv.currentUserId ?? '');
     });
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
+    _searchFocusNode.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -48,8 +55,9 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
-    final productProvider = Provider.of<ProductProvider>(context);
-  final categoryProvider = Provider.of<CategoryProvider>(context);
+    // Avoid rebuilding entire screen on product provider updates; we'll use Consumer where needed
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    final categoryProvider = Provider.of<CategoryProvider>(context);
 
     return StreamBuilder<TrousseauModel?>(
       stream: trousseauProvider.getSingleTrousseauStream(widget.trousseauId),
@@ -92,6 +100,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
               RefreshIndicator(
                 onRefresh: () => productProvider.loadProducts(widget.trousseauId),
                 child: CustomScrollView(
+                  controller: _scrollController,
                   slivers: [
                 // Header row
                 SliverPadding(
@@ -120,28 +129,43 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                     Container(
                       padding: EdgeInsets.all(isCompact ? 6 : 10),
                       color: theme.cardColor,
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Ürün ara...',
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12, vertical: isCompact ? 8 : 10),
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    productProvider.setSearchQuery('');
-                                    setState(() {});
-                                  },
-                                )
-                              : null,
-                        ),
-                        onChanged: (v) {
-                          productProvider.setSearchQuery(v);
-                          setState(() {});
+                      child: ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _searchController,
+                        builder: (context, value, _) {
+                          return TextField(
+                            controller: _searchController,
+                            focusNode: _searchFocusNode,
+                            decoration: InputDecoration(
+                              hintText: 'Ürün ara...',
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: isCompact ? 8 : 10),
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon: value.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        productProvider.setSearchQuery('');
+                                        if (!_searchFocusNode.hasFocus) {
+                                          _searchFocusNode.requestFocus();
+                                        }
+                                        _searchController.selection = const TextSelection.collapsed(offset: 0);
+                                      },
+                                    )
+                                  : null,
+                            ),
+                            onChanged: (v) {
+                              _debounce?.cancel();
+                              _debounce = Timer(const Duration(milliseconds: 300), () {
+                                if (!mounted) return;
+                                productProvider.setSearchQuery(v);
+                                if (!_searchFocusNode.hasFocus) {
+                                  _searchFocusNode.requestFocus();
+                                }
+                              });
+                            },
+                          );
                         },
                       ),
                     ),
@@ -151,39 +175,43 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                 SliverToBoxAdapter(
                   child: _constrain(
                     context,
-                    Container(
-                      height: isCompact ? 32 : 40,
-                      padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          _buildFilterChip(
-                            context,
-                            'Tümü',
-                            productProvider.currentFilter == ProductFilter.all,
-                            () => productProvider.setFilter(ProductFilter.all),
-                            count: productProvider.products.length,
+                    Consumer<ProductProvider>(
+                      builder: (context, productProvider, _) {
+                        return Container(
+                          height: isCompact ? 32 : 40,
+                          padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: [
+                              _buildFilterChip(
+                                context,
+                                'Tümü',
+                                productProvider.currentFilter == ProductFilter.all,
+                                () => productProvider.setFilter(ProductFilter.all),
+                                count: productProvider.products.length,
+                              ),
+                              const SizedBox(width: 8),
+                              _buildFilterChip(
+                                context,
+                                'Alınanlar',
+                                productProvider.currentFilter == ProductFilter.purchased,
+                                () => productProvider.setFilter(ProductFilter.purchased),
+                                count: productProvider.getPurchasedCount(),
+                                color: theme.colorScheme.tertiary,
+                              ),
+                              const SizedBox(width: 8),
+                              _buildFilterChip(
+                                context,
+                                'Alınmayanlar',
+                                productProvider.currentFilter == ProductFilter.notPurchased,
+                                () => productProvider.setFilter(ProductFilter.notPurchased),
+                                count: productProvider.getNotPurchasedCount(),
+                                color: theme.colorScheme.secondary,
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          _buildFilterChip(
-                            context,
-                            'Alınanlar',
-                            productProvider.currentFilter == ProductFilter.purchased,
-                            () => productProvider.setFilter(ProductFilter.purchased),
-                            count: productProvider.getPurchasedCount(),
-                            color: theme.colorScheme.tertiary,
-                          ),
-                          const SizedBox(width: 8),
-                          _buildFilterChip(
-                            context,
-                            'Alınmayanlar',
-                            productProvider.currentFilter == ProductFilter.notPurchased,
-                            () => productProvider.setFilter(ProductFilter.notPurchased),
-                            count: productProvider.getNotPurchasedCount(),
-                            color: theme.colorScheme.secondary,
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -191,52 +219,47 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                 SliverToBoxAdapter(
                   child: _constrain(
                     context,
-                    Container(
-                      height: isCompact ? 36 : 44,
-                      padding: EdgeInsets.symmetric(horizontal: isCompact ? 10 : 12),
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: categoryProvider.allCategories.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
-                        itemBuilder: (context, index) {
-                          final category = categoryProvider.allCategories[index];
-                          final isSelected = productProvider.selectedCategories.contains(category.id);
-                          final count = productProvider.products
-                              .where((p) => p.category == category.id)
-                              .length;
-                          return CategoryChip(
-                            category: category,
-                            isSelected: isSelected,
-                            colorful: isSelected,
-                            showCount: count > 0,
-                            count: count,
-                            onTap: () => productProvider.toggleCategory(category.id),
-                          );
-                        },
-                      ),
+                    Consumer<ProductProvider>(
+                      builder: (context, productProvider, _) {
+                        return Container(
+                          height: isCompact ? 36 : 44,
+                          padding: EdgeInsets.symmetric(horizontal: isCompact ? 10 : 12),
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: categoryProvider.allCategories.length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 8),
+                            itemBuilder: (context, index) {
+                              final category = categoryProvider.allCategories[index];
+                              final isSelected = productProvider.selectedCategories.contains(category.id);
+                              final count = productProvider.products
+                                  .where((p) => p.category == category.id)
+                                  .length;
+                              return CategoryChip(
+                                category: category,
+                                isSelected: isSelected,
+                                colorful: isSelected,
+                                showCount: count > 0,
+                                count: count,
+                                onTap: () => productProvider.toggleCategory(category.id),
+                              );
+                            },
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
                 // Product list / empty / loading
-                if (productProvider.isLoading)
-                  const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (productProvider.filteredProducts.isEmpty)
+                if (productProvider.products.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: EmptyStateWidget(
                         icon: Icons.shopping_bag_outlined,
-                        title: productProvider.products.isEmpty
-                            ? 'Henüz ürün eklenmemiş'
-                            : 'Ürün bulunamadı',
-                        subtitle: productProvider.products.isEmpty
-                            ? 'İlk ürününüzü ekleyerek başlayın'
-                            : 'Farklı filtreler deneyebilirsiniz',
-                        action: productProvider.products.isEmpty && trousseau.canEdit(trousseauProvider.currentUserId ?? '')
+                        title: 'Henüz ürün eklenmemiş',
+                        subtitle: 'İlk ürününüzü ekleyerek başlayın',
+                        action: trousseau.canEdit(trousseauProvider.currentUserId ?? '')
                             ? ElevatedButton.icon(
                                 onPressed: () => context.push('/trousseau/${widget.trousseauId}/products/add'),
                                 icon: const Icon(Icons.add),
@@ -247,79 +270,131 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                     ),
                   )
                 else
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16, vertical: isCompact ? 8 : 12),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final product = productProvider.filteredProducts[index];
-                          return Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 1100),
-                              child: _buildProductCard(
-                                context,
-                                product,
-                                trousseau.canEdit(trousseauProvider.currentUserId ?? ''),
-                              ),
-                            ),
-                          );
-                        },
-                        childCount: productProvider.filteredProducts.length,
-                      ),
-                    ),
+                  // Keep list sliver constant; overlay states separately to avoid scroll jumps
+                  Consumer<ProductProvider>(
+                    builder: (context, productProvider, _) {
+                      return SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16, vertical: isCompact ? 8 : 12),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              if (index >= productProvider.filteredProducts.length) {
+                                return const SizedBox.shrink();
+                              }
+                              final product = productProvider.filteredProducts[index];
+                              return Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 1100),
+                                  child: _buildProductCard(
+                                    context,
+                                    product,
+                                    trousseau.canEdit(trousseauProvider.currentUserId ?? ''),
+                                  ),
+                                ),
+                              );
+                            },
+                            childCount: productProvider.filteredProducts.length,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 // Summary bar (same as ProductListScreen bottom bar)
                 SliverToBoxAdapter(
                   child: _constrain(
                     context,
-                    Container(
-                    padding: EdgeInsets.all(isCompact ? 8 : 12),
-                    decoration: BoxDecoration(
-                      color: theme.cardColor,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
-                          blurRadius: 3,
-                          offset: const Offset(0, -1),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildSummaryItem(
-                          context,
-                          'Toplam',
-                          '₺${productProvider.getTotalPlanned().toStringAsFixed(0)}',
-                          theme.colorScheme.primary,
-                        ),
-                        _buildSummaryItem(
-                          context,
-                          'Harcanan',
-                          '₺${productProvider.getTotalSpent().toStringAsFixed(0)}',
-                          theme.colorScheme.tertiary,
-                        ),
-                        _buildSummaryItem(
-                          context,
-                          'Kalan',
-                          '₺${(productProvider.getTotalPlanned() - productProvider.getTotalSpent()).toStringAsFixed(0)}',
-                          theme.colorScheme.secondary,
-                        ),
-                      ],
-                    ),
+                    Consumer<ProductProvider>(
+                      builder: (context, productProvider, _) {
+                        return Container(
+                          padding: EdgeInsets.all(isCompact ? 8 : 12),
+                          decoration: BoxDecoration(
+                            color: theme.cardColor,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.06),
+                                blurRadius: 3,
+                                offset: const Offset(0, -1),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _buildSummaryItem(
+                                context,
+                                'Toplam',
+                                '₺${productProvider.getTotalPlanned().toStringAsFixed(0)}',
+                                theme.colorScheme.primary,
+                              ),
+                              _buildSummaryItem(
+                                context,
+                                'Harcanan',
+                                '₺${productProvider.getTotalSpent().toStringAsFixed(0)}',
+                                theme.colorScheme.tertiary,
+                              ),
+                              _buildSummaryItem(
+                                context,
+                                'Kalan',
+                                '₺${(productProvider.getTotalPlanned() - productProvider.getTotalSpent()).toStringAsFixed(0)}',
+                                theme.colorScheme.secondary,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
                   ],
                 ),
               ),
+              // Overlay states to avoid layout jumps
+              Consumer<ProductProvider>(
+                builder: (context, productProvider, _) {
+                  return Stack(
+                    children: [
+                      if (productProvider.isLoading)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: LinearProgressIndicator(
+                            minHeight: 2,
+                            color: theme.colorScheme.primary,
+                            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          ),
+                        ),
+                      if (!productProvider.isLoading && productProvider.filteredProducts.isEmpty && productProvider.products.isNotEmpty)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            ignoring: true,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Center(
+                                child: EmptyStateWidget(
+                                  icon: Icons.search_off,
+                                  title: 'Ürün bulunamadı',
+                                  subtitle: 'Farklı filtreler deneyebilirsiniz',
+                                  action: null,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
               if (trousseau.canEdit(trousseauProvider.currentUserId ?? ''))
                 Positioned.fill(
-                  child: DraggableFAB(
-                    heroTag: 'fab-trousseau-add-${trousseau.id}',
-                    tooltip: 'Ürün Ekle',
-                    icon: Icons.add,
-                    onPressed: () => context.push('/trousseau/${widget.trousseauId}/products/add'),
+                  child: IgnorePointer(
+                    ignoring: false,
+                    child: DraggableFAB(
+                      heroTag: 'fab-trousseau-add-${trousseau.id}',
+                      tooltip: 'Ürün Ekle',
+                      icon: Icons.add,
+                      onPressed: () => context.push('/trousseau/${widget.trousseauId}/products/add'),
+                    ),
                   ),
                 ),
             ],

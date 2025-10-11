@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
 import '../../widgets/common/custom_dialog.dart';
@@ -21,6 +22,7 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
   final _emailController = TextEditingController();
   bool _canEdit = false;
   bool _isLoading = false;
+  final Map<String, Future<DocumentSnapshot<Map<String, dynamic>>>> _userDocFutures = {};
 
   @override
   void dispose() {
@@ -196,35 +198,62 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
       BuildContext context, String userId, bool canEdit, String trousseauId) {
     final theme = Theme.of(context);
     
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: theme.colorScheme.primary,
-        child: Icon(Icons.person, color: theme.colorScheme.onPrimary),
-      ),
-      title: Text(userId), // In production, fetch user details
-      subtitle: Text(canEdit ? 'Düzenleme yetkisi var' : 'Sadece görüntüleme'),
-      trailing: IconButton(
-        icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.error),
-        onPressed: () async {
-          final confirmed = await CustomDialog.showConfirmation(
-            context: context,
-            title: 'Paylaşımı Kaldır',
-            subtitle: 'Bu kişinin erişimini kaldırmak istediğinizden emin misiniz?',
-            confirmText: 'Kaldır',
-            confirmColor: theme.colorScheme.error,
-          );
-          
-          if (!context.mounted) return;
-          if (confirmed == true) {
-            final trousseauProvider =
-                Provider.of<TrousseauProvider>(context, listen: false);
-            await trousseauProvider.removeShare(
-              trousseauId: trousseauId,
-              userId: userId,
-            );
+    _userDocFutures[userId] ??= FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: _userDocFutures[userId],
+      builder: (context, snapshot) {
+        String titleText = userId;
+        String? subtitleExtra;
+        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data();
+          if (data != null) {
+            final email = data['email'] as String?;
+            final displayName = data['displayName'] as String?;
+            if (email != null && email.isNotEmpty) {
+              titleText = email;
+              subtitleExtra = (displayName != null && displayName.isNotEmpty) ? displayName : null;
+            }
           }
-        },
-      ),
+        }
+
+        final permissionText = canEdit ? 'Düzenleme yetkisi var' : 'Sadece görüntüleme';
+        final subtitleText = subtitleExtra != null ? '$permissionText · $subtitleExtra' : permissionText;
+
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundColor: theme.colorScheme.primary,
+            child: Icon(Icons.person, color: theme.colorScheme.onPrimary),
+          ),
+          title: Text(titleText),
+          subtitle: Text(subtitleText),
+          trailing: IconButton(
+            icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.error),
+            onPressed: () async {
+              final confirmed = await CustomDialog.showConfirmation(
+                context: context,
+                title: 'Paylaşımı Kaldır',
+                subtitle: 'Bu kişinin erişimini kaldırmak istediğinizden emin misiniz?',
+                confirmText: 'Kaldır',
+                confirmColor: theme.colorScheme.error,
+              );
+              
+              if (!context.mounted) return;
+              if (confirmed == true) {
+                final trousseauProvider =
+                    Provider.of<TrousseauProvider>(context, listen: false);
+                await trousseauProvider.removeShare(
+                  trousseauId: trousseauId,
+                  userId: userId,
+                );
+              }
+            },
+          ),
+        );
+      },
     );
   }
 }

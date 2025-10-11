@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/trousseau_provider.dart';
+import '../../widgets/common/icon_color_picker.dart';
 
 class CategoryManagementScreen extends StatefulWidget {
   final String trousseauId;
@@ -18,7 +19,8 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<CategoryProvider>().bind(widget.trousseauId);
+  final trProv = context.read<TrousseauProvider>();
+  context.read<CategoryProvider>().bind(widget.trousseauId, userId: trProv.currentUserId ?? '');
     });
   }
 
@@ -93,7 +95,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
     return Card(
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: c.color.withOpacity(0.15),
+          backgroundColor: c.color.withValues(alpha: 0.15),
           child: Icon(c.icon, color: c.color),
         ),
         title: Text(title),
@@ -132,38 +134,69 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
   Future<void> _promptAddCategory(BuildContext context, CategoryProvider provider) async {
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    IconData selIcon = Icons.category;
+    Color selColor = const Color(0xFF607D8B);
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Yeni Kategori'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            decoration: const InputDecoration(hintText: 'Kategori adı'),
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Ad gerekli';
-              if (provider.allCategories.any((c) => c.displayName.toLowerCase() == v.trim().toLowerCase())) {
-                return 'Bu ad kullanılıyor';
-              }
-              return null;
-            },
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocalState) => AlertDialog(
+          title: const Text('Yeni Kategori'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: controller,
+                  decoration: const InputDecoration(hintText: 'Kategori adı'),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Ad gerekli';
+                    if (provider.allCategories.any((c) => c.displayName.toLowerCase() == v.trim().toLowerCase())) {
+                      return 'Bu ad kullanılıyor';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    CircleAvatar(backgroundColor: selColor.withValues(alpha: 0.15), child: Icon(selIcon, color: selColor)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.palette_outlined),
+                        label: const Text('Sembol ve Renk Seç'),
+                        onPressed: () async {
+                          final res = await IconColorPicker.pick(context, icon: selIcon, color: selColor);
+                          if (res != null) {
+                            setLocalState(() {
+                              selIcon = res.icon;
+                              selColor = res.color;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                final name = controller.text.trim();
+                final id = _slugify(name, provider);
+                final res = await provider.addCustom(id, name, icon: selIcon, color: selColor);
+                if (!ctx.mounted) return;
+                Navigator.pop(ctx, res);
+              },
+              child: const Text('Ekle'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              final name = controller.text.trim();
-              final id = _slugify(name, provider);
-              final res = await provider.addCustom(id, name);
-              if (!ctx.mounted) return;
-              Navigator.pop(ctx, res);
-            },
-            child: const Text('Ekle'),
-          ),
-        ],
       ),
     );
     if (ok == true && mounted) setState(() {});
@@ -230,7 +263,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
     if (slug.isEmpty) slug = 'kategori';
     final base = slug;
     int i = 1;
-    while (provider.allCategories.any((c) => c.id == slug)) {
+    while (provider.allCategories.any((c) => c.displayName.toLowerCase() == slug.toLowerCase())) {
       slug = '$base-$i';
       i++;
     }

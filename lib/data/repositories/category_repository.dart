@@ -10,9 +10,10 @@ class CategoryRepository {
         .collection('categories');
   }
 
-  Stream<List<CategoryModel>> streamCategories(String trousseauId) {
+  Stream<List<CategoryModel>> streamCategories(String trousseauId, String userId) {
+    // Filter to only categories created by the current user; sort client-side
     return _col(trousseauId)
-        .orderBy('sortOrder', descending: false)
+        .where('createdBy', isEqualTo: userId)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => CategoryModel.fromMap(d.data(), d.id))
@@ -24,18 +25,22 @@ class CategoryRepository {
     required String name,
     String? displayName,
     int sortOrder = 1000,
+    required String createdBy,
+    int? iconCode,
+    int? colorValue,
   }) async {
-    final data = CategoryModel(
-      id: id,
-      name: name,
-      displayName: displayName ?? name,
-      icon: CategoryModel.getDefaultById('other').icon,
-      color: CategoryModel.colorFromString(id),
-      sortOrder: sortOrder,
-      isCustom: true,
-    ).toMap();
+    final data = {
+      'name': name,
+      'displayName': displayName ?? name,
+      'sortOrder': sortOrder,
+      'iconCode': iconCode,
+      'colorValue': colorValue ?? CategoryModel.colorFromString(id).toARGB32(),
+    };
 
-    await _col(trousseauId).doc(id).set(data, SetOptions(merge: true));
+    await _col(trousseauId).doc(id).set({
+      ...data,
+      'createdBy': createdBy,
+    }, SetOptions(merge: true));
   }
 
   Future<void> removeCategory(String trousseauId, String id) async {

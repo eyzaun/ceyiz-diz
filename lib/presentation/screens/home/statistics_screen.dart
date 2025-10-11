@@ -39,7 +39,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final catProv = Provider.of<CategoryProvider>(context, listen: false);
     if (_boundTrousseauId != myId || catProv.currentTrousseauId != myId) {
       _boundTrousseauId = myId;
-      catProv.bind(myId);
+      catProv.bind(myId, userId: trProv.currentUserId ?? '');
     }
   }
 

@@ -69,19 +69,34 @@ class _DraggableFABState extends State<DraggableFAB> {
             Positioned(
               left: clamped.dx,
               top: clamped.dy,
-              child: GestureDetector(
-                onPanUpdate: (details) {
-                  setState(() {
-                    _offset = Offset(_offset!.dx + details.delta.dx, _offset!.dy + details.delta.dy);
-                  });
-                },
-                child: FloatingActionButton(
-                  heroTag: widget.heroTag,
-                  onPressed: widget.onPressed,
-                  backgroundColor: widget.backgroundColor,
-                  foregroundColor: widget.foregroundColor,
-                  tooltip: widget.tooltip,
-                  child: Icon(widget.icon),
+              child: Listener(
+                onPointerMove: (_) {}, // keep gesture arena lightweight
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onPanStart: (_) {
+                    // No-op, but helps with smoother drag start
+                  },
+                  onPanUpdate: (details) {
+                    final next = Offset(
+                      (_offset!.dx + details.delta.dx).clamp(minX, maxX),
+                      (_offset!.dy + details.delta.dy).clamp(minY, maxY),
+                    );
+                    if (next != _offset) {
+                      setState(() {
+                        _offset = next;
+                      });
+                    }
+                  },
+                  child: RepaintBoundary(
+                    child: FloatingActionButton(
+                      heroTag: widget.heroTag,
+                      onPressed: widget.onPressed,
+                      backgroundColor: widget.backgroundColor,
+                      foregroundColor: widget.foregroundColor,
+                      tooltip: widget.tooltip,
+                      child: Icon(widget.icon),
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -45,7 +45,9 @@ class ProductDetailScreen extends StatelessWidget {
       );
     }
 
-  final canEdit = trousseau.canEdit(trousseauProvider.currentUserId ?? '');
+  final currentUserId = trousseauProvider.currentUserId ?? '';
+  final canEdit = trousseau.canEdit(currentUserId);
+  final isOwnedByUser = trousseau.ownerId == currentUserId;
   final category = Provider.of<CategoryProvider>(context).getById(product.category);
 
     return Scaffold(
@@ -392,38 +394,155 @@ class ProductDetailScreen extends StatelessWidget {
         ),
       ),
       ),
-      bottomNavigationBar: canEdit
-          ? Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, -2),
+      bottomNavigationBar: () {
+        final myId = trousseauProvider.myTrousseauId();
+        final canClone = !isOwnedByUser && myId != null;
+        if (isOwnedByUser && canEdit) {
+          // Owned by user: only purchase toggle is relevant
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: () async {
+                await productProvider.togglePurchaseStatus(productId);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: product.isPurchased
+                    ? (semantics?.warning ?? theme.colorScheme.secondary)
+                    : (semantics?.success ?? theme.colorScheme.tertiary),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: Text(
+                product.isPurchased
+                    ? 'Alınmadı Olarak İşaretle'
+                    : 'Alındı Olarak İşaretle',
+                style: TextStyle(fontSize: 16, color: theme.colorScheme.onPrimary),
+              ),
+            ),
+          );
+        }
+        if (!isOwnedByUser && canEdit && canClone) {
+          // Not owned, but user can edit the shared trousseau: show both actions
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await productProvider.togglePurchaseStatus(productId);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: product.isPurchased
+                          ? (semantics?.warning ?? theme.colorScheme.secondary)
+                          : (semantics?.success ?? theme.colorScheme.tertiary),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      product.isPurchased
+                          ? 'Alınmadı Olarak İşaretle'
+                          : 'Alındı Olarak İşaretle',
+                      style: TextStyle(fontSize: 16, color: theme.colorScheme.onPrimary),
+                    ),
                   ),
-                ],
-              ),
-              child: ElevatedButton(
-                onPressed: () async {
-                  await productProvider.togglePurchaseStatus(productId);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: product.isPurchased
-                      ? (semantics?.warning ?? theme.colorScheme.secondary)
-                      : (semantics?.success ?? theme.colorScheme.tertiary),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: Text(
-                  product.isPurchased
-                      ? 'Alınmadı Olarak İşaretle'
-                      : 'Alındı Olarak İşaretle',
-                  style: TextStyle(fontSize: 16, color: theme.colorScheme.onPrimary),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final ok = await productProvider.cloneProductToTrousseau(
+                        targetTrousseauId: myId,
+                        source: product,
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(ok
+                                ? 'Ürün çeyizinize eklendi'
+                                : 'Ürün eklenemedi: ${productProvider.errorMessage}'),
+                            backgroundColor: ok
+                                ? (semantics?.success ?? theme.colorScheme.tertiary)
+                                : theme.colorScheme.error,
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.content_copy),
+                    label: const Text('Kendi Çeyizime Ekle'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
                 ),
+              ],
+            ),
+          );
+        }
+        if (canClone) {
+          // Not owned and cannot edit: only cloning is available
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                final ok = await productProvider.cloneProductToTrousseau(
+                  targetTrousseauId: myId,
+                  source: product,
+                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(ok
+                          ? 'Ürün çeyizinize eklendi'
+                          : 'Ürün eklenemedi: ${productProvider.errorMessage}'),
+                      backgroundColor: ok
+                          ? (semantics?.success ?? theme.colorScheme.tertiary)
+                          : theme.colorScheme.error,
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.content_copy),
+              label: const Text('Kendi Çeyizime Ekle'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-            )
-          : null,
+            ),
+          );
+        }
+        return null;
+      }(),
     );
   }
 }

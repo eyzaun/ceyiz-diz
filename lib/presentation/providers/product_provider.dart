@@ -155,7 +155,9 @@ class ProductProvider extends ChangeNotifier {
   }
   
   void setSearchQuery(String query) {
-    _searchQuery = query;
+    final normalized = query.trim();
+    if (normalized == _searchQuery) return; // avoid redundant rebuilds
+    _searchQuery = normalized;
     _applyFilters();
     notifyListeners();
   }
@@ -391,6 +393,70 @@ class ProductProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _errorMessage = 'Ürün silinemedi: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Clone an existing product into the specified target trousseau as a new
+  /// independent object. Resets ownership-sensitive fields to avoid
+  /// cross-trousseau coupling (new id, addedBy=current user, not purchased).
+  Future<bool> cloneProductToTrousseau({
+    required String targetTrousseauId,
+    required ProductModel source,
+  }) async {
+    if (_authProvider?.currentUser == null) return false;
+    try {
+      _errorMessage = '';
+      // Ensure auth state is ready before any storage interactions
+      try { await fb_auth.FirebaseAuth.instance.authStateChanges().firstWhere((u) => u != null); } catch (_) {}
+      try {
+        await fb_auth.FirebaseAuth.instance.currentUser?.getIdToken(true);
+        await Future.delayed(const Duration(milliseconds: 200));
+      } catch (_) {}
+
+      final newId = _uuid.v4();
+      final now = DateTime.now();
+      final currentUid = _authProvider!.currentUser!.uid;
+
+      // We copy metadata and references; images remain referenced by URL.
+      // If deeper isolation is required, implement re-upload of images to the
+      // current user's bucket path in a later enhancement.
+      final cloned = ProductModel(
+        id: newId,
+        trousseauId: targetTrousseauId,
+        name: source.name,
+        description: source.description,
+        price: source.price,
+        category: source.category,
+        images: List<String>.from(source.images),
+        link: source.link,
+        isPurchased: false,
+        purchaseDate: null,
+        purchasedBy: '',
+        quantity: source.quantity,
+        notes: source.notes,
+        addedBy: currentUid,
+        createdAt: now,
+        updatedAt: now,
+        customFields: Map<String, dynamic>.from(source.customFields),
+      );
+
+      await _firestore.collection('products').doc(newId).set(cloned.toFirestore());
+
+      // Update stats for the target trousseau
+      await _updateTrousseauStats(targetTrousseauId);
+
+      // If we're currently listening to the target trousseau, optimistic insert
+      if (_listeningTrousseauId == targetTrousseauId && _productsSub != null) {
+        _products.insert(0, cloned);
+        _applyFilters();
+        notifyListeners();
+      }
+
+      return true;
+    } catch (e) {
+      _errorMessage = 'Ürün kopyalanamadı: ${e.toString()}';
       notifyListeners();
       return false;
     }

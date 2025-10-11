@@ -1,12 +1,13 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../../data/models/category_model.dart';
 import '../../data/repositories/category_repository.dart';
 
 class CategoryProvider with ChangeNotifier {
 	final CategoryRepository _repo = CategoryRepository();
 
-	String? _trousseauId;
+		String? _trousseauId;
+		String? _userId;
 	StreamSubscription? _sub;
 	bool _loading = false;
 	String _error = '';
@@ -31,14 +32,15 @@ class CategoryProvider with ChangeNotifier {
 
 	Set<String> get selectedCategories => Set.unmodifiable(_selected);
 
-	Future<void> bind(String trousseauId) async {
-		if (_trousseauId == trousseauId) return;
+		Future<void> bind(String trousseauId, {required String userId}) async {
+			if (_trousseauId == trousseauId && _userId == userId) return;
 		await _sub?.cancel();
 		_trousseauId = trousseauId;
+			_userId = userId;
 		_loading = true;
 		_error = '';
 		notifyListeners();
-		_sub = _repo.streamCategories(trousseauId).listen((cats) {
+			_sub = _repo.streamCategories(trousseauId, userId).listen((cats) {
 			_custom = cats;
 			_loading = false;
 			// Remove selections that no longer exist
@@ -55,6 +57,7 @@ class CategoryProvider with ChangeNotifier {
 		await _sub?.cancel();
 		_sub = null;
 		_trousseauId = null;
+		_userId = null;
 		_custom = [];
 		_selected.clear();
 		notifyListeners();
@@ -81,14 +84,18 @@ class CategoryProvider with ChangeNotifier {
 		);
 	}
 
-	Future<bool> addCustom(String id, String name, {int sortOrder = 1000}) async {
-		if (_trousseauId == null) return false;
+			Future<bool> addCustom(String id, String name, {int sortOrder = 1000, IconData? icon, Color? color}) async {
+			if (_trousseauId == null || _userId == null) return false;
 		try {
-			await _repo.addCategory(
-				_trousseauId!,
-				id: id,
+				final scopedId = '${_userId!}__$id';
+				await _repo.addCategory(
+					_trousseauId!,
+					id: scopedId,
 				name: name,
 				sortOrder: sortOrder,
+					createdBy: _userId!,
+						iconCode: icon?.codePoint,
+						colorValue: color?.toARGB32(),
 			);
 			return true;
 		} catch (e) {
@@ -99,9 +106,10 @@ class CategoryProvider with ChangeNotifier {
 	}
 
 	Future<bool> removeCustom(String id) async {
-		if (_trousseauId == null) return false;
+			if (_trousseauId == null || _userId == null) return false;
 		try {
-			await _repo.removeCategory(_trousseauId!, id);
+				final scopedId = id.contains('__') ? id : '${_userId!}__$id';
+				await _repo.removeCategory(_trousseauId!, scopedId);
 			return true;
 		} catch (e) {
 			_error = e.toString();
@@ -111,9 +119,10 @@ class CategoryProvider with ChangeNotifier {
 	}
 
 	Future<bool> renameCustom(String id, String newName) async {
-		if (_trousseauId == null) return false;
+			if (_trousseauId == null || _userId == null) return false;
 		try {
-			await _repo.renameCategory(_trousseauId!, id, newName);
+				final scopedId = id.contains('__') ? id : '${_userId!}__$id';
+				await _repo.renameCategory(_trousseauId!, scopedId, newName);
 			return true;
 		} catch (e) {
 			_error = e.toString();

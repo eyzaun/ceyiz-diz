@@ -18,6 +18,7 @@ import '../screens/settings/settings_screen.dart';
 import '../screens/settings/profile_screen.dart';
 import '../screens/settings/theme_settings_screen.dart';
 import '../screens/settings/change_password_screen.dart';
+import '../screens/settings/feedback_screen.dart';
 import '../screens/trousseau/shared_trousseau_list_screen.dart';
 
 class AppRouter {
@@ -138,6 +139,10 @@ class AppRouter {
               GoRoute(
                 path: 'change-password',
                 builder: (context, state) => const ChangePasswordScreen(),
+              ),
+              GoRoute(
+                path: 'feedback',
+                builder: (context, state) => const FeedbackScreen(),
               ),
             ],
           ),

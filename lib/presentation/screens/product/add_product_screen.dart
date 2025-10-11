@@ -6,6 +6,8 @@ import '../../providers/product_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
 import '../../widgets/common/image_picker_widget.dart';
 import '../../providers/category_provider.dart';
+import '../../providers/trousseau_provider.dart';
+import '../../widgets/common/icon_color_picker.dart';
 
 class AddProductScreen extends StatefulWidget {
   final String trousseauId;
@@ -93,8 +95,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
     if (categoryProvider.currentTrousseauId != widget.trousseauId) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
+          final trProv = Provider.of<TrousseauProvider>(context, listen: false);
           Provider.of<CategoryProvider>(context, listen: false)
-              .bind(widget.trousseauId);
+              .bind(widget.trousseauId, userId: trProv.currentUserId ?? '');
         }
       });
     }
@@ -289,48 +292,83 @@ class _AddProductScreenState extends State<AddProductScreen> {
   Future<void> _promptAddQuickCategory(BuildContext context, CategoryProvider provider) async {
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    IconData selIcon = Icons.category;
+    Color selColor = const Color(0xFF607D8B);
     final result = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Yeni Kategori'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            decoration: const InputDecoration(hintText: 'Kategori adı'),
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Ad gerekli';
-              if (provider.allCategories.any((c) => c.displayName.toLowerCase() == v.trim().toLowerCase())) {
-                return 'Bu ad kullanılıyor';
-              }
-              return null;
-            },
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocalState) => AlertDialog(
+          title: const Text('Yeni Kategori'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: controller,
+                  decoration: const InputDecoration(hintText: 'Kategori adı'),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Ad gerekli';
+                    if (provider.allCategories.any((c) => c.displayName.toLowerCase() == v.trim().toLowerCase())) {
+                      return 'Bu ad kullanılıyor';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    CircleAvatar(backgroundColor: selColor.withValues(alpha: 0.15), child: Icon(selIcon, color: selColor)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.palette_outlined),
+                        label: const Text('Sembol ve Renk Seç'),
+                        onPressed: () async {
+                          final res = await IconColorPicker.pick(context, icon: selIcon, color: selColor);
+                          if (res != null) {
+                            setLocalState(() { selIcon = res.icon; selColor = res.color; });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Vazgeç')),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                final name = controller.text.trim();
+                String id = name
+                    .toLowerCase()
+                    .replaceAll(RegExp(r'[^a-z0-9ğüşöçı\s-]', caseSensitive: false), '')
+                    .replaceAll(RegExp(r'\s+'), '-');
+                if (id.isEmpty) id = 'kategori';
+                var base = id;
+                int i = 1;
+                while (provider.allCategories.any((c) => c.displayName.toLowerCase() == id.toLowerCase())) {
+                  id = '$base-$i';
+                  i++;
+                }
+                final ok = await provider.addCustom(id, name, icon: selIcon, color: selColor);
+                if (!ctx.mounted) return;
+                if (ok) {
+                  // Find the stored category (scoped id) by displayName
+                  final created = provider.allCategories.firstWhere(
+                    (c) => c.displayName.toLowerCase() == name.toLowerCase(),
+                    orElse: () => provider.getById('other'),
+                  );
+                  Navigator.pop(ctx, created.id);
+                }
+              },
+              child: const Text('Ekle'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Vazgeç')),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              final name = controller.text.trim();
-              String id = name
-                  .toLowerCase()
-                  .replaceAll(RegExp(r'[^a-z0-9ğüşöçı\s-]', caseSensitive: false), '')
-                  .replaceAll(RegExp(r'\s+'), '-');
-              if (id.isEmpty) id = 'kategori';
-              var base = id;
-              int i = 1;
-              while (provider.allCategories.any((c) => c.id == id)) {
-                id = '$base-$i';
-                i++;
-              }
-              final ok = await provider.addCustom(id, name);
-              if (!ctx.mounted) return;
-              if (ok) Navigator.pop(ctx, id);
-            },
-            child: const Text('Ekle'),
-          ),
-        ],
       ),
     );
     if (result != null) {
