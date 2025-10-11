@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../providers/product_provider.dart';
@@ -25,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // After first frame, ensure home tab binds to the user's own trousseau products
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _ensureHomeTrousseauBound();
+      _checkForUpdate();
     });
   }
 
@@ -178,6 +180,44 @@ class _HomeScreenState extends State<HomeScreen> {
                 await authProvider.signOut();
               }
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _checkForUpdate() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.updateAvailable) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showUpdateDialog();
+      });
+    }
+  }
+
+  void _showUpdateDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Güncelleme Mevcut'),
+        content: const Text(
+          'Uygulamanın yeni bir sürümü mevcut. Daha iyi deneyim için lütfen güncelleyin.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Daha Sonra'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              const url = 'https://play.google.com/store/apps/details?id=com.Loncagames.ceyizdiz';
+              if (await canLaunchUrl(Uri.parse(url))) {
+                await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+              }
+              Navigator.of(context).pop();
+            },
+            child: const Text('Güncelle'),
           ),
         ],
       ),

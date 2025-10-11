@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../data/models/user_model.dart';
 
 enum AuthStatus {
@@ -19,6 +20,8 @@ class AuthProvider extends ChangeNotifier {
   UserModel? _currentUser;
   AuthStatus _status = AuthStatus.uninitialized;
   String _errorMessage = '';
+  bool _updateAvailable = false;
+  String _latestVersion = '';
   
   AuthProvider() {
     _init();
@@ -28,6 +31,8 @@ class AuthProvider extends ChangeNotifier {
   UserModel? get currentUser => _currentUser;
   AuthStatus get status => _status;
   String get errorMessage => _errorMessage;
+  bool get updateAvailable => _updateAvailable;
+  String get latestVersion => _latestVersion;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   
   void _init() async {
@@ -63,6 +68,7 @@ class AuthProvider extends ChangeNotifier {
         // Ensure a single trousseau exists for this user
         await _ensureSingleTrousseau(_currentUser!);
         await _updateLastLogin();
+        await _checkForUpdates();
       } else {
         await _createUserDocument();
       }
@@ -474,8 +480,29 @@ class AuthProvider extends ChangeNotifier {
     }
   }
   
-  void clearError() {
-    _errorMessage = '';
-    notifyListeners();
+  Future<void> _checkForUpdates() async {
+    if (kIsWeb) return; // Skip on web
+    
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentBuildNumber = int.parse(packageInfo.buildNumber);
+
+      // Get latest version from Firestore
+      final doc = await _firestore.collection('app_versions').doc('latest').get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        final latestVersion = data['version'] as String;
+        final latestBuildNumber = data['buildNumber'] as int;
+
+        if (latestBuildNumber > currentBuildNumber) {
+          _updateAvailable = true;
+          _latestVersion = latestVersion;
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      // Silently fail, don't show error for update check
+      debugPrint('Update check failed: $e');
+    }
   }
 }
