@@ -196,17 +196,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showUpdateDialog() {
+    if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Güncelleme Mevcut'),
         content: const Text(
           'Uygulamanın yeni bir sürümü mevcut. Daha iyi deneyim için lütfen güncelleyin.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Daha Sonra'),
           ),
           ElevatedButton(
@@ -215,7 +216,9 @@ class _HomeScreenState extends State<HomeScreen> {
               if (await canLaunchUrl(Uri.parse(url))) {
                 await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
               }
-              Navigator.of(context).pop();
+              if (dialogContext.mounted) {
+                Navigator.of(dialogContext).pop();
+              }
             },
             child: const Text('Güncelle'),
           ),
