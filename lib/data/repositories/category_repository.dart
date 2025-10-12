@@ -53,4 +53,33 @@ class CategoryRepository {
       'displayName': newName,
     }, SetOptions(merge: true));
   }
+
+  Future<void> updateCategory(String trousseauId, String id, {
+    String? name,
+    int? iconCode,
+    int? colorValue,
+  }) async {
+    final updates = <String, dynamic>{};
+    if (name != null) {
+      updates['name'] = name;
+      updates['displayName'] = name;
+    }
+    if (iconCode != null) {
+      updates['iconCode'] = iconCode;
+      // Try to find iconKey for the codePoint
+      String? iconKey;
+      for (final entry in kCategoryIcons.entries) {
+        if (entry.value.codePoint == iconCode) {
+          iconKey = entry.key;
+          break;
+        }
+      }
+      if (iconKey != null) updates['iconKey'] = iconKey;
+    }
+    if (colorValue != null) updates['colorValue'] = colorValue;
+    
+    if (updates.isNotEmpty) {
+      await _col(trousseauId).doc(id).update(updates);
+    }
+  }
 }

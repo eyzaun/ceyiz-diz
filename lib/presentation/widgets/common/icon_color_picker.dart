@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../data/models/category_model.dart';
 
 class IconColorResult {
   final IconData icon;
@@ -31,22 +32,8 @@ class _IconColorPickerState extends State<IconColorPicker> {
   late IconData _icon;
   late Color _color;
 
-  static const _iconChoices = <IconData>[
-    Icons.category,
-    Icons.kitchen,
-    Icons.weekend,
-    Icons.bathtub,
-    Icons.bed,
-    Icons.checkroom,
-    Icons.chair_alt,
-    Icons.blender,
-    Icons.coffee_maker,
-    Icons.lightbulb,
-    Icons.tv,
-    Icons.cleaning_services,
-    Icons.soup_kitchen,
-    Icons.iron,
-  ];
+  // Use the full icon catalog from category_model
+  static final _iconChoices = kCategoryIcons.values.toList();
 
   static const _colorChoices = <Color>[
     Color(0xFF6B4EFF),
@@ -59,6 +46,12 @@ class _IconColorPickerState extends State<IconColorPicker> {
     Color(0xFF4CAF50),
     Color(0xFFE91E63),
     Color(0xFF3F51B5),
+    Color(0xFFF44336),
+    Color(0xFF673AB7),
+    Color(0xFF009688),
+    Color(0xFFFFEB3B),
+    Color(0xFF795548),
+    Color(0xFF9E9E9E),
   ];
 
   @override
@@ -89,13 +82,17 @@ class _IconColorPickerState extends State<IconColorPicker> {
           Text('Sembol', style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
           SizedBox(
-            height: 120,
+            height: 320,
             child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7, mainAxisSpacing: 8, crossAxisSpacing: 8),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 8,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+              ),
               itemCount: _iconChoices.length,
               itemBuilder: (context, i) {
                 final ic = _iconChoices[i];
-                final selected = ic == _icon;
+                final selected = ic.codePoint == _icon.codePoint;
                 return InkWell(
                   onTap: () => setState(() => _icon = ic),
                   borderRadius: BorderRadius.circular(12),
@@ -104,7 +101,7 @@ class _IconColorPickerState extends State<IconColorPicker> {
                       border: Border.all(color: selected ? Theme.of(context).colorScheme.primary : Colors.transparent, width: 2),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Center(child: Icon(ic, color: selected ? Theme.of(context).colorScheme.primary : null)),
+                    child: Center(child: Icon(ic, size: 20, color: selected ? Theme.of(context).colorScheme.primary : null)),
                   ),
                 );
               },

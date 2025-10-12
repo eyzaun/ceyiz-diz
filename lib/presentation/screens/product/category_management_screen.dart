@@ -61,7 +61,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                       context,
                       c.displayName,
                       c,
-                      canEdit: false,
+                      canEdit: canEdit,
                     )),
                 const SizedBox(height: 12),
                 Padding(
@@ -100,15 +100,15 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
         ),
         title: Text(title),
         subtitle: Text(c.isCustom ? 'Özel' : 'Varsayılan'),
-        trailing: canEdit && c.isCustom
+        trailing: canEdit
             ? Wrap(
                 spacing: 4,
                 children: [
                   IconButton(
-                    tooltip: 'Yeniden Adlandır',
+                    tooltip: 'Düzenle',
                     icon: const Icon(Icons.edit),
                     onPressed: () async {
-                      await _promptRename(context, c.id, title);
+                      await _promptEdit(context, c);
                     },
                   ),
                   IconButton(
@@ -202,38 +202,88 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
     if (ok == true && mounted) setState(() {});
   }
 
-  Future<void> _promptRename(BuildContext context, String id, String current) async {
-    final controller = TextEditingController(text: current);
+  Future<void> _promptEdit(BuildContext context, dynamic category) async {
+    final controller = TextEditingController(text: category.displayName);
     final formKey = GlobalKey<FormState>();
     final provider = context.read<CategoryProvider>();
+    IconData selIcon = category.icon;
+    Color selColor = category.color;
+    
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Kategori Yeniden Adlandır'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            decoration: const InputDecoration(hintText: 'Yeni ad'),
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Ad gerekli';
-              return null;
-            },
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocalState) => AlertDialog(
+          title: const Text('Kategoriyi Düzenle'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: controller,
+                  decoration: const InputDecoration(
+                    labelText: 'Kategori Adı',
+                    hintText: 'Kategori adını girin',
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Ad gerekli';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: selColor.withValues(alpha: 0.15),
+                      child: Icon(selIcon, color: selColor),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.palette_outlined),
+                        label: const Text('Sembol ve Renk Değiştir'),
+                        onPressed: () async {
+                          final res = await IconColorPicker.pick(
+                            context,
+                            icon: selIcon,
+                            color: selColor,
+                          );
+                          if (res != null) {
+                            setLocalState(() {
+                              selIcon = res.icon;
+                              selColor = res.color;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Vazgeç'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                final name = controller.text.trim();
+                final res = await provider.updateCustom(
+                  category.id,
+                  name: name,
+                  icon: selIcon,
+                  color: selColor,
+                );
+                if (!ctx.mounted) return;
+                Navigator.pop(ctx, res);
+              },
+              child: const Text('Kaydet'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              final name = controller.text.trim();
-              final res = await provider.renameCustom(id, name);
-              if (!ctx.mounted) return;
-              Navigator.pop(ctx, res);
-            },
-            child: const Text('Kaydet'),
-          ),
-        ],
       ),
     );
     if (ok == true && mounted) setState(() {});

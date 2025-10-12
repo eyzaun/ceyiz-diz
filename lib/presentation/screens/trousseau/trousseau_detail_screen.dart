@@ -85,6 +85,12 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
             actions: [
               if (trousseau.canEdit(trousseauProvider.currentUserId ?? ''))
                 IconButton(
+                  icon: const Icon(Icons.category_outlined),
+                  tooltip: 'Kategorileri Yönet',
+                  onPressed: () => context.push('/trousseau/${widget.trousseauId}/products/categories'),
+                ),
+              if (trousseau.canEdit(trousseauProvider.currentUserId ?? ''))
+                IconButton(
                   icon: const Icon(Icons.edit),
                   onPressed: () => context.push('/trousseau/${widget.trousseauId}/edit'),
                 ),

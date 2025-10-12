@@ -21,11 +21,45 @@ class CategoryProvider with ChangeNotifier {
 	bool get isLoading => _loading;
 	String get errorMessage => _error;
 	String? get currentTrousseauId => _trousseauId;
-	List<CategoryModel> get customCategories => List.unmodifiable(_custom);
-	List<CategoryModel> get defaultCategories => CategoryModel.defaultCategories;
+	List<CategoryModel> get customCategories => List.unmodifiable(_custom.where((c) => !c.displayName.startsWith('___DELETED___')));
+	List<CategoryModel> get defaultCategories {
+		// Filter out deleted defaults
+		final deletedDefaultIds = _custom
+			.where((c) => c.displayName.startsWith('___DELETED___'))
+			.map((c) => c.id.split('__').last)
+			.toSet();
+		return CategoryModel.defaultCategories
+			.where((c) => !deletedDefaultIds.contains(c.id))
+			.toList();
+	}
 
 	List<CategoryModel> get allCategories {
-		final combined = [...CategoryModel.defaultCategories, ..._custom];
+		// Get non-deleted customs
+		final activeCustoms = _custom.where((c) => !c.displayName.startsWith('___DELETED___')).toList();
+		
+		// Get deleted default IDs
+		final deletedDefaultIds = _custom
+			.where((c) => c.displayName.startsWith('___DELETED___'))
+			.map((c) => c.id.split('__').last)
+			.toSet();
+		
+		// Filter defaults
+		final activeDefaults = CategoryModel.defaultCategories
+			.where((c) => !deletedDefaultIds.contains(c.id))
+			.toList();
+		
+		// Get customized defaults (those that have custom versions but not deleted)
+		final customizedDefaultIds = activeCustoms
+			.where((c) => c.id.contains('__'))
+			.map((c) => c.id.split('__').last)
+			.toSet();
+		
+		// Remove defaults that have been customized
+		final finalDefaults = activeDefaults
+			.where((c) => !customizedDefaultIds.contains(c.id))
+			.toList();
+		
+		final combined = [...finalDefaults, ...activeCustoms];
 		combined.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 		return combined;
 	}
@@ -108,8 +142,81 @@ class CategoryProvider with ChangeNotifier {
 	Future<bool> removeCustom(String id) async {
 			if (_trousseauId == null || _userId == null) return false;
 		try {
-				final scopedId = id.contains('__') ? id : '${_userId!}__$id';
+			// Check if this is a default category
+			final isDefault = CategoryModel.defaultCategories.any((c) => c.id == id);
+			String scopedId;
+			
+			if (isDefault) {
+				// For default categories, create a hidden custom version with special marker
+				scopedId = '${_userId!}__$id';
+				final existingCustom = _custom.any((c) => c.id == scopedId);
+				if (!existingCustom) {
+					// Add as hidden custom category
+					final defaultCat = CategoryModel.defaultCategories.firstWhere((c) => c.id == id);
+					await _repo.addCategory(
+						_trousseauId!,
+						id: scopedId,
+						name: '___DELETED___${defaultCat.displayName}',
+						sortOrder: 9999,
+						createdBy: _userId!,
+						iconCode: defaultCat.icon.codePoint,
+						colorValue: defaultCat.color.toARGB32(),
+					);
+					return true;
+				} else {
+					// Already customized, just delete it
+					await _repo.removeCategory(_trousseauId!, scopedId);
+					return true;
+				}
+			} else {
+				scopedId = id.contains('__') ? id : '${_userId!}__$id';
 				await _repo.removeCategory(_trousseauId!, scopedId);
+			}
+			return true;
+		} catch (e) {
+			_error = e.toString();
+			notifyListeners();
+			return false;
+		}
+	}
+
+	Future<bool> updateCustom(String id, {String? name, IconData? icon, Color? color}) async {
+		if (_trousseauId == null || _userId == null) return false;
+		try {
+			// Check if this is a default category being customized for the first time
+			final isDefault = CategoryModel.defaultCategories.any((c) => c.id == id);
+			String scopedId;
+			
+			if (isDefault) {
+				// For default categories, create a scoped custom version
+				scopedId = '${_userId!}__$id';
+				// Check if custom version already exists
+				final existingCustom = _custom.any((c) => c.id == scopedId);
+				if (!existingCustom) {
+					// Add as new custom category
+					final defaultCat = CategoryModel.defaultCategories.firstWhere((c) => c.id == id);
+					await _repo.addCategory(
+						_trousseauId!,
+						id: scopedId,
+						name: name ?? defaultCat.displayName,
+						sortOrder: defaultCat.sortOrder,
+						createdBy: _userId!,
+						iconCode: icon?.codePoint ?? defaultCat.icon.codePoint,
+						colorValue: color?.toARGB32() ?? defaultCat.color.toARGB32(),
+					);
+					return true;
+				}
+			} else {
+				scopedId = id.contains('__') ? id : '${_userId!}__$id';
+			}
+			
+			await _repo.updateCategory(
+				_trousseauId!,
+				scopedId,
+				name: name,
+				iconCode: icon?.codePoint,
+				colorValue: color?.toARGB32(),
+			);
 			return true;
 		} catch (e) {
 			_error = e.toString();
