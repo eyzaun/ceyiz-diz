@@ -120,7 +120,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                       final ok = await _confirmDelete(context, title);
                       if (!mounted) return;
                       if (ok) {
-                        await provider.removeCustom(c.id);
+                        await provider.removeCategory(c.id);
                       }
                     },
                   ),
@@ -271,7 +271,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
                 final name = controller.text.trim();
-                final res = await provider.updateCustom(
+                final res = await provider.updateCategory(
                   category.id,
                   name: name,
                   icon: selIcon,

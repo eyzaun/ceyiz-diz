@@ -7,6 +7,7 @@ import '../screens/auth/register_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/trousseau/trousseau_detail_screen.dart';
+import '../screens/trousseau/create_trousseau_screen.dart';
 import '../screens/trousseau/edit_trousseau_screen.dart';
 import '../screens/trousseau/share_trousseau_screen.dart';
 import '../screens/product/product_list_screen.dart';
@@ -53,7 +54,11 @@ class AppRouter {
         path: '/',
         builder: (context, state) => const HomeScreen(),
         routes: [
-          // Trousseau routes (create disabled: single trousseau per user)
+          // Trousseau routes
+          GoRoute(
+            path: 'create-trousseau',
+            builder: (context, state) => const CreateTrousseauScreen(),
+          ),
           GoRoute(
             path: 'trousseau/:id',
             builder: (context, state) {

@@ -14,8 +14,6 @@ class StatisticsScreen extends StatefulWidget {
 }
 
 class _StatisticsScreenState extends State<StatisticsScreen> {
-  String? _boundTrousseauId;
-
   @override
   void initState() {
     super.initState();
@@ -34,13 +32,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   void _ensureCategoryBinding() {
     final trProv = Provider.of<TrousseauProvider>(context, listen: false);
+    final catProv = Provider.of<CategoryProvider>(context, listen: false);
+    
+    // Don't bind if CategoryProvider is already bound to a valid trousseau
+    // This prevents StatisticsScreen from interfering when user switches between trousseaux
+    if (catProv.currentTrousseauId != null) return;
+    
+    // Only bind if no trousseau is currently bound
     final myId = trProv.myTrousseauId();
     if (myId == null) return;
-    final catProv = Provider.of<CategoryProvider>(context, listen: false);
-    if (_boundTrousseauId != myId || catProv.currentTrousseauId != myId) {
-      _boundTrousseauId = myId;
-      catProv.bind(myId, userId: trProv.currentUserId ?? '');
-    }
+    
+    catProv.bind(myId, userId: trProv.currentUserId ?? '');
   }
 
   @override

@@ -19,6 +19,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  bool _hasShownUpdateDialog = false;
 
   @override
   void initState() {
@@ -26,13 +27,21 @@ class _HomeScreenState extends State<HomeScreen> {
     // After first frame, ensure home tab binds to the user's own trousseau products
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _ensureHomeTrousseauBound();
-      _checkForUpdate();
+      _checkForUpdateOnce();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-  // Keep build light; use values inside sub-widgets
+  // Listen to AuthProvider to catch update flag changes
+    final authProvider = Provider.of<AuthProvider>(context);
+    
+    // If update becomes available and we haven't shown dialog yet, show it
+    if (authProvider.updateAvailable && !_hasShownUpdateDialog && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkForUpdateOnce();
+      });
+    }
     
     return Scaffold(
       body: IndexedStack(
@@ -186,43 +195,170 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _checkForUpdate() {
+  void _checkForUpdateOnce() {
+    if (_hasShownUpdateDialog) return;
+    
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.updateAvailable) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showUpdateDialog();
-      });
+      _hasShownUpdateDialog = true;
+      _showUpdateDialog();
     }
   }
 
   void _showUpdateDialog() {
     if (!mounted) return;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Güncelleme Mevcut'),
-        content: const Text(
-          'Uygulamanın yeni bir sürümü mevcut. Daha iyi deneyim için lütfen güncelleyin.',
+      barrierDismissible: !authProvider.forceUpdate,
+      builder: (dialogContext) => PopScope(
+        canPop: !authProvider.forceUpdate,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.system_update,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  authProvider.forceUpdate 
+                    ? 'Güncelleme Gerekli!' 
+                    : 'Yeni Versiyon Mevcut',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: authProvider.forceUpdate 
+                      ? Theme.of(context).colorScheme.error
+                      : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                authProvider.updateMessage,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.new_releases,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Yeni Versiyon: ${authProvider.latestVersion}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (authProvider.forceUpdate) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.warning_rounded,
+                        color: Theme.of(context).colorScheme.error,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Bu güncelleme zorunludur. Uygulamayı kullanmaya devam etmek için güncellemeniz gerekiyor.',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            if (!authProvider.forceUpdate)
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                child: const Text('Daha Sonra'),
+              ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                const url = 'https://play.google.com/store/apps/details?id=com.Loncagames.ceyizdiz';
+                final uri = Uri.parse(url);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } else {
+                  // Show error if can't open Play Store
+                  if (dialogContext.mounted) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('Play Store açılamadı. Lütfen manuel olarak kontrol edin.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+                if (dialogContext.mounted && !authProvider.forceUpdate) {
+                  Navigator.of(dialogContext).pop();
+                }
+              },
+              icon: const Icon(Icons.download),
+              label: const Text('Şimdi Güncelle'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: authProvider.forceUpdate 
+                  ? Theme.of(context).colorScheme.error
+                  : Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Daha Sonra'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              const url = 'https://play.google.com/store/apps/details?id=com.Loncagames.ceyizdiz';
-              if (await canLaunchUrl(Uri.parse(url))) {
-                await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-              }
-              if (dialogContext.mounted) {
-                Navigator.of(dialogContext).pop();
-              }
-            },
-            child: const Text('Güncelle'),
-          ),
-        ],
       ),
     );
   }

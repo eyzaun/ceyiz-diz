@@ -64,3 +64,14 @@ class AppColors {
   static const Color shadow = Color(0x1A000000);
   static const Color shadowDark = Color(0x40000000);
 }
+
+/// Extension for Color to add helper methods
+extension ColorExtension on Color {
+  /// Converts Color to ARGB32 integer value (compatible with Firestore)
+  int toARGB32() {
+    return (a * 255).round() << 24 |
+           (r * 255).round() << 16 |
+           (g * 255).round() << 8 |
+           (b * 255).round();
+  }
+}

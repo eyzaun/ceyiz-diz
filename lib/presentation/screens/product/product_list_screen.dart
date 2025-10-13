@@ -595,7 +595,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                 onPressed: () async {
                                   final confirmed = await _confirmDeleteCategory(context, category.displayName);
                                   if (confirmed) {
-                                    await categoryProvider.removeCustom(category.id);
+                                    await categoryProvider.removeCategory(category.id);
                                     if (productProvider.selectedCategories.contains(category.id)) {
                                       productProvider.toggleCategory(category.id);
                                     }

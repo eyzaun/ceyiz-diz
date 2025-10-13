@@ -88,6 +88,23 @@ class CategoryModel {
     final sortOrder = (data['sortOrder'] is int)
         ? data['sortOrder'] as int
         : int.tryParse('${data['sortOrder']}') ?? 1000;
+    
+    // BACKWARD COMPATIBILITY: Determine isCustom
+    // 1. If field exists, use it
+    // 2. If ID contains '__', it's old format custom category
+    // 3. If ID is in default list, it's default
+    // 4. Otherwise, it's custom
+    bool isCustom;
+    if (data.containsKey('isCustom') && data['isCustom'] is bool) {
+      isCustom = data['isCustom'] as bool;
+    } else if (id.contains('__')) {
+      // Old format: userId__categoryId
+      isCustom = true;
+    } else {
+      // Check if it's a default category ID
+      isCustom = !defaultCategories.any((c) => c.id == id);
+    }
+    
   // Optional persisted visuals
   final String? iconKey = data['iconKey'] as String?;
   final int? iconCode = data['iconCode'] is int
@@ -103,7 +120,7 @@ class CategoryModel {
     icon: _resolveIcon(iconKey: iconKey, iconCode: iconCode),
       color: colorValue != null ? Color(colorValue) : colorFromString(id),
       sortOrder: sortOrder,
-      isCustom: true,
+      isCustom: isCustom,
     );
   }
 

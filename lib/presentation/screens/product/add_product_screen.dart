@@ -91,6 +91,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
   Widget build(BuildContext context) {
   // final theme = Theme.of(context);
     final categoryProvider = Provider.of<CategoryProvider>(context);
+    
+    // Ensure selected category exists in current categories
+    if (categoryProvider.allCategories.isNotEmpty &&
+        !categoryProvider.allCategories.any((c) => c.id == _selectedCategory)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _selectedCategory = categoryProvider.allCategories.first.id;
+          });
+        }
+      });
+    }
+    
     // Ensure bound (idempotent)
     if (categoryProvider.currentTrousseauId != widget.trousseauId) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

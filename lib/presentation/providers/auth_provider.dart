@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../data/models/user_model.dart';
+import '../../data/repositories/category_repository.dart';
 
 enum AuthStatus {
   uninitialized,
@@ -15,6 +16,7 @@ enum AuthStatus {
 class AuthProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final CategoryRepository _categoryRepo = CategoryRepository();
   
   User? _firebaseUser;
   UserModel? _currentUser;
@@ -22,6 +24,8 @@ class AuthProvider extends ChangeNotifier {
   String _errorMessage = '';
   bool _updateAvailable = false;
   String _latestVersion = '';
+  bool _forceUpdate = false;
+  String _updateMessage = 'Uygulamanın yeni bir sürümü mevcut. Daha iyi deneyim için lütfen güncelleyin.';
   
   AuthProvider() {
     _init();
@@ -33,15 +37,19 @@ class AuthProvider extends ChangeNotifier {
   String get errorMessage => _errorMessage;
   bool get updateAvailable => _updateAvailable;
   String get latestVersion => _latestVersion;
+  bool get forceUpdate => _forceUpdate;
+  String get updateMessage => _updateMessage;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   
-  void _init() async {
+  void _init() {
     // Ensure web persistence is LOCAL so auth survives reloads and headers attach
     if (kIsWeb) {
-      try {
-        await _auth.setPersistence(Persistence.LOCAL);
-      } catch (_) {}
+      _auth.setPersistence(Persistence.LOCAL).catchError((_) {});
     }
+    
+    // Check for updates immediately on init (fire and forget)
+    _checkForUpdates();
+    
     _auth.authStateChanges().listen((User? user) async {
       if (user == null) {
         _status = AuthStatus.unauthenticated;
@@ -148,6 +156,10 @@ class AuthProvider extends ChangeNotifier {
         'coverImage': '',
         'settings': <String, dynamic>{},
       });
+      
+      // Initialize default categories for this trousseau
+      await _categoryRepo.initializeDefaultCategories(trousseauRef.id);
+      
       await _firestore.collection('users').doc(user.uid).update({
         'trousseauIds': FieldValue.arrayUnion([trousseauRef.id]),
       });
@@ -493,11 +505,17 @@ class AuthProvider extends ChangeNotifier {
         final data = doc.data()!;
         final latestVersion = data['version'] as String;
         final latestBuildNumber = data['buildNumber'] as int;
+        final forceUpdate = data['forceUpdate'] as bool? ?? false;
+        final updateMessage = data['updateMessage'] as String? ?? 
+          'Uygulamanın yeni bir sürümü mevcut. Daha iyi deneyim için lütfen güncelleyin.';
 
         if (latestBuildNumber > currentBuildNumber) {
           _updateAvailable = true;
           _latestVersion = latestVersion;
+          _forceUpdate = forceUpdate;
+          _updateMessage = updateMessage;
           notifyListeners();
+          debugPrint('Update available: $latestVersion (build $latestBuildNumber)');
         }
       }
     } catch (e) {

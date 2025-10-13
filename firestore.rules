@@ -58,5 +58,17 @@ service cloud.firestore {
     match /products/{productId} {
       allow read, write: if isAuthed();
     }
+
+    // App Versions - Public read for version checking
+    match /app_versions/{versionId} {
+      allow read: if true; // Everyone can check for updates
+      allow write: if false; // Only admin/console can update
+    }
+
+    // Feedback - Users can submit feedback
+    match /feedback/{feedbackId} {
+      allow create: if isAuthed();
+      allow read, update, delete: if false; // Only admin can read
+    }
   }
 }

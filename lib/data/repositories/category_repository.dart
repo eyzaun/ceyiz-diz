@@ -10,37 +10,35 @@ class CategoryRepository {
         .collection('categories');
   }
 
-  Stream<List<CategoryModel>> streamCategories(String trousseauId, String userId) {
-    // Filter to only categories created by the current user; sort client-side
+  Stream<List<CategoryModel>> streamCategories(String trousseauId) {
+    // Get all categories for this trousseau (no user filtering needed)
     return _col(trousseauId)
-        .where('createdBy', isEqualTo: userId)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => CategoryModel.fromMap(d.data(), d.id))
-            .toList());
+            .toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)));
   }
 
   Future<void> addCategory(String trousseauId, {
     required String id,
     required String name,
-    String? displayName,
+    required String displayName,
     int sortOrder = 1000,
-    required String createdBy,
     int? iconCode,
     int? colorValue,
+    bool isCustom = false,
   }) async {
     final data = {
       'name': name,
-      'displayName': displayName ?? name,
+      'displayName': displayName,
       'sortOrder': sortOrder,
       'iconCode': iconCode,
       'colorValue': colorValue ?? CategoryModel.colorFromString(id).toARGB32(),
+      'isCustom': isCustom,
     };
 
-    await _col(trousseauId).doc(id).set({
-      ...data,
-      'createdBy': createdBy,
-    }, SetOptions(merge: true));
+    await _col(trousseauId).doc(id).set(data);
   }
 
   Future<void> removeCategory(String trousseauId, String id) async {
@@ -48,10 +46,10 @@ class CategoryRepository {
   }
 
   Future<void> renameCategory(String trousseauId, String id, String newName) async {
-    await _col(trousseauId).doc(id).set({
+    await _col(trousseauId).doc(id).update({
       'name': newName,
       'displayName': newName,
-    }, SetOptions(merge: true));
+    });
   }
 
   Future<void> updateCategory(String trousseauId, String id, {
@@ -81,5 +79,24 @@ class CategoryRepository {
     if (updates.isNotEmpty) {
       await _col(trousseauId).doc(id).update(updates);
     }
+  }
+  
+  /// Initialize default categories for a new trousseau
+  Future<void> initializeDefaultCategories(String trousseauId) async {
+    final batch = FirebaseService.firestore.batch();
+    
+    for (final category in CategoryModel.defaultCategories) {
+      final docRef = _col(trousseauId).doc(category.id);
+      batch.set(docRef, {
+        'name': category.name,
+        'displayName': category.displayName,
+        'sortOrder': category.sortOrder,
+        'iconCode': category.icon.codePoint,
+        'colorValue': category.color.toARGB32(),
+        'isCustom': false,
+      });
+    }
+    
+    await batch.commit();
   }
 }

@@ -1,0 +1,268 @@
+Date : 2025-10-13 02:52:37
+Directory : e:\web_project2\ceyiz_diz
+Total : 146 files,  13643 codes, 1037 comments, 1601 blanks, all 16281 lines
+
+Languages
++----------------+------------+------------+------------+------------+------------+
+| language       | files      | code       | comment    | blank      | total      |
++----------------+------------+------------+------------+------------+------------+
+| Dart           |         69 |     11,151 |        732 |      1,140 |     13,023 |
+| C++            |         16 |        574 |        135 |        191 |        900 |
+| XML            |         21 |        565 |        106 |         23 |        694 |
+| CMake          |          8 |        469 |          0 |         92 |        561 |
+| JSON           |         10 |        352 |          0 |         10 |        362 |
+| Markdown       |          5 |        237 |          0 |         82 |        319 |
+| HTML           |          2 |         99 |         22 |         10 |        131 |
+| Swift          |          6 |         75 |          7 |         21 |        103 |
+| Firebase Rules |          1 |         57 |          7 |         11 |         75 |
+| YAML           |          4 |         48 |         28 |         17 |         93 |
+| Properties     |          4 |         16 |          0 |          4 |         20 |
++----------------+------------+------------+------------+------------+------------+
+
+Directories
++-------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                  | files      | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                     |        146 |     13,643 |      1,037 |      1,601 |     16,281 |
+| . (Files)                                                                                             |         10 |        372 |         35 |         94 |        501 |
+| .github                                                                                               |          1 |          0 |          0 |          1 |          1 |
+| .github\workflows                                                                                     |          1 |          0 |          0 |          1 |          1 |
+| android                                                                                               |         12 |        129 |         53 |         28 |        210 |
+| android (Files)                                                                                       |          2 |         38 |          0 |         17 |         55 |
+| android\app                                                                                           |          9 |         86 |         53 |         10 |        149 |
+| android\app\src                                                                                       |          9 |         86 |         53 |         10 |        149 |
+| android\app\src\debug                                                                                 |          1 |          3 |          4 |          1 |          8 |
+| android\app\src\main                                                                                  |          7 |         80 |         45 |          8 |        133 |
+| android\app\src\main (Files)                                                                          |          1 |         45 |         13 |          1 |         59 |
+| android\app\src\main\res                                                                              |          6 |         35 |         32 |          7 |         74 |
+| android\app\src\main\res\drawable                                                                     |          1 |          4 |          7 |          2 |         13 |
+| android\app\src\main\res\drawable-v21                                                                 |          1 |          4 |          7 |          2 |         13 |
+| android\app\src\main\res\mipmap-anydpi-v26                                                            |          1 |          5 |          0 |          1 |          6 |
+| android\app\src\main\res\values                                                                       |          2 |         13 |          9 |          1 |         23 |
+| android\app\src\main\res\values-night                                                                 |          1 |          9 |          9 |          1 |         19 |
+| android\app\src\profile                                                                               |          1 |          3 |          4 |          1 |          8 |
+| android\gradle                                                                                        |          1 |          5 |          0 |          1 |          6 |
+| android\gradle\wrapper                                                                                |          1 |          5 |          0 |          1 |          6 |
+| android_backup_20251009                                                                               |         11 |         83 |         51 |         12 |        146 |
+| android_backup_20251009 (Files)                                                                       |          1 |          3 |          0 |          1 |          4 |
+| android_backup_20251009\app                                                                           |          9 |         75 |         51 |         10 |        136 |
+| android_backup_20251009\app\src                                                                       |          9 |         75 |         51 |         10 |        136 |
+| android_backup_20251009\app\src\debug                                                                 |          1 |          3 |          4 |          1 |          8 |
+| android_backup_20251009\app\src\main                                                                  |          7 |         69 |         43 |          8 |        120 |
+| android_backup_20251009\app\src\main (Files)                                                          |          1 |         34 |         11 |          1 |         46 |
+| android_backup_20251009\app\src\main\res                                                              |          6 |         35 |         32 |          7 |         74 |
+| android_backup_20251009\app\src\main\res\drawable                                                     |          1 |          4 |          7 |          2 |         13 |
+| android_backup_20251009\app\src\main\res\drawable-v21                                                 |          1 |          4 |          7 |          2 |         13 |
+| android_backup_20251009\app\src\main\res\mipmap-anydpi-v26                                            |          1 |          5 |          0 |          1 |          6 |
+| android_backup_20251009\app\src\main\res\values                                                       |          2 |         13 |          9 |          1 |         23 |
+| android_backup_20251009\app\src\main\res\values-night                                                 |          1 |          9 |          9 |          1 |         19 |
+| android_backup_20251009\app\src\profile                                                               |          1 |          3 |          4 |          1 |          8 |
+| android_backup_20251009\gradle                                                                        |          1 |          5 |          0 |          1 |          6 |
+| android_backup_20251009\gradle\wrapper                                                                |          1 |          5 |          0 |          1 |          6 |
+| ios                                                                                                   |          8 |        229 |          4 |         13 |        246 |
+| ios\Runner                                                                                            |          7 |        222 |          2 |          9 |        233 |
+| ios\Runner (Files)                                                                                    |          2 |         13 |          0 |          3 |         16 |
+| ios\RunnerTests                                                                                       |          1 |          7 |          2 |          4 |         13 |
+| ios\Runner\Assets.xcassets                                                                            |          3 |        148 |          0 |          4 |        152 |
+| ios\Runner\Assets.xcassets\AppIcon.appiconset                                                         |          1 |        122 |          0 |          1 |        123 |
+| ios\Runner\Assets.xcassets\LaunchImage.imageset                                                       |          2 |         26 |          0 |          3 |         29 |
+| ios\Runner\Base.lproj                                                                                 |          2 |         61 |          2 |          2 |         65 |
+| lib                                                                                                   |         70 |     11,137 |        726 |      1,139 |     13,002 |
+| lib (Files)                                                                                           |          2 |        124 |          1 |         11 |        136 |
+| lib\core                                                                                              |         10 |        980 |         80 |        112 |      1,172 |
+| lib\core\constants                                                                                    |          3 |         73 |         21 |         25 |        119 |
+| lib\core\errors                                                                                       |          1 |         17 |          0 |          7 |         24 |
+| lib\core\localization                                                                                 |          1 |          0 |          0 |          1 |          1 |
+| lib\core\themes                                                                                       |          3 |        844 |         59 |         68 |        971 |
+| lib\core\utils                                                                                        |          2 |         46 |          0 |         11 |         57 |
+| lib\data                                                                                              |         11 |        936 |         41 |        116 |      1,093 |
+| lib\data\models                                                                                       |          4 |        671 |         38 |         56 |        765 |
+| lib\data\repositories                                                                                 |          5 |        230 |          2 |         47 |        279 |
+| lib\data\services                                                                                     |          2 |         35 |          1 |         13 |         49 |
+| lib\l10n                                                                                              |          8 |        465 |        400 |        241 |      1,106 |
+| lib\l10n (Files)                                                                                      |          5 |         64 |         70 |         24 |        158 |
+| lib\l10n\generated                                                                                    |          3 |        401 |        330 |        217 |        948 |
+| lib\presentation                                                                                      |         39 |      8,632 |        204 |        659 |      9,495 |
+| lib\presentation\providers                                                                            |          6 |      1,606 |         82 |        239 |      1,927 |
+| lib\presentation\router                                                                               |          1 |        204 |          3 |          6 |        213 |
+| lib\presentation\screens                                                                              |         20 |      5,892 |         97 |        346 |      6,335 |
+| lib\presentation\screens\auth                                                                         |          3 |        684 |         13 |         58 |        755 |
+| lib\presentation\screens\home                                                                         |          2 |        567 |         11 |         40 |        618 |
+| lib\presentation\screens\product                                                                      |          5 |      2,264 |         34 |         99 |      2,397 |
+| lib\presentation\screens\settings                                                                     |          5 |      1,127 |         22 |         79 |      1,228 |
+| lib\presentation\screens\trousseau                                                                    |          5 |      1,250 |         17 |         70 |      1,337 |
+| lib\presentation\widgets                                                                              |         12 |        930 |         22 |         68 |      1,020 |
+| lib\presentation\widgets\common                                                                       |         12 |        930 |         22 |         68 |      1,020 |
+| linux                                                                                                 |          9 |        343 |         41 |         94 |        478 |
+| linux (Files)                                                                                         |          1 |        104 |          0 |         25 |        129 |
+| linux\flutter                                                                                         |          4 |        115 |          9 |         27 |        151 |
+| linux\runner                                                                                          |          4 |        124 |         32 |         42 |        198 |
+| macos                                                                                                 |          6 |        467 |          5 |         17 |        489 |
+| macos\Flutter                                                                                         |          1 |         26 |          3 |          4 |         33 |
+| macos\Runner                                                                                          |          4 |        434 |          0 |          9 |        443 |
+| macos\Runner (Files)                                                                                  |          2 |         23 |          0 |          7 |         30 |
+| macos\RunnerTests                                                                                     |          1 |          7 |          2 |          4 |         13 |
+| macos\Runner\Assets.xcassets                                                                          |          1 |         68 |          0 |          1 |         69 |
+| macos\Runner\Assets.xcassets\AppIcon.appiconset                                                       |          1 |         68 |          0 |          1 |         69 |
+| macos\Runner\Base.lproj                                                                               |          1 |        343 |          0 |          1 |        344 |
+| public                                                                                                |          1 |         79 |          6 |          5 |         90 |
+| test                                                                                                  |          1 |         14 |          6 |          3 |         23 |
+| web                                                                                                   |          3 |         91 |         16 |          7 |        114 |
+| windows                                                                                               |         14 |        699 |         94 |        188 |        981 |
+| windows (Files)                                                                                       |          1 |         89 |          0 |         20 |        109 |
+| windows\flutter                                                                                       |          4 |        148 |          9 |         29 |        186 |
+| windows\runner                                                                                        |          9 |        462 |         85 |        139 |        686 |
++-------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| filename                                                                                              | language       | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| e:\web_project2\ceyiz_diz\.github\workflows\build-android.yml                                         | YAML           |          0 |          0 |          1 |          1 |
+| e:\web_project2\ceyiz_diz\FIREBASE_VERSION_SETUP_STEPS.md                                             | Markdown       |        117 |          0 |         45 |        162 |
+| e:\web_project2\ceyiz_diz\README.md                                                                   | Markdown       |         50 |          0 |         11 |         61 |
+| e:\web_project2\ceyiz_diz\analysis_options.yaml                                                       | YAML           |          3 |         22 |          4 |         29 |
+| e:\web_project2\ceyiz_diz\android\README-signing.md                                                   | Markdown       |         35 |          0 |         16 |         51 |
+| e:\web_project2\ceyiz_diz\android\app\src\debug\AndroidManifest.xml                                   | XML            |          3 |          4 |          1 |          8 |
+| e:\web_project2\ceyiz_diz\android\app\src\main\AndroidManifest.xml                                    | XML            |         45 |         13 |          1 |         59 |
+| e:\web_project2\ceyiz_diz\android\app\src\main\res\drawable-v21\launch_background.xml                 | XML            |          4 |          7 |          2 |         13 |
+| e:\web_project2\ceyiz_diz\android\app\src\main\res\drawable\launch_background.xml                     | XML            |          4 |          7 |          2 |         13 |
+| e:\web_project2\ceyiz_diz\android\app\src\main\res\mipmap-anydpi-v26\ic_launcher.xml                  | XML            |          5 |          0 |          1 |          6 |
+| e:\web_project2\ceyiz_diz\android\app\src\main\res\values-night\styles.xml                            | XML            |          9 |          9 |          1 |         19 |
+| e:\web_project2\ceyiz_diz\android\app\src\main\res\values\colors.xml                                  | XML            |          4 |          0 |          0 |          4 |
+| e:\web_project2\ceyiz_diz\android\app\src\main\res\values\styles.xml                                  | XML            |          9 |          9 |          1 |         19 |
+| e:\web_project2\ceyiz_diz\android\app\src\profile\AndroidManifest.xml                                 | XML            |          3 |          4 |          1 |          8 |
+| e:\web_project2\ceyiz_diz\android\gradle.properties                                                   | Properties     |          3 |          0 |          1 |          4 |
+| e:\web_project2\ceyiz_diz\android\gradle\wrapper\gradle-wrapper.properties                            | Properties     |          5 |          0 |          1 |          6 |
+| e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\debug\AndroidManifest.xml                   | XML            |          3 |          4 |          1 |          8 |
+| e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\AndroidManifest.xml                    | XML            |         34 |         11 |          1 |         46 |
+| e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\res\drawable-v21\launch_background.xml | XML            |          4 |          7 |          2 |         13 |
+| e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\res\drawable\launch_background.xml     | XML            |          4 |          7 |          2 |         13 |
+| e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\res\mipmap-anydpi-v26\ic_launcher.xml  | XML            |          5 |          0 |          1 |          6 |
+| e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\res\values-night\styles.xml            | XML            |          9 |          9 |          1 |         19 |
+| e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\res\values\colors.xml                  | XML            |          4 |          0 |          0 |          4 |
+| e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\res\values\styles.xml                  | XML            |          9 |          9 |          1 |         19 |
+| e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\profile\AndroidManifest.xml                 | XML            |          3 |          4 |          1 |          8 |
+| e:\web_project2\ceyiz_diz\android_backup_20251009\gradle.properties                                   | Properties     |          3 |          0 |          1 |          4 |
+| e:\web_project2\ceyiz_diz\android_backup_20251009\gradle\wrapper\gradle-wrapper.properties            | Properties     |          5 |          0 |          1 |          6 |
+| e:\web_project2\ceyiz_diz\firebase.json                                                               | JSON           |         31 |          0 |          1 |         32 |
+| e:\web_project2\ceyiz_diz\firestore.indexes.json                                                      | JSON           |         37 |          0 |          1 |         38 |
+| e:\web_project2\ceyiz_diz\firestore.rules                                                             | Firebase Rules |         57 |          7 |         11 |         75 |
+| e:\web_project2\ceyiz_diz\firestore_version_setup.md                                                  | Markdown       |         32 |          0 |          8 |         40 |
+| e:\web_project2\ceyiz_diz\ios\RunnerTests\RunnerTests.swift                                           | Swift          |          7 |          2 |          4 |         13 |
+| e:\web_project2\ceyiz_diz\ios\Runner\AppDelegate.swift                                                | Swift          |         12 |          0 |          2 |         14 |
+| e:\web_project2\ceyiz_diz\ios\Runner\Assets.xcassets\AppIcon.appiconset\Contents.json                 | JSON           |        122 |          0 |          1 |        123 |
+| e:\web_project2\ceyiz_diz\ios\Runner\Assets.xcassets\LaunchImage.imageset\Contents.json               | JSON           |         23 |          0 |          1 |         24 |
+| e:\web_project2\ceyiz_diz\ios\Runner\Assets.xcassets\LaunchImage.imageset\README.md                   | Markdown       |          3 |          0 |          2 |          5 |
+| e:\web_project2\ceyiz_diz\ios\Runner\Base.lproj\LaunchScreen.storyboard                               | XML            |         36 |          1 |          1 |         38 |
+| e:\web_project2\ceyiz_diz\ios\Runner\Base.lproj\Main.storyboard                                       | XML            |         25 |          1 |          1 |         27 |
+| e:\web_project2\ceyiz_diz\ios\Runner\Runner-Bridging-Header.h                                         | C++            |          1 |          0 |          1 |          2 |
+| e:\web_project2\ceyiz_diz\l10n.yaml                                                                   | YAML           |          0 |          0 |          1 |          1 |
+| e:\web_project2\ceyiz_diz\lib\core\constants\app_colors.dart                                          | Dart           |         42 |         12 |         12 |         66 |
+| e:\web_project2\ceyiz_diz\lib\core\constants\app_constants.dart                                       | Dart           |         12 |          5 |          7 |         24 |
+| e:\web_project2\ceyiz_diz\lib\core\constants\app_strings.dart                                         | Dart           |         19 |          4 |          6 |         29 |
+| e:\web_project2\ceyiz_diz\lib\core\errors\exceptions.dart                                             | Dart           |         17 |          0 |          7 |         24 |
+| e:\web_project2\ceyiz_diz\lib\core\localization\locale_provider.dart                                  | Dart           |          0 |          0 |          1 |          1 |
+| e:\web_project2\ceyiz_diz\lib\core\themes\app_theme.dart                                              | Dart           |         29 |          0 |          7 |         36 |
+| e:\web_project2\ceyiz_diz\lib\core\themes\design_system.dart                                          | Dart           |        767 |         56 |         52 |        875 |
+| e:\web_project2\ceyiz_diz\lib\core\themes\theme_provider.dart                                         | Dart           |         48 |          3 |          9 |         60 |
+| e:\web_project2\ceyiz_diz\lib\core\utils\formatters.dart                                              | Dart           |         16 |          0 |          5 |         21 |
+| e:\web_project2\ceyiz_diz\lib\core\utils\validators.dart                                              | Dart           |         30 |          0 |          6 |         36 |
+| e:\web_project2\ceyiz_diz\lib\data\models\category_model.dart                                         | Dart           |        371 |         37 |         37 |        445 |
+| e:\web_project2\ceyiz_diz\lib\data\models\product_model.dart                                          | Dart           |        125 |          0 |          6 |        131 |
+| e:\web_project2\ceyiz_diz\lib\data\models\trousseau_model.dart                                        | Dart           |        114 |          0 |          7 |        121 |
+| e:\web_project2\ceyiz_diz\lib\data\models\user_model.dart                                             | Dart           |         61 |          1 |          6 |         68 |
+| e:\web_project2\ceyiz_diz\lib\data\repositories\auth_repository.dart                                  | Dart           |         42 |          0 |         11 |         53 |
+| e:\web_project2\ceyiz_diz\lib\data\repositories\category_repository.dart                              | Dart           |         75 |          2 |          9 |         86 |
+| e:\web_project2\ceyiz_diz\lib\data\repositories\feedback_repository.dart                              | Dart           |         27 |          0 |          5 |         32 |
+| e:\web_project2\ceyiz_diz\lib\data\repositories\product_repository.dart                               | Dart           |         45 |          0 |         11 |         56 |
+| e:\web_project2\ceyiz_diz\lib\data\repositories\trousseau_repository.dart                             | Dart           |         41 |          0 |         11 |         52 |
+| e:\web_project2\ceyiz_diz\lib\data\services\firebase_service.dart                                     | Dart           |         13 |          0 |          6 |         19 |
+| e:\web_project2\ceyiz_diz\lib\data\services\storage_service.dart                                      | Dart           |         22 |          1 |          7 |         30 |
+| e:\web_project2\ceyiz_diz\lib\firebase_options.dart                                                   | Dart           |         54 |          0 |          3 |         57 |
+| e:\web_project2\ceyiz_diz\lib\l10n\app_en.arb                                                         | JSON           |          0 |          0 |          1 |          1 |
+| e:\web_project2\ceyiz_diz\lib\l10n\app_localizations.dart                                             | Dart           |         54 |         64 |         16 |        134 |
+| e:\web_project2\ceyiz_diz\lib\l10n\app_localizations_en.dart                                          | Dart           |          5 |          3 |          3 |         11 |
+| e:\web_project2\ceyiz_diz\lib\l10n\app_localizations_tr.dart                                          | Dart           |          5 |          3 |          3 |         11 |
+| e:\web_project2\ceyiz_diz\lib\l10n\app_tr.arb                                                         | JSON           |          0 |          0 |          1 |          1 |
+| e:\web_project2\ceyiz_diz\lib\l10n\generated\app_localizations.dart                                   | Dart           |        119 |        324 |         81 |        524 |
+| e:\web_project2\ceyiz_diz\lib\l10n\generated\app_localizations_en.dart                                | Dart           |        141 |          3 |         68 |        212 |
+| e:\web_project2\ceyiz_diz\lib\l10n\generated\app_localizations_tr.dart                                | Dart           |        141 |          3 |         68 |        212 |
+| e:\web_project2\ceyiz_diz\lib\main.dart                                                               | Dart           |         70 |          1 |          8 |         79 |
+| e:\web_project2\ceyiz_diz\lib\presentation\providers\auth_provider.dart                               | Dart           |        444 |         14 |         60 |        518 |
+| e:\web_project2\ceyiz_diz\lib\presentation\providers\category_provider.dart                           | Dart           |        199 |         17 |         25 |        241 |
+| e:\web_project2\ceyiz_diz\lib\presentation\providers\feedback_provider.dart                           | Dart           |         80 |          0 |         11 |         91 |
+| e:\web_project2\ceyiz_diz\lib\presentation\providers\locale_provider.dart                             | Dart           |          0 |          0 |          1 |          1 |
+| e:\web_project2\ceyiz_diz\lib\presentation\providers\product_provider.dart                            | Dart           |        486 |         28 |         74 |        588 |
+| e:\web_project2\ceyiz_diz\lib\presentation\providers\trousseau_provider.dart                          | Dart           |        397 |         23 |         68 |        488 |
+| e:\web_project2\ceyiz_diz\lib\presentation\router\app_router.dart                                     | Dart           |        204 |          3 |          6 |        213 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\auth\forgot_password_screen.dart                   | Dart           |        180 |          0 |         14 |        194 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\auth\login_screen.dart                             | Dart           |        217 |          6 |         19 |        242 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\auth\register_screen.dart                          | Dart           |        287 |          7 |         25 |        319 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\home\home_screen.dart                              | Dart           |        333 |          7 |         16 |        356 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\home\statistics_screen.dart                        | Dart           |        234 |          4 |         24 |        262 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\product\add_product_screen.dart                    | Dart           |        347 |         12 |         21 |        380 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\product\category_management_screen.dart            | Dart           |        309 |          1 |         13 |        323 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\product\edit_product_screen.dart                   | Dart           |        386 |          0 |         23 |        409 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\product\product_detail_screen.dart                 | Dart           |        525 |          8 |         15 |        548 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\product\product_list_screen.dart                   | Dart           |        697 |         13 |         27 |        737 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\settings\change_password_screen.dart               | Dart           |        207 |          4 |         21 |        232 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\settings\feedback_screen.dart                      | Dart           |        106 |          0 |          8 |        114 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\settings\profile_screen.dart                       | Dart           |        200 |          5 |         19 |        224 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\settings\settings_screen.dart                      | Dart           |        381 |          6 |         21 |        408 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\settings\theme_settings_screen.dart                | Dart           |        233 |          7 |         10 |        250 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\trousseau\create_trousseau_screen.dart             | Dart           |        159 |          0 |         11 |        170 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\trousseau\edit_trousseau_screen.dart               | Dart           |        145 |          0 |         13 |        158 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\trousseau\share_trousseau_screen.dart              | Dart           |        240 |          0 |         19 |        259 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\trousseau\shared_trousseau_list_screen.dart        | Dart           |         71 |          0 |          5 |         76 |
+| e:\web_project2\ceyiz_diz\lib\presentation\screens\trousseau\trousseau_detail_screen.dart             | Dart           |        635 |         17 |         22 |        674 |
+| e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\category_chip.dart                          | Dart           |         97 |          0 |          4 |        101 |
+| e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\custom_app_bar.dart                         | Dart           |         66 |          0 |          5 |         71 |
+| e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\custom_dialog.dart                          | Dart           |         86 |          0 |          5 |         91 |
+| e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\draggable_fab.dart                          | Dart           |         97 |          3 |          9 |        109 |
+| e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\empty_state_widget.dart                     | Dart           |         60 |          0 |          4 |         64 |
+| e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\filter_pill.dart                            | Dart           |        102 |          5 |          7 |        114 |
+| e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\icon_color_picker.dart                      | Dart           |        135 |          1 |         10 |        146 |
+| e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\image_picker_widget.dart                    | Dart           |        181 |          0 |         10 |        191 |
+| e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\loading_overlay.dart                        | Dart           |         47 |          0 |          4 |         51 |
+| e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\responsive_app_bar.dart                     | Dart           |          0 |          0 |          1 |          1 |
+| e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\responsive_container.dart                   | Dart           |         33 |          6 |          5 |         44 |
+| e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\web_frame.dart                              | Dart           |         26 |          7 |          4 |         37 |
+| e:\web_project2\ceyiz_diz\linux\CMakeLists.txt                                                        | CMake          |        104 |          0 |         25 |        129 |
+| e:\web_project2\ceyiz_diz\linux\flutter\CMakeLists.txt                                                | CMake          |         79 |          0 |         10 |         89 |
+| e:\web_project2\ceyiz_diz\linux\flutter\generated_plugin_registrant.cc                                | C++            |         11 |          4 |          5 |         20 |
+| e:\web_project2\ceyiz_diz\linux\flutter\generated_plugin_registrant.h                                 | C++            |          5 |          5 |          6 |         16 |
+| e:\web_project2\ceyiz_diz\linux\flutter\generated_plugins.cmake                                       | CMake          |         20 |          0 |          6 |         26 |
+| e:\web_project2\ceyiz_diz\linux\runner\CMakeLists.txt                                                 | CMake          |         21 |          0 |          6 |         27 |
+| e:\web_project2\ceyiz_diz\linux\runner\main.cc                                                        | C++            |          5 |          0 |          2 |          7 |
+| e:\web_project2\ceyiz_diz\linux\runner\my_application.cc                                              | C++            |         91 |         25 |         29 |        145 |
+| e:\web_project2\ceyiz_diz\linux\runner\my_application.h                                               | C++            |          7 |          7 |          5 |         19 |
+| e:\web_project2\ceyiz_diz\macos\Flutter\GeneratedPluginRegistrant.swift                               | Swift          |         26 |          3 |          4 |         33 |
+| e:\web_project2\ceyiz_diz\macos\RunnerTests\RunnerTests.swift                                         | Swift          |          7 |          2 |          4 |         13 |
+| e:\web_project2\ceyiz_diz\macos\Runner\AppDelegate.swift                                              | Swift          |         11 |          0 |          3 |         14 |
+| e:\web_project2\ceyiz_diz\macos\Runner\Assets.xcassets\AppIcon.appiconset\Contents.json               | JSON           |         68 |          0 |          1 |         69 |
+| e:\web_project2\ceyiz_diz\macos\Runner\Base.lproj\MainMenu.xib                                        | XML            |        343 |          0 |          1 |        344 |
+| e:\web_project2\ceyiz_diz\macos\Runner\MainFlutterWindow.swift                                        | Swift          |         12 |          0 |          4 |         16 |
+| e:\web_project2\ceyiz_diz\public\index.html                                                           | HTML           |         79 |          6 |          5 |         90 |
+| e:\web_project2\ceyiz_diz\pubspec.yaml                                                                | YAML           |         45 |          6 |         11 |         62 |
+| e:\web_project2\ceyiz_diz\storage.cors.json                                                           | JSON           |          0 |          0 |          1 |          1 |
+| e:\web_project2\ceyiz_diz\test\widget_test.dart                                                       | Dart           |         14 |          6 |          3 |         23 |
+| e:\web_project2\ceyiz_diz\web\index.html                                                              | HTML           |         20 |         16 |          5 |         41 |
+| e:\web_project2\ceyiz_diz\web\manifest.json                                                           | JSON           |         35 |          0 |          1 |         36 |
+| e:\web_project2\ceyiz_diz\web\manifest.webmanifest                                                    | JSON           |         36 |          0 |          1 |         37 |
+| e:\web_project2\ceyiz_diz\windows\CMakeLists.txt                                                      | CMake          |         89 |          0 |         20 |        109 |
+| e:\web_project2\ceyiz_diz\windows\flutter\CMakeLists.txt                                              | CMake          |         98 |          0 |         12 |        110 |
+| e:\web_project2\ceyiz_diz\windows\flutter\generated_plugin_registrant.cc                              | C++            |         21 |          4 |          5 |         30 |
+| e:\web_project2\ceyiz_diz\windows\flutter\generated_plugin_registrant.h                               | C++            |          5 |          5 |          6 |         16 |
+| e:\web_project2\ceyiz_diz\windows\flutter\generated_plugins.cmake                                     | CMake          |         24 |          0 |          6 |         30 |
+| e:\web_project2\ceyiz_diz\windows\runner\CMakeLists.txt                                               | CMake          |         34 |          0 |          7 |         41 |
+| e:\web_project2\ceyiz_diz\windows\runner\flutter_window.cpp                                           | C++            |         49 |          7 |         16 |         72 |
+| e:\web_project2\ceyiz_diz\windows\runner\flutter_window.h                                             | C++            |         20 |          5 |          9 |         34 |
+| e:\web_project2\ceyiz_diz\windows\runner\main.cpp                                                     | C++            |         30 |          4 |         10 |         44 |
+| e:\web_project2\ceyiz_diz\windows\runner\resource.h                                                   | C++            |          9 |          6 |          2 |         17 |
+| e:\web_project2\ceyiz_diz\windows\runner\utils.cpp                                                    | C++            |         54 |          2 |         10 |         66 |
+| e:\web_project2\ceyiz_diz\windows\runner\utils.h                                                      | C++            |          8 |          6 |          6 |         20 |
+| e:\web_project2\ceyiz_diz\windows\runner\win32_window.cpp                                             | C++            |        210 |         24 |         55 |        289 |
+| e:\web_project2\ceyiz_diz\windows\runner\win32_window.h                                               | C++            |         48 |         31 |         24 |        103 |
+| Total                                                                                                 |                |     13,643 |      1,037 |      1,601 |     16,281 |
++-------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+

@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/models/trousseau_model.dart';
 import '../../data/models/user_model.dart';
+import '../../data/repositories/category_repository.dart';
 import 'auth_provider.dart';
 
 class TrousseauProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final CategoryRepository _categoryRepo = CategoryRepository();
   
   List<TrousseauModel> _trousseaus = [];
   List<TrousseauModel> _sharedTrousseaus = [];
@@ -192,10 +194,44 @@ class TrousseauProvider extends ChangeNotifier {
     String description = '',
     double totalBudget = 0.0,
   }) async {
-    // Single-trousseau policy: block manual creation
-    _errorMessage = 'Her kullanıcı için yalnızca 1 çeyiz oluşturulabilir.';
-    notifyListeners();
-    return false;
+    if (_authProvider?.currentUser == null) return false;
+    
+    try {
+      _errorMessage = '';
+      
+      final userId = _authProvider!.currentUser!.uid;
+      final now = DateTime.now();
+      
+      final newTrousseau = TrousseauModel(
+        id: '', // Firestore will generate
+        name: name,
+        description: description,
+        ownerId: userId,
+        sharedWith: [],
+        editors: [],
+        createdAt: now,
+        updatedAt: now,
+        categoryCounts: {},
+        totalProducts: 0,
+        purchasedProducts: 0,
+        totalBudget: totalBudget,
+        spentAmount: 0.0,
+        coverImage: '',
+        settings: {},
+      );
+      
+      await _firestore.collection('trousseaus').add(newTrousseau.toFirestore()).then((docRef) async {
+        // Initialize default categories for this trousseau
+        await _categoryRepo.initializeDefaultCategories(docRef.id);
+      });
+      // Don't add to local list; stream listener will handle it automatically
+      
+      return true;
+    } catch (e) {
+      _errorMessage = 'Çeyiz oluşturulamadı: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
   }
   
   Future<bool> updateTrousseau({
@@ -283,12 +319,36 @@ class TrousseauProvider extends ChangeNotifier {
         return false;
       }
       
-      // Single-trousseau policy: prevent deleting the only trousseau
-      _errorMessage = 'Çeyiz silinemez. Her kullanıcı için bir çeyiz zorunludur.';
+      // Check permissions
+      if (trousseau.ownerId != _authProvider!.currentUser!.uid) {
+        _errorMessage = 'Sadece çeyiz sahibi silebilir';
+        return false;
+      }
+      
+      // Delete all products first
+      final productsSnapshot = await _firestore
+          .collection('trousseaus')
+          .doc(trousseauId)
+          .collection('products')
+          .get();
+      
+      for (var doc in productsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+      
+      // Delete the trousseau
+      await _firestore.collection('trousseaus').doc(trousseauId).delete();
+      
+      _trousseaus.removeWhere((t) => t.id == trousseauId);
+      
+      if (_selectedTrousseau?.id == trousseauId) {
+        _selectedTrousseau = _trousseaus.isNotEmpty ? _trousseaus.first : null;
+      }
+      
       notifyListeners();
-      return false;
+      return true;
     } catch (e) {
-      _errorMessage = 'İşlem başarısız: ${e.toString()}';
+      _errorMessage = 'Çeyiz silinemedi: ${e.toString()}';
       notifyListeners();
       return false;
     }

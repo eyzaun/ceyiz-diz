@@ -29,18 +29,36 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
   Timer? _debounce;
   final FocusNode _searchFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
+  String _currentTrousseauId = '';
+  
   @override
   void initState() {
     super.initState();
+    _currentTrousseauId = widget.trousseauId;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       Provider.of<ProductProvider>(context, listen: false)
-          .loadProducts(widget.trousseauId);
+          .loadProducts(_currentTrousseauId);
       // Bind dynamic categories to this trousseau
     final trProv = Provider.of<TrousseauProvider>(context, listen: false);
     Provider.of<CategoryProvider>(context, listen: false)
-      .bind(widget.trousseauId, userId: trProv.currentUserId ?? '');
+      .bind(_currentTrousseauId, userId: trProv.currentUserId ?? '');
     });
+  }
+
+  @override
+  void didUpdateWidget(TrousseauDetailScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Widget parametresi değiştiğinde _currentTrousseauId'yi güncelle (deep link vs.)
+    if (widget.trousseauId != oldWidget.trousseauId && widget.trousseauId != _currentTrousseauId) {
+      setState(() {
+        _currentTrousseauId = widget.trousseauId;
+      });
+      Provider.of<ProductProvider>(context, listen: false).loadProducts(_currentTrousseauId);
+      final trProv = Provider.of<TrousseauProvider>(context, listen: false);
+      Provider.of<CategoryProvider>(context, listen: false)
+          .bind(_currentTrousseauId, userId: trProv.currentUserId ?? '');
+    }
   }
 
   @override
@@ -57,10 +75,10 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
     // Avoid rebuilding entire screen on product provider updates; we'll use Consumer where needed
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
-    final categoryProvider = Provider.of<CategoryProvider>(context);
 
     return StreamBuilder<TrousseauModel?>(
-      stream: trousseauProvider.getSingleTrousseauStream(widget.trousseauId),
+      key: ValueKey(_currentTrousseauId), // Prevent unnecessary rebuilds
+      stream: trousseauProvider.getSingleTrousseauStream(_currentTrousseauId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -87,44 +105,34 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                 IconButton(
                   icon: const Icon(Icons.category_outlined),
                   tooltip: 'Kategorileri Yönet',
-                  onPressed: () => context.push('/trousseau/${widget.trousseauId}/products/categories'),
+                  onPressed: () => context.push('/trousseau/$_currentTrousseauId/products/categories'),
                 ),
               if (trousseau.canEdit(trousseauProvider.currentUserId ?? ''))
                 IconButton(
                   icon: const Icon(Icons.edit),
-                  onPressed: () => context.push('/trousseau/${widget.trousseauId}/edit'),
+                  onPressed: () => context.push('/trousseau/$_currentTrousseauId/edit'),
                 ),
               if (trousseau.ownerId == trousseauProvider.currentUserId)
                 IconButton(
                   icon: const Icon(Icons.share),
-                  onPressed: () => context.push('/trousseau/${widget.trousseauId}/share'),
+                  onPressed: () => context.push('/trousseau/$_currentTrousseauId/share'),
                 ),
             ],
           ),
           body: Stack(
             children: [
               RefreshIndicator(
-                onRefresh: () => productProvider.loadProducts(widget.trousseauId),
+                onRefresh: () => productProvider.loadProducts(_currentTrousseauId),
                 child: CustomScrollView(
                   controller: _scrollController,
                   slivers: [
-                // Header row
+                // Trousseau Selector (horizontal scrolling tabs)
                 SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   sliver: SliverToBoxAdapter(
                     child: _constrain(
                       context,
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Ürünler',
-                            style: isCompact
-                                ? theme.textTheme.titleLarge
-                                : theme.textTheme.headlineSmall,
-                          ),
-                        ],
-                      ),
+                      _buildTrousseauSelector(context, trousseauProvider, isCompact),
                     ),
                   ),
                 ),
@@ -133,44 +141,55 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                   child: _constrain(
                     context,
                     Container(
-                      padding: EdgeInsets.all(isCompact ? 6 : 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       color: theme.cardColor,
                       child: ValueListenableBuilder<TextEditingValue>(
                         valueListenable: _searchController,
                         builder: (context, value, _) {
-                          return TextField(
-                            controller: _searchController,
-                            focusNode: _searchFocusNode,
-                            decoration: InputDecoration(
-                              hintText: 'Ürün ara...',
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: isCompact ? 8 : 10),
-                              prefixIcon: const Icon(Icons.search),
-                              suffixIcon: value.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        productProvider.setSearchQuery('');
-                                        if (!_searchFocusNode.hasFocus) {
-                                          _searchFocusNode.requestFocus();
-                                        }
-                                        _searchController.selection = const TextSelection.collapsed(offset: 0);
-                                      },
-                                    )
-                                  : null,
+                          return Container(
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            onChanged: (v) {
-                              _debounce?.cancel();
-                              _debounce = Timer(const Duration(milliseconds: 300), () {
-                                if (!mounted) return;
-                                productProvider.setSearchQuery(v);
-                                if (!_searchFocusNode.hasFocus) {
-                                  _searchFocusNode.requestFocus();
-                                }
-                              });
-                            },
+                            child: TextField(
+                              controller: _searchController,
+                              focusNode: _searchFocusNode,
+                              style: const TextStyle(fontSize: 14),
+                              decoration: InputDecoration(
+                                hintText: 'Ürün ara...',
+                                hintStyle: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                prefixIcon: Icon(Icons.search, size: 20, color: theme.colorScheme.onSurfaceVariant),
+                                suffixIcon: value.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(Icons.clear, size: 18, color: theme.colorScheme.onSurfaceVariant),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          productProvider.setSearchQuery('');
+                                          if (!_searchFocusNode.hasFocus) {
+                                            _searchFocusNode.requestFocus();
+                                          }
+                                          _searchController.selection = const TextSelection.collapsed(offset: 0);
+                                        },
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                      )
+                                    : null,
+                                border: InputBorder.none,
+                              ),
+                              onChanged: (v) {
+                                _debounce?.cancel();
+                                _debounce = Timer(const Duration(milliseconds: 300), () {
+                                  if (!mounted) return;
+                                  productProvider.setSearchQuery(v);
+                                  if (!_searchFocusNode.hasFocus) {
+                                    _searchFocusNode.requestFocus();
+                                  }
+                                });
+                              },
+                            ),
                           );
                         },
                       ),
@@ -184,8 +203,8 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                     Consumer<ProductProvider>(
                       builder: (context, productProvider, _) {
                         return Container(
-                          height: isCompact ? 32 : 40,
-                          padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),
+                          height: 36,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                           child: ListView(
                             scrollDirection: Axis.horizontal,
                             children: [
@@ -196,7 +215,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                                 () => productProvider.setFilter(ProductFilter.all),
                                 count: productProvider.products.length,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               _buildFilterChip(
                                 context,
                                 'Alınanlar',
@@ -205,7 +224,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                                 count: productProvider.getPurchasedCount(),
                                 color: theme.colorScheme.tertiary,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               _buildFilterChip(
                                 context,
                                 'Alınmayanlar',
@@ -225,31 +244,35 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                 SliverToBoxAdapter(
                   child: _constrain(
                     context,
-                    Consumer<ProductProvider>(
-                      builder: (context, productProvider, _) {
-                        return Container(
-                          height: isCompact ? 36 : 44,
-                          padding: EdgeInsets.symmetric(horizontal: isCompact ? 10 : 12),
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: categoryProvider.allCategories.length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 8),
-                            itemBuilder: (context, index) {
-                              final category = categoryProvider.allCategories[index];
-                              final isSelected = productProvider.selectedCategories.contains(category.id);
-                              final count = productProvider.products
-                                  .where((p) => p.category == category.id)
-                                  .length;
-                              return CategoryChip(
-                                category: category,
-                                isSelected: isSelected,
-                                colorful: isSelected,
-                                showCount: count > 0,
-                                count: count,
-                                onTap: () => productProvider.toggleCategory(category.id),
-                              );
-                            },
-                          ),
+                    Consumer<CategoryProvider>(
+                      builder: (context, categoryProvider, _) {
+                        return Consumer<ProductProvider>(
+                          builder: (context, productProvider, _) {
+                            return Container(
+                              height: 36,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: categoryProvider.allCategories.length,
+                                separatorBuilder: (_, __) => const SizedBox(width: 6),
+                                itemBuilder: (context, index) {
+                                  final category = categoryProvider.allCategories[index];
+                                  final isSelected = productProvider.selectedCategories.contains(category.id);
+                                  final count = productProvider.products
+                                      .where((p) => p.category == category.id)
+                                      .length;
+                                  return CategoryChip(
+                                    category: category,
+                                    isSelected: isSelected,
+                                    colorful: isSelected,
+                                    showCount: count > 0,
+                                    count: count,
+                                    onTap: () => productProvider.toggleCategory(category.id),
+                                  );
+                                },
+                              ),
+                            );
+                          },
                         );
                       },
                     ),
@@ -267,7 +290,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                         subtitle: 'İlk ürününüzü ekleyerek başlayın',
                         action: trousseau.canEdit(trousseauProvider.currentUserId ?? '')
                             ? ElevatedButton.icon(
-                                onPressed: () => context.push('/trousseau/${widget.trousseauId}/products/add'),
+                                onPressed: () => context.push('/trousseau/$_currentTrousseauId/products/add'),
                                 icon: const Icon(Icons.add),
                                 label: const Text('Ürün Ekle'),
                               )
@@ -312,7 +335,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                     Consumer<ProductProvider>(
                       builder: (context, productProvider, _) {
                         return Container(
-                          padding: EdgeInsets.all(isCompact ? 8 : 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           decoration: BoxDecoration(
                             color: theme.cardColor,
                             boxShadow: [
@@ -399,7 +422,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                       heroTag: 'fab-trousseau-add-${trousseau.id}',
                       tooltip: 'Ürün Ekle',
                       icon: Icons.add,
-                      onPressed: () => context.push('/trousseau/${widget.trousseauId}/products/add'),
+                      onPressed: () => context.push('/trousseau/$_currentTrousseauId/products/add'),
                     ),
                   ),
                 ),
@@ -434,37 +457,50 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
     final theme = Theme.of(context);
     final chipColor = color ?? theme.colorScheme.primary;
 
-    return FilterChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label),
-          if (count != null) ...[
-            const SizedBox(width: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-        color: isSelected
-          ? Colors.white.withValues(alpha: 0.3)
-          : chipColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                count.toString(),
+    return Material(
+      color: isSelected ? chipColor : chipColor.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          height: 28,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 13,
                   color: isSelected ? Colors.white : chipColor,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
-            ),
-          ],
-        ],
+              if (count != null) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Colors.white.withValues(alpha: 0.25)
+                        : chipColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    count.toString(),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isSelected ? Colors.white : chipColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
-      selected: isSelected,
-      onSelected: (_) => onTap(),
-      selectedColor: chipColor,
-      checkmarkColor: Colors.white,
     );
   }
 
@@ -473,52 +509,51 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
     final category = Provider.of<CategoryProvider>(context, listen: false)
         .getById(product.category);
 
-    final isCompact = kIsWeb || MediaQuery.of(context).size.width >= 1000;
-
     return Card(
-      margin: EdgeInsets.only(bottom: isCompact ? 8 : 12),
+      margin: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         onTap: () => context.push(
-          '/trousseau/${widget.trousseauId}/products/${product.id}',
+          '/trousseau/$_currentTrousseauId/products/${product.id}',
         ),
-        borderRadius: BorderRadius.circular(isCompact ? 12 : 16),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: EdgeInsets.all(isCompact ? 10 : 12),
+          padding: const EdgeInsets.all(10),
           child: Row(
             children: [
               // Product Image or Icon
               Container(
-                width: isCompact ? 64 : 80,
-                height: isCompact ? 64 : 80,
+                width: 60,
+                height: 60,
                 decoration: BoxDecoration(
                   color: category.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(isCompact ? 10 : 12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: product.images.isNotEmpty
                     ? ClipRRect(
-                        borderRadius: BorderRadius.circular(isCompact ? 10 : 12),
+                        borderRadius: BorderRadius.circular(10),
                         child: CachedNetworkImage(
                           imageUrl: product.images.first,
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Center(
                             child: CircularProgressIndicator(
                               color: category.color,
+                              strokeWidth: 2,
                             ),
                           ),
                           errorWidget: (context, url, error) => Icon(
                             category.icon,
                             color: category.color,
-                            size: isCompact ? 26 : 32,
+                            size: 24,
                           ),
                         ),
                       )
                     : Icon(
                         category.icon,
                         color: category.color,
-                        size: isCompact ? 26 : 32,
+                        size: 24,
                       ),
               ),
-              SizedBox(width: isCompact ? 10 : 12),
+              const SizedBox(width: 10),
               
               // Product Details
               Expanded(
@@ -530,7 +565,10 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                         Expanded(
                           child: Text(
                             product.name,
-                            style: theme.textTheme.titleMedium,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -538,45 +576,45 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                         if (product.isPurchased)
                           Icon(
                             Icons.check_circle,
-                            color: Colors.green,
-                            size: isCompact ? 18 : 20,
+                            color: theme.colorScheme.tertiary,
+                            size: 18,
                           ),
                       ],
                     ),
-                    SizedBox(height: isCompact ? 3 : 4),
+                    const SizedBox(height: 2),
                     if (product.description.isNotEmpty) ...[
                       Text(
                         product.description,
-                        style: theme.textTheme.bodySmall,
-                        maxLines: 2,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: isCompact ? 3 : 4),
+                      const SizedBox(height: 2),
                     ],
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 3,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: category.color.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(isCompact ? 6 : 8),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
                                 category.icon,
-                                size: isCompact ? 11 : 12,
+                                size: 10,
                                 color: category.color,
                               ),
-                              SizedBox(width: isCompact ? 3 : 4),
+                              const SizedBox(width: 3),
                               Text(
                                 category.displayName,
                                 style: TextStyle(
-                                  fontSize: isCompact ? 10 : 11,
+                                  fontSize: 10,
                                   color: category.color,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -584,45 +622,54 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                             ],
                           ),
                         ),
-                        SizedBox(width: isCompact ? 6 : 8),
+                        const SizedBox(width: 6),
                         if (product.quantity > 1)
                           Text(
                             '${product.quantity} adet',
-                            style: theme.textTheme.bodySmall,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                       ],
                     ),
                   ],
                 ),
               ),
-              SizedBox(width: isCompact ? 10 : 12),
+              const SizedBox(width: 10),
               
               // Price and Actions
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     '₺${product.price.toStringAsFixed(2)}',
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: TextStyle(
+                      fontSize: 15,
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   if (product.quantity > 1) ...[
-                    SizedBox(height: isCompact ? 3 : 4),
+                    const SizedBox(height: 2),
                     Text(
                       'Toplam: ₺${product.totalPrice.toStringAsFixed(2)}',
-                      style: theme.textTheme.bodySmall,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                   if (canEdit) ...[
-                    SizedBox(height: isCompact ? 6 : 8),
+                    const SizedBox(height: 4),
                     IconButton(
                       icon: Icon(
                         product.isPurchased
                             ? Icons.check_box
                             : Icons.check_box_outline_blank,
-                        color: product.isPurchased ? Colors.green : null,
+                        color: product.isPurchased ? theme.colorScheme.tertiary : theme.colorScheme.onSurfaceVariant,
+                        size: 20,
                       ),
                       onPressed: () async {
                         final provider = Provider.of<ProductProvider>(
@@ -631,7 +678,9 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                         );
                         await provider.togglePurchaseStatus(product.id);
                       },
-                      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                      visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
                   ],
                 ],
@@ -649,23 +698,120 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
     String value,
     Color color,
   ) {
-    final theme = Theme.of(context);
-
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
-          style: theme.textTheme.bodySmall,
+          style: TextStyle(
+            fontSize: 11,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Text(
           value,
-          style: theme.textTheme.titleMedium?.copyWith(
+          style: TextStyle(
+            fontSize: 15,
             color: color,
             fontWeight: FontWeight.bold,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTrousseauSelector(
+    BuildContext context,
+    TrousseauProvider trousseauProvider,
+    bool isCompact,
+  ) {
+    final theme = Theme.of(context);
+    final myTrousseaus = trousseauProvider.trousseaus;
+
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: myTrousseaus.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 4),
+              itemBuilder: (context, index) {
+                final trousseau = myTrousseaus[index];
+                final isSelected = trousseau.id == _currentTrousseauId;
+
+                return Material(
+                  color: isSelected 
+                      ? theme.colorScheme.primaryContainer 
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(6),
+                  child: InkWell(
+                    onTap: () {
+                      if (trousseau.id != _currentTrousseauId) {
+                        setState(() {
+                          _currentTrousseauId = trousseau.id;
+                        });
+                        
+                        final productProvider = Provider.of<ProductProvider>(context, listen: false);
+                        productProvider.loadProducts(_currentTrousseauId);
+                        
+                        final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
+                        categoryProvider.bind(_currentTrousseauId, userId: trousseauProvider.currentUserId ?? '');
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            trousseau.name,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              color: isSelected 
+                                  ? theme.colorScheme.onPrimaryContainer 
+                                  : theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          if (index < myTrousseaus.length - 1 || myTrousseaus.length > 1)
+                            const SizedBox(width: 4),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 4),
+          Material(
+            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+            child: InkWell(
+              onTap: () => context.push('/create-trousseau'),
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                child: Icon(
+                  Icons.add,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
