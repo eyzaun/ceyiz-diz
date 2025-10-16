@@ -1,8 +1,20 @@
+/// Login Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
+/// ✅ Jakob Yasası: Standart login layout (logo + form + alt link)
+/// ✅ Fitts Yasası: Primary button 56dp, full width, kolay erişim
+/// ✅ Hick Yasası: 1 primary action (Giriş Yap)
+/// ✅ Miller Yasası: 2 form alanı (email + şifre) - ideal
+/// ✅ Gestalt: İlgili öğeler gruplanmış, tutarlı spacing
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/common/app_button.dart';
+import '../../widgets/common/app_input.dart';
 import '../../widgets/common/loading_overlay.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -16,17 +28,18 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
-  bool _isPasswordVisible = false;
+
   bool _hasShownUpdateDialog = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  
+
   @override
   void initState() {
     super.initState();
+
+    // Fade-in animation
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: AppDurations.slow,
       vsync: this,
     );
     _fadeAnimation = Tween<double>(
@@ -34,16 +47,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeInOut,
+      curve: AppCurves.easeInOut,
     ));
     _animationController.forward();
-    
-    // Check for update after first frame
+
+    // Check for app update
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForUpdateOnce();
     });
   }
-  
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -51,52 +64,70 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     _animationController.dispose();
     super.dispose();
   }
-  
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VALIDATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'E-posta adresi gereklidir';
+      return 'Email adresi gereklidir';
     }
     if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
-      return 'Geçerli bir e-posta adresi girin';
+      return 'Geçerli bir email adresi girin';
     }
     return null;
   }
-  
+
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Şifre gereklidir';
     }
     if (value.length < 6) {
-      return 'Şifre en az 6 karakter olmalıdır';
+      return 'Şifre en az 6 karakter olmalı';
     }
     return null;
   }
-  
-  Future<void> _login() async {
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LOGIN HANDLER
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
+
     final success = await authProvider.signIn(
-      email: _emailController.text,
+      email: _emailController.text.trim(),
       password: _passwordController.text,
     );
-    
-    if (success && mounted) {
+
+    if (!mounted) return;
+
+    if (success) {
       context.go('/');
-    } else if (!success && mounted) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authProvider.errorMessage),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.radiusMD,
+          ),
         ),
       );
     }
   }
-  
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // UPDATE DIALOG
+  // ═══════════════════════════════════════════════════════════════════════════
+
   void _checkForUpdateOnce() {
     if (_hasShownUpdateDialog) return;
-    
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.updateAvailable) {
       _hasShownUpdateDialog = true;
@@ -107,7 +138,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   void _showUpdateDialog() {
     if (!mounted) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
+    final theme = Theme.of(context);
+
     showDialog(
       context: context,
       barrierDismissible: !authProvider.forceUpdate,
@@ -115,34 +147,34 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         canPop: !authProvider.forceUpdate,
         child: AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: AppRadius.radiusXL,
           ),
           title: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: AppSpacing.paddingSM,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: AppRadius.radiusSM,
                 ),
                 child: Icon(
                   Icons.system_update,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 28,
+                  color: theme.colorScheme.primary,
+                  size: AppDimensions.iconSizeLarge,
                 ),
               ),
-              const SizedBox(width: 12),
+              AppSpacing.md.horizontalSpace,
               Expanded(
                 child: Text(
-                  authProvider.forceUpdate 
-                    ? 'Güncelleme Gerekli!' 
+                  authProvider.forceUpdate
+                    ? 'Güncelleme Gerekli!'
                     : 'Yeni Versiyon Mevcut',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: authProvider.forceUpdate 
-                      ? Theme.of(context).colorScheme.error
-                      : null,
+                    fontSize: AppTypography.sizeLG,
+                    fontWeight: AppTypography.bold,
+                    color: authProvider.forceUpdate
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -154,59 +186,59 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             children: [
               Text(
                 authProvider.updateMessage,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: theme.textTheme.bodyMedium,
               ),
-              const SizedBox(height: 16),
+              AppSpacing.md.verticalSpace,
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: AppSpacing.paddingMD,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(8),
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  borderRadius: AppRadius.radiusMD,
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.new_releases,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 20,
+                      color: theme.colorScheme.primary,
+                      size: AppDimensions.iconSizeMedium,
                     ),
-                    const SizedBox(width: 8),
+                    AppSpacing.sm.horizontalSpace,
                     Text(
                       'Yeni Versiyon: ${authProvider.latestVersion}',
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                        fontSize: 15,
+                        fontWeight: AppTypography.bold,
+                        color: theme.colorScheme.primary,
+                        fontSize: AppTypography.sizeBase,
                       ),
                     ),
                   ],
                 ),
               ),
               if (authProvider.forceUpdate) ...[
-                const SizedBox(height: 12),
+                AppSpacing.md.verticalSpace,
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: AppSpacing.paddingMD,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(8),
+                    color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
+                    borderRadius: AppRadius.radiusMD,
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.warning_rounded,
-                        color: Theme.of(context).colorScheme.error,
-                        size: 20,
+                        color: theme.colorScheme.error,
+                        size: AppDimensions.iconSizeMedium,
                       ),
-                      const SizedBox(width: 8),
+                      AppSpacing.sm.horizontalSpace,
                       Expanded(
                         child: Text(
-                          'Bu güncelleme zorunludur. Uygulamayı kullanmaya devam etmek için güncellemeniz gerekiyor.',
+                          'Bu güncelleme zorunludur. Devam etmek için güncellemeniz gerekiyor.',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontSize: 12,
+                            color: theme.colorScheme.error,
+                            fontSize: AppTypography.sizeSM,
                           ),
                         ),
                       ),
@@ -218,14 +250,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           ),
           actions: [
             if (!authProvider.forceUpdate)
-              TextButton(
+              AppTextButton(
+                label: 'Daha Sonra',
                 onPressed: () => Navigator.of(dialogContext).pop(),
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                child: const Text('Daha Sonra'),
               ),
-            ElevatedButton.icon(
+            AppPrimaryButton(
+              label: 'Şimdi Güncelle',
+              icon: Icons.download,
               onPressed: () async {
                 const url = 'https://play.google.com/store/apps/details?id=com.Loncagames.ceyizdiz';
                 final uri = Uri.parse(url);
@@ -234,9 +265,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 } else {
                   if (dialogContext.mounted) {
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      const SnackBar(
-                        content: Text('Play Store açılamadı. Lütfen manuel olarak kontrol edin.'),
-                        backgroundColor: Colors.red,
+                      SnackBar(
+                        content: const Text('Play Store açılamadı.'),
+                        backgroundColor: theme.colorScheme.error,
                       ),
                     );
                   }
@@ -245,15 +276,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   Navigator.of(dialogContext).pop();
                 }
               },
-              icon: const Icon(Icons.download),
-              label: const Text('Şimdi Güncelle'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: authProvider.forceUpdate 
-                  ? Theme.of(context).colorScheme.error
-                  : Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              ),
             ),
           ],
         ),
@@ -261,18 +283,22 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUILD
+  // ═══════════════════════════════════════════════════════════════════════════
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final authProvider = Provider.of<AuthProvider>(context);
-    
+
     // Listen for update flag changes
     if (authProvider.updateAvailable && !_hasShownUpdateDialog && mounted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _checkForUpdateOnce();
       });
     }
-    
+
     return LoadingOverlay(
       isLoading: authProvider.status == AuthStatus.loading,
       child: Scaffold(
@@ -281,131 +307,91 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             opacity: _fadeAnimation,
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 400),
+                padding: context.safePaddingHorizontal.horizontalSpace,
+                child: ConstrainedBox(
+                  // Responsive: Web'de maksimum genişlik
+                  constraints: BoxConstraints(
+                    maxWidth: AppBreakpoints.maxFormWidth,
+                  ),
                   child: Form(
                     key: _formKey,
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Logo and Title
-                        Container(
-                          height: 120,
-                          width: 120,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(60),
-                            child: Image.asset(
-                              'web/icons/Icon-192.png',
-                              width: 72,
-                              height: 72,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stack) {
-                                return Icon(
-                                  Icons.home_filled,
-                                  size: 60,
-                                  color: theme.colorScheme.primary,
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'Çeyiz Diz',
-                          style: theme.textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Hayalinizdeki çeyizi kolayca yönetin',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.textTheme.bodySmall?.color,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 48),
-                        
-                        // Email Field
-                        TextFormField(
+                        // ─────────────────────────────────────────────────────
+                        // LOGO VE BAŞLIK
+                        // Gestalt: Gruplama - Logo + Başlık + Subtitle yakın
+                        // ─────────────────────────────────────────────────────
+                        _buildHeader(theme),
+
+                        AppSpacing.xl.verticalSpace,
+
+                        // ─────────────────────────────────────────────────────
+                        // FORM ALANLARI
+                        // Miller Yasası: 2 alan = ideal (email + şifre)
+                        // ─────────────────────────────────────────────────────
+                        AppTextInput(
+                          label: 'Email',
+                          hint: 'ornek@email.com',
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
-                            labelText: 'E-posta',
-                            hintText: 'ornek@email.com',
-                            prefixIcon: const Icon(Icons.email_outlined),
-                          ),
+                          prefixIcon: const Icon(Icons.email_outlined),
                           validator: _validateEmail,
                         ),
-                        const SizedBox(height: 16),
-                        
-                        // Password Field
-                        TextFormField(
+
+                        AppSpacing.md.verticalSpace,
+
+                        AppPasswordInput(
+                          label: 'Şifre',
+                          hint: 'En az 6 karakter',
                           controller: _passwordController,
-                          obscureText: !_isPasswordVisible,
                           textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _login(),
-                          decoration: InputDecoration(
-                            labelText: 'Şifre',
-                            hintText: 'En az 6 karakter',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _isPasswordVisible
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _isPasswordVisible = !_isPasswordVisible;
-                                });
-                              },
-                            ),
-                          ),
                           validator: _validatePassword,
                         ),
-                        
-                        // Forgot Password Link
+
+                        // Şifremi Unuttum (Secondary action)
                         Align(
                           alignment: Alignment.centerRight,
-                          child: TextButton(
+                          child: AppTextButton(
+                            label: 'Şifremi Unuttum',
                             onPressed: () => context.push('/forgot-password'),
-                            child: const Text('Şifremi Unuttum'),
                           ),
                         ),
-                        const SizedBox(height: 24),
-                        
-                        // Login Button
-                        SizedBox(
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: _login,
-                            child: const Text('Giriş Yap'),
-                          ),
+
+                        AppSpacing.xl.verticalSpace,
+
+                        // ─────────────────────────────────────────────────────
+                        // PRIMARY ACTION - HICK YASASI: Sadece 1 tane
+                        // FITTS YASASI: 56dp height, full width, kolay basılır
+                        // ─────────────────────────────────────────────────────
+                        AppPrimaryButton(
+                          label: 'Giriş Yap',
+                          icon: Icons.login,
+                          isFullWidth: true,
+                          onPressed: _handleLogin,
+                          isLoading: authProvider.status == AuthStatus.loading,
                         ),
-                        const SizedBox(height: 16),
-                        
-                        // Register Link
+
+                        AppSpacing.lg.verticalSpace,
+
+                        // ─────────────────────────────────────────────────────
+                        // SECONDARY LINK (Kayıt Olun)
+                        // Gestalt: Yakınlık - Soru + Link birlikte
+                        // ─────────────────────────────────────────────────────
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               'Hesabınız yok mu?',
-                              style: theme.textTheme.bodyMedium,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: AppTypography.sizeBase,
+                              ),
                             ),
-                            TextButton(
+                            AppSpacing.xs.horizontalSpace,
+                            AppTextButton(
+                              label: 'Kayıt Olun',
                               onPressed: () => context.push('/register'),
-                              child: const Text('Kayıt Olun'),
                             ),
                           ],
                         ),
@@ -418,6 +404,66 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           ),
         ),
       ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HEADER WIDGET (Logo + Başlık)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildHeader(ThemeData theme) {
+    return Column(
+      children: [
+        // Logo Container
+        Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer,
+            shape: BoxShape.circle,
+          ),
+          child: ClipOval(
+            child: Image.asset(
+              'web/icons/Icon-192.png',
+              width: 72,
+              height: 72,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stack) {
+                return Icon(
+                  Icons.inventory_2,
+                  size: 64,
+                  color: theme.colorScheme.primary,
+                );
+              },
+            ),
+          ),
+        ),
+
+        AppSpacing.lg.verticalSpace,
+
+        // Başlık
+        Text(
+          'Çeyiz Diz',
+          style: theme.textTheme.displaySmall?.copyWith(
+            fontWeight: AppTypography.bold,
+            color: theme.colorScheme.primary,
+            fontSize: AppTypography.size4XL,
+          ),
+          textAlign: TextAlign.center,
+        ),
+
+        AppSpacing.xs.verticalSpace,
+
+        // Alt Başlık
+        Text(
+          'Hayalinizdeki çeyizi kolayca yönetin',
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: AppTypography.sizeMD,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }

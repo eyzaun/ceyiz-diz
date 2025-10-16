@@ -1,20 +1,27 @@
+/// Product List Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
+/// ✅ Jakob Yasası: Standart list + filter layout
+/// ✅ Fitts Yasası: FAB 56dp, filter chips 48dp height, product cards 48dp touch
+/// ✅ Hick Yasası: Max 3 filter pills (Tümü, Alınanlar, Alınmayanlar)
+/// ✅ Miller Yasası: Filter chips max 5 visible at once
+/// ✅ Gestalt: İlgili filter'lar gruplanmış (status + category ayrı rows)
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/trousseau_provider.dart';
-import '../../widgets/common/empty_state_widget.dart';
-import '../../widgets/common/category_chip.dart';
-import '../../../data/models/product_model.dart';
 import '../../providers/category_provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../../../core/themes/design_system.dart';
+import '../../widgets/common/empty_state_widget.dart';
+import '../../widgets/common/app_button.dart';
+import '../../widgets/common/app_input.dart';
+import '../../widgets/common/app_card.dart';
 import '../../widgets/common/filter_pill.dart';
-import '../../widgets/common/responsive_container.dart';
 import '../../widgets/common/icon_color_picker.dart';
-import '../../../core/utils/currency_formatter.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../../../data/models/product_model.dart';
 
 class ProductListScreen extends StatefulWidget {
   final String trousseauId;
@@ -39,11 +46,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      // Force load products immediately
       final productProv = Provider.of<ProductProvider>(context, listen: false);
       productProv.loadProducts(widget.trousseauId);
 
-      // Bind category provider for dynamic categories of this trousseau
       final catProv = Provider.of<CategoryProvider>(context, listen: false);
       final trProv = Provider.of<TrousseauProvider>(context, listen: false);
       catProv.bind(widget.trousseauId, userId: trProv.currentUserId ?? '');
@@ -55,17 +60,221 @@ class _ProductListScreenState extends State<ProductListScreen> {
     _debounce?.cancel();
     _searchFocusNode.dispose();
     _searchController.dispose();
+    _listController.dispose();
     super.dispose();
+  }
+
+  Future<bool> _promptAddCategory(BuildContext context, CategoryProvider provider) async {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    IconData selIcon = Icons.category;
+    Color selColor = const Color(0xFF607D8B);
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocalState) => AlertDialog(
+          title: const Text('Yeni Kategori'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: controller,
+                  decoration: const InputDecoration(hintText: 'Kategori adı'),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Ad gerekli';
+                    if (provider.allCategories.any((c) =>
+                        c.displayName.toLowerCase() == v.trim().toLowerCase())) {
+                      return 'Bu ad kullanılıyor';
+                    }
+                    return null;
+                  },
+                ),
+                AppSpacing.sm.verticalSpace,
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: selColor.withValues(alpha: 0.15),
+                      child: Icon(selIcon, color: selColor),
+                    ),
+                    AppSpacing.sm.horizontalSpace,
+                    Expanded(
+                      child: AppSecondaryButton(
+                        label: 'Sembol ve Renk Seç',
+                        icon: Icons.palette_outlined,
+                        onPressed: () async {
+                          final res = await IconColorPicker.pick(
+                              context, icon: selIcon, color: selColor);
+                          if (res != null) {
+                            setLocalState(() {
+                              selIcon = res.icon;
+                              selColor = res.color;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            AppTextButton(
+              label: 'Vazgeç',
+              onPressed: () => Navigator.pop(ctx, false),
+            ),
+            AppPrimaryButton(
+              label: 'Ekle',
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                final name = controller.text.trim();
+                String id = name
+                    .toLowerCase()
+                    .replaceAll(RegExp(r'[^a-z0-9ğüşöçı\s-]', caseSensitive: false), '')
+                    .replaceAll(RegExp(r'\s+'), '-');
+                if (id.isEmpty) id = 'kategori';
+                var base = id;
+                int i = 1;
+                while (provider.allCategories.any((c) =>
+                    c.displayName.toLowerCase() == id.toLowerCase())) {
+                  id = '$base-$i';
+                  i++;
+                }
+                final ok = await provider.addCustom(id, name, icon: selIcon, color: selColor);
+                if (!ctx.mounted) return;
+                Navigator.pop(ctx, ok);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+    return result ?? false;
+  }
+
+  void _showFilterDialog(BuildContext context) {
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
+    final trousseauProvider = Provider.of<TrousseauProvider>(context, listen: false);
+    final trousseau = trousseauProvider.getTrousseauById(widget.trousseauId);
+    final canEdit = trousseau != null &&
+        trousseau.canEdit(trousseauProvider.currentUserId ?? '');
+
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: AppRadius.radiusXL),
+      ),
+      builder: (context) {
+        final theme = Theme.of(context);
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: EdgeInsets.only(bottom: AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                          borderRadius: AppRadius.radiusSM,
+                        ),
+                      ),
+                    ),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Kategoriler',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: AppTypography.bold,
+                            ),
+                          ),
+                        ),
+                        if (canEdit)
+                          AppIconButton(
+                            icon: Icons.add,
+                            onPressed: () async {
+                              final result = await _promptAddCategory(context, categoryProvider);
+                              if (result) setState(() {});
+                            },
+                            tooltip: 'Kategori Ekle',
+                          ),
+                      ],
+                    ),
+
+                    AppSpacing.md.verticalSpace,
+
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
+                      children: categoryProvider.allCategories.map((category) {
+                        final isSelected = productProvider.selectedCategories
+                            .contains(category.id);
+                        return FilterPill(
+                          label: category.displayName,
+                          selected: isSelected,
+                          onTap: () {
+                            setState(() {
+                              productProvider.toggleCategory(category.id);
+                            });
+                          },
+                          color: category.color,
+                          leadingIcon: category.icon,
+                        );
+                      }).toList(),
+                    ),
+
+                    AppSpacing.lg.verticalSpace,
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppSecondaryButton(
+                            label: 'Temizle',
+                            onPressed: () {
+                              productProvider.clearCategoryFilter();
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ),
+                        AppSpacing.md.horizontalSpace,
+                        Expanded(
+                          child: AppPrimaryButton(
+                            label: 'Uygula',
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final semantics = theme.extension<AppSemanticColors>();
     final productProvider = Provider.of<ProductProvider>(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
-  final trousseau = trousseauProvider.getTrousseauById(widget.trousseauId);
-  final categoryProvider = Provider.of<CategoryProvider>(context);
+    final trousseau = trousseauProvider.getTrousseauById(widget.trousseauId);
+    final categoryProvider = Provider.of<CategoryProvider>(context);
 
     if (trousseau == null) {
       return Scaffold(
@@ -81,72 +290,63 @@ class _ProductListScreenState extends State<ProductListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ürünler'),
+        // HICK YASASI: Max 2 actions
+        // FITTS YASASI: 48x48dp touch area
         actions: [
           if (canEdit)
-            IconButton(
+            AppIconButton(
+              icon: Icons.settings_outlined,
+              onPressed: () => context.push(
+                  '/trousseau/${widget.trousseauId}/products/categories'),
               tooltip: 'Kategorileri Yönet',
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () => context.push('/trousseau/${widget.trousseauId}/products/categories'),
             ),
-          IconButton(
-            icon: const Icon(Icons.filter_list),
+          AppIconButton(
+            icon: Icons.filter_list,
             onPressed: () => _showFilterDialog(context),
+            tooltip: 'Filtrele',
           ),
         ],
       ),
       body: Column(
         children: [
-          // Search Bar
-          ResponsiveContainer(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              color: theme.cardColor,
-              child: ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _searchController,
-                builder: (context, value, _) {
-                  return TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    decoration: InputDecoration(
-                      hintText: 'Ürün ara...',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: value.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                                productProvider.setSearchQuery('');
-                                // keep focus to avoid keyboard dismissal
-                                if (!_searchFocusNode.hasFocus) {
-                                  _searchFocusNode.requestFocus();
-                                }
-                                _searchController.selection = const TextSelection.collapsed(offset: 0);
-                              },
-                            )
-                          : null,
-                    ),
-                    onChanged: (v) {
-                      _debounce?.cancel();
-                      _debounce = Timer(const Duration(milliseconds: 300), () {
-                        if (!mounted) return;
-                        productProvider.setSearchQuery(v);
-                        // keep keyboard open by re-requesting focus if lost
-                        if (!_searchFocusNode.hasFocus) {
-                          _searchFocusNode.requestFocus();
-                        }
-                      });
-                    },
-                  );
+          // ─────────────────────────────────────────────────────
+          // SEARCH BAR
+          // FITTS YASASI: 56dp height search input
+          // ─────────────────────────────────────────────────────
+          Container(
+            padding: context.safePaddingHorizontal.horizontalSpace,
+            color: theme.cardColor,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              child: AppSearchInput(
+                controller: _searchController,
+                hint: 'Ürün ara...',
+                onChanged: (v) {
+                  _debounce?.cancel();
+                  _debounce = Timer(const Duration(milliseconds: 300), () {
+                    if (!mounted) return;
+                    productProvider.setSearchQuery(v);
+                  });
+                },
+                onClear: () {
+                  productProvider.setSearchQuery('');
                 },
               ),
             ),
           ),
-          
-          // Filter Chips
-          ResponsiveContainer(
-            child: SizedBox(
-              height: 50,
-              child: ListView(
+
+          // ─────────────────────────────────────────────────────
+          // FILTER PILLS ROW 1: STATUS
+          // HICK YASASI: Max 3 options (Tümü, Alınanlar, Alınmayanlar)
+          // FITTS YASASI: 48dp height chips
+          // ─────────────────────────────────────────────────────
+          Container(
+            height: 60,
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
                 FilterPill(
@@ -155,70 +355,82 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   onTap: () => productProvider.setFilter(ProductFilter.all),
                   count: productProvider.products.length,
                 ),
-                const SizedBox(width: 8),
+                AppSpacing.sm.horizontalSpace,
                 FilterPill(
                   label: 'Alınanlar',
                   selected: productProvider.currentFilter == ProductFilter.purchased,
                   onTap: () => productProvider.setFilter(ProductFilter.purchased),
                   count: productProvider.getPurchasedCount(),
-                  color: semantics?.success ?? theme.colorScheme.tertiary,
+                  color: theme.colorScheme.tertiary,
                 ),
-                const SizedBox(width: 8),
+                AppSpacing.sm.horizontalSpace,
                 FilterPill(
                   label: 'Alınmayanlar',
                   selected: productProvider.currentFilter == ProductFilter.notPurchased,
                   onTap: () => productProvider.setFilter(ProductFilter.notPurchased),
                   count: productProvider.getNotPurchasedCount(),
-                  color: semantics?.warning ?? theme.colorScheme.secondary,
+                  color: theme.colorScheme.secondary,
                 ),
               ],
             ),
-            ),
           ),
 
-          // Category filter row (only categories; grey when inactive, colored when active)
-          ResponsiveContainer(
-            child: SizedBox(
+          // ─────────────────────────────────────────────────────
+          // FILTER PILLS ROW 2: CATEGORIES
+          // MILLER YASASI: Scrollable, max 5 visible
+          // GESTALT: Ayrı row'da category filter'ları
+          // ─────────────────────────────────────────────────────
+          if (categoryProvider.allCategories.isNotEmpty)
+            Container(
               height: 48,
+              padding: EdgeInsets.only(
+                left: AppSpacing.md,
+                right: AppSpacing.md,
+                bottom: AppSpacing.sm,
+              ),
               child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: categoryProvider.allCategories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final category = categoryProvider.allCategories[index];
-                final isSelected = productProvider.selectedCategories.contains(category.id);
-                final count = productProvider.products.where((p) => p.category == category.id).length;
-                return FilterPill(
-                  label: category.displayName,
-                  selected: isSelected,
-                  onTap: () => productProvider.toggleCategory(category.id),
-                  count: count > 0 ? count : null,
-                  color: category.color,
-                  leadingIcon: category.icon,
-                  neutralWhenUnselected: true,
-                  dense: true,
-                );
-              },
+                scrollDirection: Axis.horizontal,
+                itemCount: categoryProvider.allCategories.length,
+                separatorBuilder: (_, __) => AppSpacing.sm.horizontalSpace,
+                itemBuilder: (context, index) {
+                  final category = categoryProvider.allCategories[index];
+                  final isSelected = productProvider.selectedCategories
+                      .contains(category.id);
+                  final count = productProvider.products
+                      .where((p) => p.category == category.id)
+                      .length;
+                  return FilterPill(
+                    label: category.displayName,
+                    selected: isSelected,
+                    onTap: () => productProvider.toggleCategory(category.id),
+                    count: count > 0 ? count : null,
+                    color: category.color,
+                    leadingIcon: category.icon,
+                    neutralWhenUnselected: true,
+                    dense: true,
+                  );
+                },
+              ),
             ),
-            ),
-          ),
-          
-          // Products List (kept constant to preserve scroll position)
+
+          // ─────────────────────────────────────────────────────
+          // PRODUCTS LIST
+          // ─────────────────────────────────────────────────────
           Expanded(
             child: productProvider.products.isEmpty
                 ? Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     child: EmptyStateWidget(
                       icon: Icons.shopping_bag_outlined,
                       title: 'Henüz ürün eklenmemiş',
                       subtitle: 'İlk ürününüzü ekleyerek başlayın',
                       action: canEdit
-                          ? ElevatedButton.icon(
+                          ? AppPrimaryButton(
+                              label: 'Ürün Ekle',
+                              icon: Icons.add,
                               onPressed: () => context.push(
                                 '/trousseau/${widget.trousseauId}/products/add',
                               ),
-                              icon: const Icon(Icons.add),
-                              label: const Text('Ürün Ekle'),
                             )
                           : null,
                     ),
@@ -226,36 +438,97 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 : Stack(
                     children: [
                       RefreshIndicator(
-                        onRefresh: () => productProvider.loadProducts(widget.trousseauId),
+                        onRefresh: () =>
+                            productProvider.loadProducts(widget.trousseauId),
                         child: ListView.builder(
                           controller: _listController,
                           physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.all(16),
+                          padding: EdgeInsets.all(AppSpacing.md),
                           itemCount: productProvider.filteredProducts.isEmpty
                               ? 1
                               : productProvider.filteredProducts.length,
                           itemBuilder: (context, index) {
                             if (productProvider.filteredProducts.isEmpty) {
-                              // Inline empty placeholder (filters yield zero results)
                               return Center(
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(maxWidth: 700),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 32),
-                                    child: EmptyStateWidget(
-                                      icon: Icons.search_off,
-                                      title: 'Ürün bulunamadı',
-                                      subtitle: 'Farklı filtreler deneyebilirsiniz',
-                                    ),
+                                child: Padding(
+                                  padding: EdgeInsets.only(top: AppSpacing.xl2),
+                                  child: EmptyStateWidget(
+                                    icon: Icons.search_off,
+                                    title: 'Ürün bulunamadı',
+                                    subtitle: 'Farklı filtreler deneyebilirsiniz',
                                   ),
                                 ),
                               );
                             }
+
                             final product = productProvider.filteredProducts[index];
-                            return Center(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 1100),
-                                child: _buildProductCard(context, product, canEdit),
+                            final category = categoryProvider.getById(product.category);
+
+                            // Use AppProductCard from design system
+                            return Padding(
+                              padding: EdgeInsets.only(bottom: AppSpacing.sm),
+                              child: AppProductCard(
+                                product: product,
+                                category: category,
+                                canEdit: canEdit,
+                                onTap: () => context.push(
+                                  '/trousseau/${widget.trousseauId}/products/${product.id}',
+                                ),
+                                onTogglePurchase: canEdit
+                                    ? () async {
+                                        await productProvider
+                                            .togglePurchaseStatus(product.id);
+                                      }
+                                    : null,
+                                onEdit: canEdit
+                                    ? () => context.push(
+                                          '/trousseau/${widget.trousseauId}/products/${product.id}/edit',
+                                        )
+                                    : null,
+                                onDelete: canEdit
+                                    ? () async {
+                                        final confirmed = await showDialog<bool>(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            title: const Text('Ürünü Sil'),
+                                            content: Text(
+                                              '${product.name} ürününü silmek istediğinizden emin misiniz?',
+                                            ),
+                                            actions: [
+                                              AppTextButton(
+                                                label: 'İptal',
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx, false),
+                                              ),
+                                              AppDangerButton(
+                                                label: 'Sil',
+                                                icon: Icons.delete,
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx, true),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+
+                                        if (confirmed == true) {
+                                          await productProvider
+                                              .deleteProduct(product.id);
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content:
+                                                    Text('${product.name} silindi'),
+                                                behavior: SnackBarBehavior.floating,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: AppRadius.radiusMD,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      }
+                                    : null,
                               ),
                             );
                           },
@@ -269,16 +542,21 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           child: LinearProgressIndicator(
                             minHeight: 2,
                             color: theme.colorScheme.primary,
-                            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            backgroundColor:
+                                theme.colorScheme.primary.withValues(alpha: 0.1),
                           ),
                         ),
                     ],
                   ),
           ),
-          
-          // Summary Bar
+
+          // ─────────────────────────────────────────────────────
+          // SUMMARY BAR
+          // MILLER YASASI: 3 metrics (Toplam, Harcanan, Kalan)
+          // GESTALT: İlgili metrikler gruplanmış
+          // ─────────────────────────────────────────────────────
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: theme.cardColor,
               boxShadow: [
@@ -289,398 +567,44 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 ),
               ],
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildSummaryItem(
-                  context,
-                  'Toplam',
-                  '₺${productProvider.getTotalPlanned().toStringAsFixed(0)}',
-                  theme.colorScheme.primary,
-                ),
-                _buildSummaryItem(
-                  context,
-                  'Harcanan',
-                  '₺${productProvider.getTotalSpent().toStringAsFixed(0)}',
-                  theme.colorScheme.tertiary,
-                ),
-                _buildSummaryItem(
-                  context,
-                  'Kalan',
-                  '₺${(productProvider.getTotalPlanned() - productProvider.getTotalSpent()).toStringAsFixed(0)}',
-                  theme.colorScheme.secondary,
-                ),
-              ],
+            child: SafeArea(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildSummaryItem(
+                    context,
+                    'Toplam',
+                    '₺${productProvider.getTotalPlanned().toStringAsFixed(0)}',
+                    theme.colorScheme.primary,
+                  ),
+                  _buildSummaryItem(
+                    context,
+                    'Harcanan',
+                    '₺${productProvider.getTotalSpent().toStringAsFixed(0)}',
+                    theme.colorScheme.tertiary,
+                  ),
+                  _buildSummaryItem(
+                    context,
+                    'Kalan',
+                    '₺${(productProvider.getTotalPlanned() - productProvider.getTotalSpent()).toStringAsFixed(0)}',
+                    theme.colorScheme.secondary,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
+      // FITTS YASASI: 56dp FAB
       floatingActionButton: canEdit
-          ? FloatingActionButton.extended(
+          ? AppFAB(
+              label: 'Ürün Ekle',
+              icon: Icons.add,
               onPressed: () => context.push(
                 '/trousseau/${widget.trousseauId}/products/add',
               ),
-              icon: const Icon(Icons.add),
-              label: const Text('Ürün Ekle'),
             )
           : null,
-    );
-  }
-
-  // Filter chips are now unified via FilterPill for consistent visuals.
-
-  Widget _buildProductCard(BuildContext context, ProductModel product, bool canEdit) {
-    final theme = Theme.of(context);
-    final semantics = theme.extension<AppSemanticColors>();
-  final category = Provider.of<CategoryProvider>(context, listen: false)
-    .getById(product.category);
-
-    final cardContent = Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () => context.push(
-          '/trousseau/${widget.trousseauId}/products/${product.id}',
-        ),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Product Image or Icon
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: category.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: product.images.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: CachedNetworkImage(
-                          imageUrl: product.images.first,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Center(
-                            child: CircularProgressIndicator(
-                              color: category.color,
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Icon(
-                            category.icon,
-                            color: category.color,
-                            size: 32,
-                          ),
-                        ),
-                      )
-                    : Icon(
-                        category.icon,
-                        color: category.color,
-                        size: 32,
-                      ),
-              ),
-              const SizedBox(width: 12),
-              
-              // Product Details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            product.name,
-                            style: theme.textTheme.titleMedium,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (product.isPurchased)
-                          Icon(
-                            Icons.check_circle,
-                            color: semantics?.success ?? theme.colorScheme.tertiary,
-                            size: 20,
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    if (product.description.isNotEmpty) ...[
-                      Text(
-                        product.description,
-                        style: theme.textTheme.bodySmall,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                    ],
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: category.color.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  category.icon,
-                                  size: 12,
-                                  color: category.color,
-                                ),
-                                const SizedBox(width: 4),
-                                Flexible(
-                                  child: Text(
-                                    category.displayName,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: category.color,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        if (product.quantity > 1) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            '${product.quantity}x',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                        ],
-                        if (product.link.isNotEmpty) ...[
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: () async {
-                              final url = product.link;
-                              if (url.isEmpty) return;
-                              
-                              try {
-                                String normalized = url.trim();
-                                if (!normalized.startsWith('http://') && 
-                                    !normalized.startsWith('https://')) {
-                                  normalized = 'https://$normalized';
-                                }
-                                
-                                final uri = Uri.parse(normalized);
-                                final launched = await launchUrl(
-                                  uri,
-                                  mode: LaunchMode.externalApplication,
-                                );
-                                
-                                if (!launched && context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Link açılamadı'),
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Geçersiz link'),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: Colors.blue.withValues(alpha: 0.3),
-                                  width: 0.5,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.link,
-                                    size: 12,
-                                    color: Colors.blue[700],
-                                  ),
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    'Link',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.blue[700],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              
-              // Price and Actions
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    CurrencyFormatter.formatWithSymbol(product.price),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (product.quantity > 1) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'Toplam: ${CurrencyFormatter.formatWithSymbol(product.totalPrice)}',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ],
-                  if (canEdit) ...[
-                    const SizedBox(height: 8),
-                    IconButton(
-                      icon: Icon(
-                        product.isPurchased
-                            ? Icons.check_box
-                            : Icons.check_box_outline_blank,
-                        color: product.isPurchased
-                            ? (semantics?.success ?? theme.colorScheme.tertiary)
-                            : null,
-                      ),
-                      onPressed: () async {
-                        final provider = Provider.of<ProductProvider>(
-                          context,
-                          listen: false,
-                        );
-                        await provider.togglePurchaseStatus(product.id);
-                      },
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    // Wrap with Dismissible only if user can edit
-    if (!canEdit) {
-      return cardContent;
-    }
-
-    return Dismissible(
-      key: Key(product.id),
-      background: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.blue,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.only(left: 20),
-        child: const Row(
-          children: [
-            Icon(Icons.edit, color: Colors.white),
-            SizedBox(width: 8),
-            Text(
-              'Düzenle',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-      secondaryBackground: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.red,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              'Sil',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(width: 8),
-            Icon(Icons.delete, color: Colors.white),
-          ],
-        ),
-      ),
-      confirmDismiss: (direction) async {
-        if (direction == DismissDirection.startToEnd) {
-          // Left to right swipe - Edit
-          context.push(
-            '/trousseau/${widget.trousseauId}/products/${product.id}/edit',
-          );
-          return false; // Don't dismiss, just navigate
-        } else {
-          // Right to left swipe - Delete
-          return await showDialog<bool>(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Ürünü Sil'),
-                content: Text('${product.name} ürününü silmek istediğinizden emin misiniz?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('İptal'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
-                    ),
-                    child: const Text('Sil'),
-                  ),
-                ],
-              );
-            },
-          ) ?? false;
-        }
-      },
-      onDismissed: (direction) async {
-        // Only called if confirmDismiss returns true (delete confirmed)
-        final provider = Provider.of<ProductProvider>(
-          context,
-          listen: false,
-        );
-        await provider.deleteProduct(product.id);
-        
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${product.name} silindi'),
-            ),
-          );
-        }
-      },
-      child: cardContent,
     );
   }
 
@@ -696,225 +620,20 @@ class _ProductListScreenState extends State<ProductListScreen> {
       children: [
         Text(
           label,
-          style: theme.textTheme.bodySmall,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontSize: AppTypography.sizeSM,
+          ),
         ),
-        const SizedBox(height: 4),
+        AppSpacing.xs.verticalSpace,
         Text(
           value,
           style: theme.textTheme.titleMedium?.copyWith(
             color: color,
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.bold,
+            fontSize: AppTypography.sizeLG,
           ),
         ),
       ],
     );
-  }
-
-  void _showFilterDialog(BuildContext context) {
-    final productProvider = Provider.of<ProductProvider>(context, listen: false);
-    final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
-    final trousseauProvider = Provider.of<TrousseauProvider>(context, listen: false);
-    final trousseau = trousseauProvider.getTrousseauById(widget.trousseauId);
-    final canEdit = trousseau != null && trousseau.canEdit(trousseauProvider.currentUserId ?? '');
-    
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Container(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Kategoriler',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                      ),
-                      if (canEdit)
-                        IconButton(
-                          tooltip: 'Kategori Ekle',
-                          onPressed: () async {
-                            final result = await _promptAddCategory(context, categoryProvider);
-                            if (result) setState(() {});
-                          },
-                          icon: const Icon(Icons.add),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: categoryProvider.allCategories.map((category) {
-                      final isSelected = productProvider.selectedCategories
-                          .contains(category.id);
-                      return Stack(
-                        alignment: Alignment.topRight,
-                        children: [
-                          CategoryChip(
-                            category: category,
-                            isSelected: isSelected,
-                            onTap: () {
-                              setState(() {
-                                productProvider.toggleCategory(category.id);
-                              });
-                            },
-                          ),
-                          if (canEdit && category.isCustom)
-                            Positioned(
-                              right: -6,
-                              top: -6,
-                              child: IconButton(
-                                icon: const Icon(Icons.close, size: 16),
-                                splashRadius: 14,
-                                onPressed: () async {
-                                  final confirmed = await _confirmDeleteCategory(context, category.displayName);
-                                  if (confirmed) {
-                                    await categoryProvider.removeCategory(category.id);
-                                    if (productProvider.selectedCategories.contains(category.id)) {
-                                      productProvider.toggleCategory(category.id);
-                                    }
-                                    setState(() {});
-                                  }
-                                },
-                              ),
-                            ),
-                        ],
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            productProvider.clearCategoryFilter();
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Temizle'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Uygula'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<bool> _promptAddCategory(BuildContext context, CategoryProvider provider) async {
-    final controller = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    IconData selIcon = Icons.category;
-    Color selColor = const Color(0xFF607D8B);
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setLocalState) => AlertDialog(
-          title: const Text('Yeni Kategori'),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: controller,
-                  decoration: const InputDecoration(hintText: 'Kategori adı (örn. Balkon)'),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Ad gerekli';
-                    if (provider.allCategories.any((c) => c.displayName.toLowerCase() == v.trim().toLowerCase())) {
-                      return 'Bu ad kullanılıyor';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    CircleAvatar(backgroundColor: selColor.withValues(alpha: 0.15), child: Icon(selIcon, color: selColor)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.palette_outlined),
-                        label: const Text('Sembol ve Renk Seç'),
-                        onPressed: () async {
-                          final res = await IconColorPicker.pick(context, icon: selIcon, color: selColor);
-                          if (res != null) {
-                            setLocalState(() { selIcon = res.icon; selColor = res.color; });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
-            ElevatedButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                final name = controller.text.trim();
-                final id = _slugify(name, provider);
-                final ok = await provider.addCustom(id, name, icon: selIcon, color: selColor);
-                if (!ctx.mounted) return;
-                Navigator.pop(ctx, ok);
-              },
-              child: const Text('Ekle'),
-            ),
-          ],
-        ),
-      ),
-    );
-    return result ?? false;
-  }
-
-  String _slugify(String name, CategoryProvider provider) {
-    String slug = name.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9ğüşöçı\s-]', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\s+'), '-');
-    if (slug.isEmpty) slug = 'kategori';
-    var base = slug;
-    int i = 1;
-    while (provider.allCategories.any((c) => c.displayName.toLowerCase() == slug.toLowerCase())) {
-      slug = '$base-$i';
-      i++;
-    }
-    return slug;
-  }
-
-  Future<bool> _confirmDeleteCategory(BuildContext context, String displayName) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Kategoriyi Sil'),
-        content: Text('"$displayName" kategorisini silmek istediğinize emin misiniz? Ürünler silinmez, kategori görünümü Diğer olarak değişebilir.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('İptal')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sil')),
-        ],
-      ),
-    );
-    return result ?? false;
   }
 }

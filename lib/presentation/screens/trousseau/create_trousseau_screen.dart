@@ -1,8 +1,21 @@
+/// Create Trousseau Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
+/// ✅ Jakob Yasası: Standart create form layout
+/// ✅ Fitts Yasası: Primary button 56dp, inputs 56dp height
+/// ✅ Hick Yasası: 1 primary action (Oluştur), 1 secondary (İptal - back button)
+/// ✅ Miller Yasası: 3 form alanı (Ad, Açıklama, Bütçe) - ideal
+/// ✅ Gestalt: Form alanları gruplanmış, info card ayrı
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
+import '../../widgets/common/app_button.dart';
+import '../../widgets/common/app_input.dart';
+import '../../widgets/common/app_card.dart';
 import '../../../core/utils/currency_formatter.dart';
 
 class CreateTrousseauScreen extends StatefulWidget {
@@ -27,6 +40,34 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
     super.dispose();
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VALIDATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  String? _validateName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Çeyiz adı gereklidir';
+    }
+    if (value.length < 3) {
+      return 'En az 3 karakter olmalıdır';
+    }
+    return null;
+  }
+
+  String? _validateBudget(String? value) {
+    if (value != null && value.isNotEmpty) {
+      final budget = CurrencyFormatter.parse(value);
+      if (budget == null || budget < 0) {
+        return 'Geçerli bir tutar girin';
+      }
+    }
+    return null;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CREATE TROUSSEAU HANDLER
+  // ═══════════════════════════════════════════════════════════════════════════
+
   Future<void> _createTrousseau() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -45,19 +86,29 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
       _isLoading = false;
     });
 
-    if (success && mounted) {
+    if (!mounted) return;
+
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Çeyiz başarıyla oluşturuldu'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Çeyiz başarıyla oluşturuldu'),
+          backgroundColor: Theme.of(context).colorScheme.tertiary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.radiusMD,
+          ),
         ),
       );
       context.pop();
-    } else if (!success && mounted) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(trousseauProvider.errorMessage),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.radiusMD,
+          ),
         ),
       );
     }
@@ -69,100 +120,110 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
 
     return LoadingOverlay(
       isLoading: _isLoading,
+      message: 'Çeyiz oluşturuluyor...',
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Yeni Çeyiz Oluştur'),
+          // FITTS YASASI: Back button 48x48
+          leading: AppIconButton(
+            icon: Icons.arrow_back,
+            onPressed: () => context.pop(),
+            tooltip: 'Geri',
+          ),
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: context.safePaddingHorizontal.horizontalSpace,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: AppBreakpoints.maxFormWidth,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppSpacing.md.verticalSpace,
+
+                    // ─────────────────────────────────────────────────────
+                    // INFO CARD
+                    // GESTALT: Görsel olarak ayrı bilgilendirme kutusu
+                    // ─────────────────────────────────────────────────────
+                    AppInfoCard(
+                      icon: Icons.home_work,
+                      title: 'Hayalinizdeki çeyizi planlamaya başlayın',
+                      color: theme.colorScheme.primary,
+                      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.05),
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.home_work,
-                        size: 48,
-                        color: theme.colorScheme.primary,
+
+                    AppSpacing.xl.verticalSpace,
+
+                    // ─────────────────────────────────────────────────────
+                    // FORM SECTION
+                    // MILLER YASASI: 3 alan (ideal)
+                    // ─────────────────────────────────────────────────────
+                    AppFormSection(
+                      title: 'Çeyiz Bilgileri',
+                      children: [
+                        // Trousseau Name
+                        AppTextInput(
+                          label: 'Çeyiz Adı',
+                          hint: 'Örn: Evlilik Çeyizim',
+                          controller: _nameController,
+                          prefixIcon: const Icon(Icons.label_outline),
+                          textInputAction: TextInputAction.next,
+                          validator: _validateName,
+                        ),
+
+                        // Description
+                        AppTextInput(
+                          label: 'Açıklama',
+                          hint: 'Çeyiziniz hakkında notlar ekleyin (Opsiyonel)',
+                          controller: _descriptionController,
+                          maxLines: 3,
+                          textInputAction: TextInputAction.next,
+                          prefixIcon: const Icon(Icons.description_outlined),
+                        ),
+
+                        // Budget
+                        AppTextInput(
+                          label: 'Toplam Bütçe (₺)',
+                          hint: 'Örn: 50.000 (Opsiyonel)',
+                          controller: _budgetController,
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.done,
+                          prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+                          inputFormatters: [CurrencyInputFormatter()],
+                          validator: _validateBudget,
+                        ),
+                      ],
+                    ),
+
+                    AppSpacing.xl2.verticalSpace,
+
+                    // ─────────────────────────────────────────────────────
+                    // PRIMARY ACTION
+                    // HICK YASASI: 1 primary action
+                    // FITTS YASASI: 56dp button
+                    // ─────────────────────────────────────────────────────
+                    AppButtonGroup(
+                      primaryButton: AppPrimaryButton(
+                        label: 'Çeyiz Oluştur',
+                        icon: Icons.add,
+                        isFullWidth: true,
+                        onPressed: _createTrousseau,
+                        isLoading: _isLoading,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Hayalinizdeki çeyizi planlamaya başlayın',
-                        style: theme.textTheme.bodyLarge,
-                        textAlign: TextAlign.center,
+                      secondaryButton: AppSecondaryButton(
+                        label: 'İptal',
+                        onPressed: () => context.pop(),
                       ),
-                    ],
-                  ),
+                    ),
+
+                    AppSpacing.xl.verticalSpace,
+                  ],
                 ),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Çeyiz Adı',
-                    hintText: 'Örn: Evlilik Çeyizim',
-                    prefixIcon: Icon(Icons.label_outline),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Çeyiz adı gereklidir';
-                    }
-                    if (value.length < 3) {
-                      return 'En az 3 karakter olmalıdır';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descriptionController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Açıklama (Opsiyonel)',
-                    hintText: 'Çeyiziniz hakkında notlar ekleyin',
-                    prefixIcon: Icon(Icons.description_outlined),
-                    alignLabelWithHint: true,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _budgetController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [CurrencyInputFormatter()],
-                  decoration: const InputDecoration(
-                    labelText: 'Toplam Bütçe (₺)',
-                    hintText: 'Örn: 50.000',
-                    prefixIcon: Icon(Icons.account_balance_wallet_outlined),
-                  ),
-                  validator: (value) {
-                    if (value != null && value.isNotEmpty) {
-                      final budget = CurrencyFormatter.parse(value);
-                      if (budget == null || budget < 0) {
-                        return 'Geçerli bir tutar girin';
-                      }
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _createTrousseau,
-                    child: const Text('Çeyiz Oluştur'),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

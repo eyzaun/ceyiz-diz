@@ -1,13 +1,25 @@
+/// Add Product Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
+/// ✅ Jakob Yasası: Standart form layout
+/// ✅ Fitts Yasası: Primary button 56dp, full width, tüm input'lar 56dp height
+/// ✅ Hick Yasası: 1 primary action (Ürün Ekle), 1 secondary (İptal - AppBar back)
+/// ✅ Miller Yasası: 8 alan → 2 bölüme ayrılmış (Temel Bilgiler 4 alan + Ek Bilgiler 4 alan)
+/// ✅ Gestalt: Form bölümleri gruplanmış, ilgili alanlar yakın (fiyat+adet)
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../providers/product_provider.dart';
-import '../../widgets/common/loading_overlay.dart';
-import '../../widgets/common/image_picker_widget.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/trousseau_provider.dart';
+import '../../widgets/common/loading_overlay.dart';
+import '../../widgets/common/image_picker_widget.dart';
 import '../../widgets/common/icon_color_picker.dart';
+import '../../widgets/common/app_button.dart';
+import '../../widgets/common/app_input.dart';
 import '../../../core/utils/currency_formatter.dart';
 
 class AddProductScreen extends StatefulWidget {
@@ -29,7 +41,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _priceController = TextEditingController();
   final _linkController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
-  
+
   String _selectedCategory = 'other';
   List<XFile> _selectedImages = [];
   bool _isLoading = false;
@@ -43,6 +55,41 @@ class _AddProductScreenState extends State<AddProductScreen> {
     _quantityController.dispose();
     super.dispose();
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VALIDATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  String? _validateName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Ürün adı gereklidir';
+    }
+    return null;
+  }
+
+  String? _validatePrice(String? value) {
+    if (value == null || value.trim().isEmpty) return null; // Opsiyonel
+    final price = CurrencyFormatter.parse(value.trim());
+    if (price == null || price <= 0) {
+      return 'Geçerli bir fiyat girin';
+    }
+    return null;
+  }
+
+  String? _validateQuantity(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Gerekli';
+    }
+    final quantity = int.tryParse(value);
+    if (quantity == null || quantity < 1) {
+      return 'Geçersiz';
+    }
+    return null;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ADD PRODUCT HANDLER
+  // ═══════════════════════════════════════════════════════════════════════════
 
   Future<void> _addProduct() async {
     if (!_formKey.currentState!.validate()) return;
@@ -67,233 +114,44 @@ class _AddProductScreenState extends State<AddProductScreen> {
       _isLoading = false;
     });
 
-    if (success && mounted) {
+    if (!mounted) return;
+
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Ürün başarıyla eklendi'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Ürün başarıyla eklendi'),
+          backgroundColor: Theme.of(context).colorScheme.tertiary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.radiusMD,
+          ),
         ),
       );
       context.pop();
-    } else if (!success && mounted) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(productProvider.errorMessage),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.radiusMD,
+          ),
         ),
       );
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-  // final theme = Theme.of(context);
-    final categoryProvider = Provider.of<CategoryProvider>(context);
-    
-    // Ensure selected category exists in current categories
-    if (categoryProvider.allCategories.isNotEmpty &&
-        !categoryProvider.allCategories.any((c) => c.id == _selectedCategory)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            _selectedCategory = categoryProvider.allCategories.first.id;
-          });
-        }
-      });
-    }
-    
-    // Ensure bound (idempotent)
-    if (categoryProvider.currentTrousseauId != widget.trousseauId) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          final trProv = Provider.of<TrousseauProvider>(context, listen: false);
-          Provider.of<CategoryProvider>(context, listen: false)
-              .bind(widget.trousseauId, userId: trProv.currentUserId ?? '');
-        }
-      });
-    }
-
-    return LoadingOverlay(
-      isLoading: _isLoading,
-      message: 'Ürün ekleniyor...',
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Ürün Ekle'),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Image Picker
-                ImagePickerWidget(
-                  selectedImages: _selectedImages,
-                  onImagesSelected: (images) {
-                    setState(() {
-                      _selectedImages = images;
-                    });
-                  },
-                  maxImages: 5,
-                ),
-                const SizedBox(height: 24),
-                
-                // Product Name
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Ürün Adı',
-                    hintText: 'Örn: Çatal Bıçak Takımı',
-                    prefixIcon: Icon(Icons.label_outline),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Ürün adı gereklidir';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                
-                // Description
-                TextFormField(
-                  controller: _descriptionController,
-                  maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: 'Açıklama (Opsiyonel)',
-                    hintText: 'Ürün hakkında detaylar',
-                    prefixIcon: Icon(Icons.description_outlined),
-                    alignLabelWithHint: true,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                // Price and Quantity Row
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: TextFormField(
-                        controller: _priceController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [CurrencyInputFormatter()],
-                        decoration: const InputDecoration(
-                          labelText: 'Fiyat (₺)',
-                          prefixIcon: Icon(Icons.attach_money),
-                        ),
-                        // Opsiyonel fiyat: boş bırakılabilir, doluysa sayı olmalı
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) return null;
-                          final price = CurrencyFormatter.parse(value.trim());
-                          if (price == null || price <= 0) {
-                            return 'Geçerli bir fiyat girin';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _quantityController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Adet',
-                          prefixIcon: Icon(Icons.numbers),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Gerekli';
-                          }
-                          final quantity = int.tryParse(value);
-                          if (quantity == null || quantity < 1) {
-                            return 'Geçersiz';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                
-                // Category Selection
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedCategory,
-                  decoration: const InputDecoration(
-                    labelText: 'Kategori',
-                    prefixIcon: Icon(Icons.category_outlined),
-                  ),
-                  items: [
-                    ...categoryProvider.allCategories.map((category) {
-                      return DropdownMenuItem(
-                        value: category.id,
-                        child: Row(
-                          children: [
-                            Icon(category.icon, size: 20, color: category.color),
-                            const SizedBox(width: 8),
-                            Text(category.displayName),
-                          ],
-                        ),
-                      );
-                    }),
-                    const DropdownMenuItem(
-                      value: '__add_new__',
-                      child: Row(
-                        children: [
-                          Icon(Icons.add),
-                          SizedBox(width: 8),
-                          Text('Yeni kategori ekle...'),
-                        ],
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value == '__add_new__') {
-                      _promptAddQuickCategory(context, categoryProvider);
-                    } else if (value != null) {
-                      setState(() {
-                        _selectedCategory = value;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                
-                // Product Link
-                TextFormField(
-                  controller: _linkController,
-                  keyboardType: TextInputType.url,
-                  decoration: const InputDecoration(
-                    labelText: 'Ürün Linki (Opsiyonel)',
-                    hintText: 'https://...',
-                    prefixIcon: Icon(Icons.link),
-                  ),
-                ),
-                const SizedBox(height: 32),
-                
-                // Submit Button
-                SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _addProduct,
-                    child: const Text('Ürün Ekle'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  // ═══════════════════════════════════════════════════════════════════════════
+  // QUICK ADD CATEGORY DIALOG
+  // ═══════════════════════════════════════════════════════════════════════════
 
   Future<void> _promptAddQuickCategory(BuildContext context, CategoryProvider provider) async {
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
     IconData selIcon = Icons.category;
     Color selColor = const Color(0xFF607D8B);
+
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -318,16 +176,22 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    CircleAvatar(backgroundColor: selColor.withValues(alpha: 0.15), child: Icon(selIcon, color: selColor)),
+                    CircleAvatar(
+                      backgroundColor: selColor.withValues(alpha: 0.15),
+                      child: Icon(selIcon, color: selColor),
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.palette_outlined),
-                        label: const Text('Sembol ve Renk Seç'),
+                      child: AppSecondaryButton(
+                        label: 'Sembol ve Renk Seç',
+                        icon: Icons.palette_outlined,
                         onPressed: () async {
                           final res = await IconColorPicker.pick(context, icon: selIcon, color: selColor);
                           if (res != null) {
-                            setLocalState(() { selIcon = res.icon; selColor = res.color; });
+                            setLocalState(() {
+                              selIcon = res.icon;
+                              selColor = res.color;
+                            });
                           }
                         },
                       ),
@@ -338,8 +202,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Vazgeç')),
-            ElevatedButton(
+            AppTextButton(
+              label: 'Vazgeç',
+              onPressed: () => Navigator.pop(ctx, null),
+            ),
+            AppPrimaryButton(
+              label: 'Ekle',
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
                 final name = controller.text.trim();
@@ -357,7 +225,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 final ok = await provider.addCustom(id, name, icon: selIcon, color: selColor);
                 if (!ctx.mounted) return;
                 if (ok) {
-                  // Find the stored category (scoped id) by displayName
                   final created = provider.allCategories.firstWhere(
                     (c) => c.displayName.toLowerCase() == name.toLowerCase(),
                     orElse: () => provider.getById('other'),
@@ -365,16 +232,242 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   Navigator.pop(ctx, created.id);
                 }
               },
-              child: const Text('Ekle'),
             ),
           ],
         ),
       ),
     );
+
     if (result != null) {
       setState(() {
         _selectedCategory = result;
       });
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUILD
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final categoryProvider = Provider.of<CategoryProvider>(context);
+
+    // Ensure selected category exists in current categories
+    if (categoryProvider.allCategories.isNotEmpty &&
+        !categoryProvider.allCategories.any((c) => c.id == _selectedCategory)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _selectedCategory = categoryProvider.allCategories.first.id;
+          });
+        }
+      });
+    }
+
+    // Ensure bound (idempotent)
+    if (categoryProvider.currentTrousseauId != widget.trousseauId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          final trProv = Provider.of<TrousseauProvider>(context, listen: false);
+          Provider.of<CategoryProvider>(context, listen: false)
+              .bind(widget.trousseauId, userId: trProv.currentUserId ?? '');
+        }
+      });
+    }
+
+    return LoadingOverlay(
+      isLoading: _isLoading,
+      message: 'Ürün ekleniyor...',
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Ürün Ekle'),
+          // FITTS YASASI: Back button 48x48 (default IconButton)
+          leading: AppIconButton(
+            icon: Icons.arrow_back,
+            onPressed: () => context.pop(),
+            tooltip: 'Geri',
+          ),
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: context.safePaddingHorizontal.horizontalSpace,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: AppBreakpoints.maxFormWidth,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppSpacing.md.verticalSpace,
+
+                    // ─────────────────────────────────────────────────────
+                    // IMAGE PICKER
+                    // ─────────────────────────────────────────────────────
+                    ImagePickerWidget(
+                      selectedImages: _selectedImages,
+                      onImagesSelected: (images) {
+                        setState(() {
+                          _selectedImages = images;
+                        });
+                      },
+                      maxImages: 5,
+                    ),
+
+                    AppSpacing.xl.verticalSpace,
+
+                    // ─────────────────────────────────────────────────────
+                    // FORM BÖLÜM 1: TEMEL BİLGİLER
+                    // Miller Yasası: 4 alan (Ad, Kategori, Fiyat+Adet row)
+                    // ─────────────────────────────────────────────────────
+                    AppFormSection(
+                      title: 'Temel Bilgiler',
+                      children: [
+                        // Product Name
+                        AppTextInput(
+                          label: 'Ürün Adı',
+                          hint: 'Örn: Çatal Bıçak Takımı',
+                          controller: _nameController,
+                          prefixIcon: const Icon(Icons.label_outline),
+                          textInputAction: TextInputAction.next,
+                          validator: _validateName,
+                        ),
+
+                        // Category Dropdown
+                        AppDropdown<String>(
+                          label: 'Kategori',
+                          value: _selectedCategory,
+                          prefixIcon: const Icon(Icons.category_outlined),
+                          items: [
+                            ...categoryProvider.allCategories.map((category) {
+                              return DropdownMenuItem(
+                                value: category.id,
+                                child: Row(
+                                  children: [
+                                    Icon(category.icon, size: 20, color: category.color),
+                                    AppSpacing.sm.horizontalSpace,
+                                    Text(category.displayName),
+                                  ],
+                                ),
+                              );
+                            }),
+                            const DropdownMenuItem(
+                              value: '__add_new__',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.add),
+                                  SizedBox(width: 8),
+                                  Text('Yeni kategori ekle...'),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value == '__add_new__') {
+                              _promptAddQuickCategory(context, categoryProvider);
+                            } else if (value != null) {
+                              setState(() {
+                                _selectedCategory = value;
+                              });
+                            }
+                          },
+                        ),
+
+                        // Price and Quantity Row
+                        // GESTALT: İlgili alanlar yakın (fiyat + adet)
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: AppTextInput(
+                                label: 'Fiyat (₺)',
+                                controller: _priceController,
+                                keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.next,
+                                prefixIcon: const Icon(Icons.attach_money),
+                                inputFormatters: [CurrencyInputFormatter()],
+                                validator: _validatePrice,
+                              ),
+                            ),
+                            AppSpacing.md.horizontalSpace,
+                            Expanded(
+                              child: AppTextInput(
+                                label: 'Adet',
+                                controller: _quantityController,
+                                keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.next,
+                                prefixIcon: const Icon(Icons.numbers),
+                                validator: _validateQuantity,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    AppSpacing.xl.verticalSpace,
+
+                    // ─────────────────────────────────────────────────────
+                    // FORM BÖLÜM 2: EK BİLGİLER
+                    // Miller Yasası: 2 alan (Açıklama, Link)
+                    // ─────────────────────────────────────────────────────
+                    AppFormSection(
+                      title: 'Ek Bilgiler',
+                      subtitle: 'Opsiyonel',
+                      children: [
+                        // Description
+                        AppTextInput(
+                          label: 'Açıklama',
+                          hint: 'Ürün hakkında detaylar',
+                          controller: _descriptionController,
+                          maxLines: 3,
+                          textInputAction: TextInputAction.next,
+                          prefixIcon: const Icon(Icons.description_outlined),
+                        ),
+
+                        // Product Link
+                        AppTextInput(
+                          label: 'Ürün Linki',
+                          hint: 'https://...',
+                          controller: _linkController,
+                          keyboardType: TextInputType.url,
+                          textInputAction: TextInputAction.done,
+                          prefixIcon: const Icon(Icons.link),
+                        ),
+                      ],
+                    ),
+
+                    AppSpacing.xl2.verticalSpace,
+
+                    // ─────────────────────────────────────────────────────
+                    // PRIMARY ACTION - HICK YASASI: Sadece 1 primary button
+                    // FITTS YASASI: 56dp height, full width
+                    // ─────────────────────────────────────────────────────
+                    AppButtonGroup(
+                      primaryButton: AppPrimaryButton(
+                        label: 'Ürün Ekle',
+                        icon: Icons.add_shopping_cart,
+                        isFullWidth: true,
+                        onPressed: _addProduct,
+                        isLoading: _isLoading,
+                      ),
+                      secondaryButton: AppSecondaryButton(
+                        label: 'İptal',
+                        onPressed: () => context.pop(),
+                      ),
+                    ),
+
+                    AppSpacing.xl.verticalSpace,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

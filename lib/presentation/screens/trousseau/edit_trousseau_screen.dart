@@ -1,8 +1,20 @@
+/// Edit Trousseau Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
+/// ✅ Jakob Yasası: Standart edit form layout
+/// ✅ Fitts Yasası: Primary button 56dp, inputs 56dp height
+/// ✅ Hick Yasası: 1 primary (Güncelle), 2 secondary (İptal, Sil)
+/// ✅ Miller Yasası: 3 form alanı (Ad, Açıklama, Bütçe) - ideal
+/// ✅ Gestalt: Form alanları gruplanmış, danger zone görsel olarak ayrı
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
+import '../../widgets/common/app_button.dart';
+import '../../widgets/common/app_input.dart';
 import '../../../core/utils/currency_formatter.dart';
 
 class EditTrousseauScreen extends StatefulWidget {
@@ -29,7 +41,7 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
     super.initState();
     final trousseau = Provider.of<TrousseauProvider>(context, listen: false)
         .getTrousseauById(widget.trousseauId);
-    
+
     _nameController = TextEditingController(text: trousseau?.name ?? '');
     _descriptionController = TextEditingController(text: trousseau?.description ?? '');
     _budgetController = TextEditingController(
@@ -44,6 +56,34 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
     _budgetController.dispose();
     super.dispose();
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VALIDATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  String? _validateName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Çeyiz adı gereklidir';
+    }
+    if (value.length < 3) {
+      return 'En az 3 karakter olmalıdır';
+    }
+    return null;
+  }
+
+  String? _validateBudget(String? value) {
+    if (value != null && value.isNotEmpty) {
+      final budget = CurrencyFormatter.parse(value);
+      if (budget == null || budget < 0) {
+        return 'Geçerli bir tutar girin';
+      }
+    }
+    return null;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // UPDATE TROUSSEAU HANDLER
+  // ═══════════════════════════════════════════════════════════════════════════
 
   Future<void> _updateTrousseau() async {
     if (!_formKey.currentState!.validate()) return;
@@ -64,34 +104,49 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
       _isLoading = false;
     });
 
-    if (success && mounted) {
+    if (!mounted) return;
+
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Çeyiz başarıyla güncellendi'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Çeyiz başarıyla güncellendi'),
+          backgroundColor: Theme.of(context).colorScheme.tertiary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.radiusMD,
+          ),
         ),
       );
       context.pop();
-    } else if (!success && mounted) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(trousseauProvider.errorMessage),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.radiusMD,
+          ),
         ),
       );
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DELETE TROUSSEAU HANDLER
+  // ═══════════════════════════════════════════════════════════════════════════
+
   Future<void> _deleteTrousseau() async {
+    final theme = Theme.of(context);
     final trousseau = Provider.of<TrousseauProvider>(context, listen: false)
         .getTrousseauById(widget.trousseauId);
 
     if (trousseau == null) return;
 
-    // Show confirmation dialog
+    // Confirmation Dialog
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('Çeyizi Sil'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -101,26 +156,26 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
               '"${trousseau.name}" çeyizini silmek istediğinizden emin misiniz?',
               style: const TextStyle(fontWeight: FontWeight.w500),
             ),
-            const SizedBox(height: 16),
+            AppSpacing.md.verticalSpace,
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.errorContainer,
-                borderRadius: BorderRadius.circular(8),
+                color: theme.colorScheme.errorContainer,
+                borderRadius: AppRadius.radiusMD,
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.warning_amber_rounded,
-                    color: Theme.of(context).colorScheme.error,
+                    color: theme.colorScheme.error,
                   ),
-                  const SizedBox(width: 12),
+                  AppSpacing.sm.horizontalSpace,
                   Expanded(
                     child: Text(
                       'Bu işlem geri alınamaz! Çeyiz içindeki tüm ürünler silinecektir.',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onErrorContainer,
-                        fontSize: 12,
+                        color: theme.colorScheme.onErrorContainer,
+                        fontSize: AppTypography.sizeSM,
                       ),
                     ),
                   ),
@@ -130,17 +185,14 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('İptal'),
+          AppTextButton(
+            label: 'Vazgeç',
+            onPressed: () => Navigator.pop(ctx, false),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            child: const Text('Sil'),
+          AppDangerButton(
+            label: 'Sil',
+            icon: Icons.delete,
+            onPressed: () => Navigator.pop(ctx, true),
           ),
         ],
       ),
@@ -159,20 +211,29 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
       _isLoading = false;
     });
 
-    if (success && mounted) {
+    if (!mounted) return;
+
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Çeyiz başarıyla silindi'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Çeyiz başarıyla silindi'),
+          backgroundColor: theme.colorScheme.tertiary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.radiusMD,
+          ),
         ),
       );
-      // Go back to home after deletion
       context.go('/');
-    } else if (!success && mounted) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(trousseauProvider.errorMessage),
-          backgroundColor: Colors.red,
+          backgroundColor: theme.colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.radiusMD,
+          ),
         ),
       );
     }
@@ -180,134 +241,156 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return LoadingOverlay(
       isLoading: _isLoading,
+      message: 'İşlem yapılıyor...',
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Çeyizi Düzenle'),
+          leading: AppIconButton(
+            icon: Icons.arrow_back,
+            onPressed: () => context.pop(),
+            tooltip: 'Geri',
+          ),
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Çeyiz Adı',
-                    prefixIcon: Icon(Icons.label_outline),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Çeyiz adı gereklidir';
-                    }
-                    if (value.length < 3) {
-                      return 'En az 3 karakter olmalıdır';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descriptionController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Açıklama',
-                    prefixIcon: Icon(Icons.description_outlined),
-                    alignLabelWithHint: true,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _budgetController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [CurrencyInputFormatter()],
-                  decoration: const InputDecoration(
-                    labelText: 'Toplam Bütçe (₺)',
-                    prefixIcon: Icon(Icons.account_balance_wallet_outlined),
-                  ),
-                  validator: (value) {
-                    if (value != null && value.isNotEmpty) {
-                      final budget = CurrencyFormatter.parse(value);
-                      if (budget == null || budget < 0) {
-                        return 'Geçerli bir tutar girin';
-                      }
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _updateTrousseau,
-                    child: const Text('Güncelle'),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Divider(),
-                const SizedBox(height: 24),
-                // Danger Zone
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
-                      width: 1,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: context.safePaddingHorizontal.horizontalSpace,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: AppBreakpoints.maxFormWidth,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppSpacing.md.verticalSpace,
+
+                    // ─────────────────────────────────────────────────────
+                    // FORM SECTION
+                    // MILLER YASASI: 3 alan (ideal)
+                    // ─────────────────────────────────────────────────────
+                    AppFormSection(
+                      title: 'Çeyiz Bilgileri',
+                      children: [
+                        AppTextInput(
+                          label: 'Çeyiz Adı',
+                          controller: _nameController,
+                          prefixIcon: const Icon(Icons.label_outline),
+                          textInputAction: TextInputAction.next,
+                          validator: _validateName,
+                        ),
+
+                        AppTextInput(
+                          label: 'Açıklama',
+                          controller: _descriptionController,
+                          maxLines: 3,
+                          textInputAction: TextInputAction.next,
+                          prefixIcon: const Icon(Icons.description_outlined),
+                        ),
+
+                        AppTextInput(
+                          label: 'Toplam Bütçe (₺)',
+                          controller: _budgetController,
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.done,
+                          prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+                          inputFormatters: [CurrencyInputFormatter()],
+                          validator: _validateBudget,
+                        ),
+                      ],
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+
+                    AppSpacing.xl2.verticalSpace,
+
+                    // ─────────────────────────────────────────────────────
+                    // PRIMARY ACTION
+                    // HICK YASASI: 1 primary + 1 secondary
+                    // ─────────────────────────────────────────────────────
+                    AppButtonGroup(
+                      primaryButton: AppPrimaryButton(
+                        label: 'Güncelle',
+                        icon: Icons.save,
+                        isFullWidth: true,
+                        onPressed: _updateTrousseau,
+                        isLoading: _isLoading,
+                      ),
+                      secondaryButton: AppSecondaryButton(
+                        label: 'İptal',
+                        onPressed: () => context.pop(),
+                      ),
+                    ),
+
+                    AppSpacing.xl.verticalSpace,
+
+                    // ─────────────────────────────────────────────────────
+                    // DANGER ZONE
+                    // GESTALT: Görsel olarak ayrı tehlikeli alan (kırmızı)
+                    // ─────────────────────────────────────────────────────
+                    Divider(
+                      height: AppSpacing.xl2,
+                      thickness: 1,
+                      color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                    ),
+
+                    Container(
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
+                        borderRadius: AppRadius.radiusMD,
+                        border: Border.all(
+                          color: theme.colorScheme.error.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.warning_amber_rounded,
-                            color: Theme.of(context).colorScheme.error,
-                            size: 20,
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                color: theme.colorScheme.error,
+                                size: 20,
+                              ),
+                              AppSpacing.sm.horizontalSpace,
+                              Text(
+                                'Tehlikeli Alan',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: theme.colorScheme.error,
+                                  fontWeight: AppTypography.bold,
+                                  fontSize: AppTypography.sizeLG,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
+                          AppSpacing.sm.verticalSpace,
                           Text(
-                            'Tehlikeli Alan',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.error,
-                              fontWeight: FontWeight.bold,
+                            'Çeyizi silmek geri alınamaz bir işlemdir. Tüm ürünler ve veriler kalıcı olarak silinecektir.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onErrorContainer,
+                              fontSize: AppTypography.sizeSM,
                             ),
+                          ),
+                          AppSpacing.md.verticalSpace,
+                          AppDangerButton(
+                            label: 'Çeyizi Sil',
+                            icon: Icons.delete_forever,
+                            isOutlined: true,
+                            isFullWidth: true,
+                            onPressed: _deleteTrousseau,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Çeyizi silmek geri alınamaz bir işlemdir. Tüm ürünler ve veriler kalıcı olarak silinecektir.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onErrorContainer,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: OutlinedButton.icon(
-                          onPressed: _deleteTrousseau,
-                          icon: const Icon(Icons.delete_forever),
-                          label: const Text('Çeyizi Sil'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Theme.of(context).colorScheme.error,
-                            side: BorderSide(
-                              color: Theme.of(context).colorScheme.error,
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+
+                    AppSpacing.xl.verticalSpace,
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
