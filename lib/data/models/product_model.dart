@@ -13,7 +13,6 @@ class ProductModel {
   final DateTime? purchaseDate;
   final String purchasedBy;
   final int quantity;
-  final String notes;
   final String addedBy;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -32,7 +31,6 @@ class ProductModel {
     this.purchaseDate,
     this.purchasedBy = '',
     this.quantity = 1,
-    this.notes = '',
     required this.addedBy,
     required this.createdAt,
     required this.updatedAt,
@@ -56,7 +54,6 @@ class ProductModel {
           : null,
       purchasedBy: data['purchasedBy'] ?? '',
       quantity: data['quantity'] ?? 1,
-      notes: data['notes'] ?? '',
       addedBy: data['addedBy'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
@@ -79,7 +76,6 @@ class ProductModel {
           : null,
       'purchasedBy': purchasedBy,
       'quantity': quantity,
-      'notes': notes,
       'addedBy': addedBy,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
@@ -100,7 +96,6 @@ class ProductModel {
     DateTime? purchaseDate,
     String? purchasedBy,
     int? quantity,
-    String? notes,
     String? addedBy,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -119,7 +114,6 @@ class ProductModel {
       purchaseDate: purchaseDate ?? this.purchaseDate,
       purchasedBy: purchasedBy ?? this.purchasedBy,
       quantity: quantity ?? this.quantity,
-      notes: notes ?? this.notes,
       addedBy: addedBy ?? this.addedBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

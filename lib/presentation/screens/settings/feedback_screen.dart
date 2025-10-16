@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/feedback_provider.dart';
 
 class FeedbackScreen extends StatelessWidget {
@@ -23,7 +24,16 @@ class _FeedbackForm extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Geri Bildirim')),
+      appBar: AppBar(
+        title: const Text('Geri Bildirim'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Geçmiş Geri Bildirimler',
+            onPressed: () => context.push('/settings/feedback/history'),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Center(

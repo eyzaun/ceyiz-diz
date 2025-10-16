@@ -8,6 +8,7 @@ import '../../widgets/common/image_picker_widget.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/icon_color_picker.dart';
+import '../../../core/utils/currency_formatter.dart';
 
 class AddProductScreen extends StatefulWidget {
   final String trousseauId;
@@ -28,7 +29,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _priceController = TextEditingController();
   final _linkController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
-  final _notesController = TextEditingController();
   
   String _selectedCategory = 'other';
   List<XFile> _selectedImages = [];
@@ -41,7 +41,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
     _priceController.dispose();
     _linkController.dispose();
     _quantityController.dispose();
-    _notesController.dispose();
     super.dispose();
   }
 
@@ -57,12 +56,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
       trousseauId: widget.trousseauId,
       name: _nameController.text,
       description: _descriptionController.text,
-      price: double.tryParse(_priceController.text.trim()) ?? 0.0,
+      price: CurrencyFormatter.parse(_priceController.text.trim()) ?? 0.0,
       category: _selectedCategory,
       imageFiles: _selectedImages,
       link: _linkController.text,
       quantity: int.parse(_quantityController.text),
-      notes: _notesController.text,
     );
 
     setState(() {
@@ -179,6 +177,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       child: TextFormField(
                         controller: _priceController,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [CurrencyInputFormatter()],
                         decoration: const InputDecoration(
                           labelText: 'Fiyat (₺)',
                           prefixIcon: Icon(Icons.attach_money),
@@ -186,7 +185,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         // Opsiyonel fiyat: boş bırakılabilir, doluysa sayı olmalı
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) return null;
-                          if (double.tryParse(value.trim()) == null) {
+                          final price = CurrencyFormatter.parse(value.trim());
+                          if (price == null || price <= 0) {
                             return 'Geçerli bir fiyat girin';
                           }
                           return null;
@@ -269,19 +269,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     labelText: 'Ürün Linki (Opsiyonel)',
                     hintText: 'https://...',
                     prefixIcon: Icon(Icons.link),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                // Notes
-                TextFormField(
-                  controller: _notesController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Notlar (Opsiyonel)',
-                    hintText: 'Ürün hakkında notlarınız',
-                    prefixIcon: Icon(Icons.note_outlined),
-                    alignLabelWithHint: true,
                   ),
                 ),
                 const SizedBox(height: 32),

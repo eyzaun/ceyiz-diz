@@ -8,6 +8,7 @@ import '../../widgets/common/image_picker_widget.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/icon_color_picker.dart';
+import '../../../core/utils/currency_formatter.dart';
 
 class EditProductScreen extends StatefulWidget {
   final String trousseauId;
@@ -30,7 +31,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
   late TextEditingController _priceController;
   late TextEditingController _linkController;
   late TextEditingController _quantityController;
-  late TextEditingController _notesController;
   
   String _selectedCategory = 'other';
   List<XFile> _selectedImages = [];
@@ -47,10 +47,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
     if (product != null) {
       _nameController = TextEditingController(text: product.name);
       _descriptionController = TextEditingController(text: product.description);
-      _priceController = TextEditingController(text: product.price.toString());
+      _priceController = TextEditingController(text: CurrencyFormatter.format(product.price));
       _linkController = TextEditingController(text: product.link);
       _quantityController = TextEditingController(text: product.quantity.toString());
-      _notesController = TextEditingController(text: product.notes);
       _selectedCategory = product.category;
       _existingImages = product.images;
       _isPurchased = product.isPurchased;
@@ -60,7 +59,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
       _priceController = TextEditingController();
       _linkController = TextEditingController();
       _quantityController = TextEditingController();
-      _notesController = TextEditingController();
     }
   }
 
@@ -71,7 +69,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
     _priceController.dispose();
     _linkController.dispose();
     _quantityController.dispose();
-    _notesController.dispose();
     super.dispose();
   }
 
@@ -87,13 +84,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
       productId: widget.productId,
       name: _nameController.text,
       description: _descriptionController.text,
-      price: double.parse(_priceController.text),
+      price: CurrencyFormatter.parse(_priceController.text),
       category: _selectedCategory,
       newImageFiles: _selectedImages,
       existingImages: _existingImages,
       link: _linkController.text,
       quantity: int.parse(_quantityController.text),
-      notes: _notesController.text,
       isPurchased: _isPurchased,
     );
 
@@ -158,6 +154,102 @@ class _EditProductScreenState extends State<EditProductScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Existing Images Section
+                if (_existingImages.isNotEmpty) ...[
+                  Text(
+                    'Mevcut Fotoğraflar',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: _existingImages.map((imageUrl) {
+                      return Stack(
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.outline,
+                                width: 1,
+                              ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                imageUrl,
+                                fit: BoxFit.cover,
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Center(
+                                    child: Icon(Icons.error_outline, color: Colors.red),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _existingImages.remove(imageUrl);
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.3),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                
+                // New Images Section
+                if (_existingImages.length + _selectedImages.length < 5) ...[
+                  Text(
+                    'Yeni Fotoğraf Ekle',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 ImagePickerWidget(
                   selectedImages: _selectedImages,
                   onImagesSelected: (images) {
@@ -165,7 +257,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       _selectedImages = images;
                     });
                   },
-                  maxImages: 5,
+                  maxImages: 5 - _existingImages.length,
                 ),
                 const SizedBox(height: 24),
                 
@@ -202,6 +294,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       child: TextFormField(
                         controller: _priceController,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [CurrencyInputFormatter()],
                         decoration: const InputDecoration(
                           labelText: 'Fiyat (₺)',
                           prefixIcon: Icon(Icons.attach_money),
@@ -210,7 +303,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           if (value == null || value.isEmpty) {
                             return 'Fiyat gereklidir';
                           }
-                          if (double.tryParse(value) == null) {
+                          final price = CurrencyFormatter.parse(value);
+                          if (price == null || price <= 0) {
                             return 'Geçerli bir fiyat girin';
                           }
                           return null;
@@ -290,17 +384,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Ürün Linki',
                     prefixIcon: Icon(Icons.link),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                TextFormField(
-                  controller: _notesController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Notlar',
-                    prefixIcon: Icon(Icons.note_outlined),
-                    alignLabelWithHint: true,
                   ),
                 ),
                 const SizedBox(height: 16),

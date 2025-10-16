@@ -6,6 +6,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'eyyup.zaferr.unal@gmail.com';
+    }
+
     function trousseauPath(trousseauId) {
       return /databases/$(database)/documents/trousseaus/$(trousseauId);
     }
@@ -31,7 +35,8 @@ service cloud.firestore {
       allow create, delete: if isAuthed() && request.auth.uid == userId;
       allow update: if isAuthed() && (
         request.auth.uid == userId ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sharedTrousseauIds'])
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sharedTrousseauIds']) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pinnedSharedTrousseauIds'])
       );
     }
 
@@ -49,7 +54,13 @@ service cloud.firestore {
 
       // Subcollection: categories
       match /categories/{categoryId} {
-        allow read: if isAuthed() && canReadTrousseau(trousseauId);
+        // Read categories if user can read the parent trousseau
+        // Use direct parent document access instead of exists() to avoid issues
+        allow read: if isAuthed() && (
+          get(/databases/$(database)/documents/trousseaus/$(trousseauId)).data.ownerId == request.auth.uid ||
+          request.auth.uid in get(/databases/$(database)/documents/trousseaus/$(trousseauId)).data.get('sharedWith', []) ||
+          request.auth.uid in get(/databases/$(database)/documents/trousseaus/$(trousseauId)).data.get('editors', [])
+        );
         allow create, update, delete: if isAuthed() && canWriteTrousseau(trousseauId);
       }
     }
@@ -65,10 +76,28 @@ service cloud.firestore {
       allow write: if false; // Only admin/console can update
     }
 
-    // Feedback - Users can submit feedback
+    // Feedback - Users can submit and read their own feedback
     match /feedback/{feedbackId} {
       allow create: if isAuthed();
-      allow read, update, delete: if false; // Only admin can read
+      // Users can read their own feedback, admin can read all
+      allow read: if isAuthed() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      // Admin can update to add replies
+      // When admin fills adminReply, repliedAt and repliedBy should be set
+      allow update: if isAdmin() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['adminReply', 'repliedAt', 'repliedBy']) &&
+        (
+          // If adminReply is being set (not null), ensure repliedAt and repliedBy are also set
+          (request.resource.data.adminReply != null &&
+           request.resource.data.repliedAt != null &&
+           request.resource.data.repliedBy != null) ||
+          // Or if adminReply is being cleared, allow clearing all fields
+          (request.resource.data.adminReply == null)
+        );
+      // Admin can delete feedback
+      allow delete: if isAdmin();
     }
   }
 }

@@ -278,30 +278,31 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                     ),
                   ),
                 ),
-                // Product list / empty / loading
-                if (productProvider.products.isEmpty)
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: EmptyStateWidget(
-                        icon: Icons.shopping_bag_outlined,
-                        title: 'Henüz ürün eklenmemiş',
-                        subtitle: 'İlk ürününüzü ekleyerek başlayın',
-                        action: trousseau.canEdit(trousseauProvider.currentUserId ?? '')
-                            ? ElevatedButton.icon(
-                                onPressed: () => context.push('/trousseau/$_currentTrousseauId/products/add'),
-                                icon: const Icon(Icons.add),
-                                label: const Text('Ürün Ekle'),
-                              )
-                            : null,
-                      ),
-                    ),
-                  )
-                else
-                  // Keep list sliver constant; overlay states separately to avoid scroll jumps
-                  Consumer<ProductProvider>(
-                    builder: (context, productProvider, _) {
+                // Product list / empty / loading - MUST use Consumer to react to product changes
+                Consumer<ProductProvider>(
+                  builder: (context, productProvider, _) {
+                    if (productProvider.products.isEmpty) {
+                      return SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: EmptyStateWidget(
+                            icon: Icons.shopping_bag_outlined,
+                            title: 'Henüz ürün eklenmemiş',
+                            subtitle: 'İlk ürününüzü ekleyerek başlayın',
+                            action: trousseau.canEdit(trousseauProvider.currentUserId ?? '')
+                                ? ElevatedButton.icon(
+                                    onPressed: () => context.push('/trousseau/$_currentTrousseauId/products/add'),
+                                    icon: const Icon(Icons.add),
+                                    label: const Text('Ürün Ekle'),
+                                  )
+                                : null,
+                          ),
+                        ),
+                      );
+                    }
+
+                    // Keep list sliver constant; overlay states separately to avoid scroll jumps
                       return SliverPadding(
                         padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16, vertical: isCompact ? 8 : 12),
                         sliver: SliverList(
@@ -728,7 +729,8 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
     bool isCompact,
   ) {
     final theme = Theme.of(context);
-    final myTrousseaus = trousseauProvider.trousseaus;
+    // Include both owned and pinned shared trousseaus
+    final myTrousseaus = trousseauProvider.pinnedTrousseaus;
 
     return Container(
       height: 36,
@@ -773,18 +775,27 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Show icon for shared trousseaus
+                          if (trousseau.ownerId != trousseauProvider.currentUserId) ...[
+                            Icon(
+                              Icons.people_outline,
+                              size: 14,
+                              color: isSelected
+                                  ? theme.colorScheme.onPrimaryContainer
+                                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            ),
+                            const SizedBox(width: 4),
+                          ],
                           Text(
                             trousseau.name,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                              color: isSelected 
-                                  ? theme.colorScheme.onPrimaryContainer 
+                              color: isSelected
+                                  ? theme.colorScheme.onPrimaryContainer
                                   : theme.colorScheme.onSurface,
                             ),
                           ),
-                          if (index < myTrousseaus.length - 1 || myTrousseaus.length > 1)
-                            const SizedBox(width: 4),
                         ],
                       ),
                     ),

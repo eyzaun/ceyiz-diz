@@ -4,9 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/trousseau_provider.dart';
-import '../../providers/product_provider.dart';
 import '../../widgets/common/custom_dialog.dart';
-// import '../../widgets/common/draggable_fab.dart';
 import 'statistics_screen.dart';
 import '../trousseau/trousseau_detail_screen.dart';
 
@@ -24,9 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // After first frame, ensure home tab binds to the user's own trousseau products
+    // After first frame, check for updates
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _ensureHomeTrousseauBound();
       _checkForUpdateOnce();
     });
   }
@@ -58,10 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _selectedIndex = index;
           });
-          if (index == 0) {
-            // Re-bind to user's own trousseau when returning to home tab
-            _ensureHomeTrousseauBound();
-          }
         },
         items: const [
           BottomNavigationBarItem(
@@ -83,24 +76,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTrousseauTab(BuildContext context) {
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
-    final id = trousseauProvider.myTrousseauId();
-    if (id == null) {
-      // Henüz stream bağlanmadı veya ilk çeyiz oluşturuluyor
+    final pinnedTrousseaus = trousseauProvider.pinnedTrousseaus;
+
+    // Wait until trousseaus are loaded (either loading or have data)
+    if (trousseauProvider.isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    // Çeyiz detay sayfasını ana tabda göster
-    return TrousseauDetailScreen(trousseauId: id);
-  }
 
-  void _ensureHomeTrousseauBound() {
-    final trousseauProvider = context.read<TrousseauProvider>();
-    final productProvider = context.read<ProductProvider>();
-    final id = trousseauProvider.myTrousseauId();
-    if (id != null) {
-      productProvider.loadProducts(id);
+    if (pinnedTrousseaus.isEmpty) {
+      // No trousseaus yet, show empty state
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text('Henüz çeyiz oluşturmadınız'),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => context.push('/create-trousseau'),
+                icon: const Icon(Icons.add),
+                label: const Text('Çeyiz Oluştur'),
+              ),
+            ],
+          ),
+        ),
+      );
     }
+
+    // İlk çeyizi göster (varsayılan)
+    final id = pinnedTrousseaus.first.id;
+    return TrousseauDetailScreen(trousseauId: id, key: ValueKey(id));
   }
 
   Widget _buildProfile(BuildContext context) {

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
+import '../../../core/utils/currency_formatter.dart';
 
 class CreateTrousseauScreen extends StatefulWidget {
   const CreateTrousseauScreen({super.key});
@@ -37,7 +38,7 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
     final success = await trousseauProvider.createTrousseau(
       name: _nameController.text,
       description: _descriptionController.text,
-      totalBudget: double.tryParse(_budgetController.text) ?? 0,
+      totalBudget: CurrencyFormatter.parse(_budgetController.text) ?? 0,
     );
 
     setState(() {
@@ -137,14 +138,15 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
                 TextFormField(
                   controller: _budgetController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [CurrencyInputFormatter()],
                   decoration: const InputDecoration(
                     labelText: 'Toplam Bütçe (₺)',
-                    hintText: 'Örn: 50000',
+                    hintText: 'Örn: 50.000',
                     prefixIcon: Icon(Icons.account_balance_wallet_outlined),
                   ),
                   validator: (value) {
                     if (value != null && value.isNotEmpty) {
-                      final budget = double.tryParse(value);
+                      final budget = CurrencyFormatter.parse(value);
                       if (budget == null || budget < 0) {
                         return 'Geçerli bir tutar girin';
                       }

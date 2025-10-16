@@ -20,6 +20,7 @@ import '../screens/settings/profile_screen.dart';
 import '../screens/settings/theme_settings_screen.dart';
 import '../screens/settings/change_password_screen.dart';
 import '../screens/settings/feedback_screen.dart';
+import '../screens/settings/feedback_history_screen.dart';
 import '../screens/trousseau/shared_trousseau_list_screen.dart';
 
 class AppRouter {
@@ -148,6 +149,12 @@ class AppRouter {
               GoRoute(
                 path: 'feedback',
                 builder: (context, state) => const FeedbackScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'history',
+                    builder: (context, state) => const FeedbackHistoryScreen(),
+                  ),
+                ],
               ),
             ],
           ),

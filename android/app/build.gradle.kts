@@ -31,6 +31,19 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
+    // Enable App Bundle splits for smaller download sizes
+    bundle {
+        language {
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
+        }
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.Loncagames.ceyizdiz"
@@ -40,6 +53,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // Enable multidex to avoid 64k method limit (helps with build optimization)
+        multiDexEnabled = true
     }
 
     signingConfigs {
@@ -58,10 +74,24 @@ android {
         release {
             // Use release signing if configured, otherwise fall back to debug for local runs
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            
+            // Enable minify and shrink resources to reduce APK size
+            isMinifyEnabled = true
+            isShrinkResources = true
+            
+            // Use ProGuard rules for code obfuscation and optimization
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation("androidx.multidex:multidex:2.0.1")
 }

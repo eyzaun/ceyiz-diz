@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
@@ -21,12 +21,75 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  // Optionally initialize Firebase App Check on web if a site key is provided at build time
-  const appCheckSiteKey = String.fromEnvironment('APP_CHECK_RECAPTCHA_V3_SITE_KEY');
-  if (kIsWeb && appCheckSiteKey.isNotEmpty) {
-    await FirebaseAppCheck.instance.activate(
-      webProvider: ReCaptchaV3Provider(appCheckSiteKey),
-    );
+  
+  // Initialize Firebase App Check with Debug Token support
+  if (kIsWeb) {
+    // Web: ReCAPTCHA Enterprise provider (gerekli tip)
+    try {
+      await FirebaseAppCheck.instance.activate(
+        webProvider: ReCaptchaEnterpriseProvider(
+          '6LeLa-srAAAAAC7WSsymHEKckyhM8pocD01RMB6e',
+        ),
+      );
+      
+      if (kDebugMode) {
+        debugPrint('🌐 Web: App Check aktif (ReCAPTCHA Enterprise)');
+        try {
+          await FirebaseAppCheck.instance.getToken();
+          debugPrint('✅ Web App Check token alındı');
+        } catch (e) {
+          debugPrint('⚠️  Token hatası: $e');
+        }
+      } else {
+        debugPrint('🌐 Web: App Check aktif (Production mode)');
+      }
+    } catch (e) {
+      debugPrint('❌ Web App Check başlatılamadı: $e');
+    }
+  } else {
+    // Android/iOS: Use debug provider in debug mode, Play Integrity in release
+    if (kDebugMode) {
+      // Debug mode: Use debug provider - automatically generates token
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.debug,
+        appleProvider: AppleProvider.debug,
+      );
+      
+      // Wait for token to be generated
+      await Future.delayed(const Duration(seconds: 2));
+      try {
+        final token = await FirebaseAppCheck.instance.getToken();
+        if (token != null) {
+          debugPrint('');
+          debugPrint('═══════════════════════════════════════════════════════════════');
+          debugPrint('🔐 FIREBASE APP CHECK DEBUG TOKEN');
+          debugPrint('═══════════════════════════════════════════════════════════════');
+          debugPrint('');
+          debugPrint('Token: $token');
+          debugPrint('');
+          debugPrint('📋 BU TOKEN\'I FIREBASE CONSOLE\'A EKLEYİN:');
+          debugPrint('');
+          debugPrint('1. https://console.firebase.google.com/project/ceyiz-diz/appcheck');
+          debugPrint('2. "Apps" sekmesinde Android app\'i bulun');
+          debugPrint('3. "Manage debug tokens" tıklayın');
+          debugPrint('4. "Add debug token" tıklayın');
+          debugPrint('5. Yukarıdaki token\'ı yapıştırın ve kaydedin');
+          debugPrint('');
+          debugPrint('⚠️  NOT: Token kaydettikten sonra uygulamayı yeniden başlatın!');
+          debugPrint('═══════════════════════════════════════════════════════════════');
+          debugPrint('');
+        }
+      } catch (e) {
+        debugPrint('⚠️  Debug token alınamadı: $e');
+      }
+    } else {
+      // Release mode: Use Play Integrity
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.playIntegrity,
+        appleProvider: AppleProvider.deviceCheck,
+      );
+      debugPrint('✅ App Check: Play Integrity aktif (Release mode)');
+    }
   }
   
   final prefs = await SharedPreferences.getInstance();

@@ -8,6 +8,7 @@ class UserModel {
   final DateTime lastLoginAt;
   final List<String> trousseauIds;
   final List<String> sharedTrousseauIds;
+  final List<String> pinnedSharedTrousseauIds;
 
   UserModel({
     required this.uid,
@@ -17,6 +18,7 @@ class UserModel {
     required this.lastLoginAt,
     this.trousseauIds = const [],
     this.sharedTrousseauIds = const [],
+    this.pinnedSharedTrousseauIds = const [],
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -29,6 +31,7 @@ class UserModel {
       lastLoginAt: (data['lastLoginAt'] as Timestamp).toDate(),
       trousseauIds: List<String>.from(data['trousseauIds'] ?? []),
       sharedTrousseauIds: List<String>.from(data['sharedTrousseauIds'] ?? []),
+      pinnedSharedTrousseauIds: List<String>.from(data['pinnedSharedTrousseauIds'] ?? []),
     );
   }
 
@@ -42,6 +45,7 @@ class UserModel {
       'lastLoginAt': Timestamp.fromDate(lastLoginAt),
       'trousseauIds': trousseauIds,
       'sharedTrousseauIds': sharedTrousseauIds,
+      'pinnedSharedTrousseauIds': pinnedSharedTrousseauIds,
     };
   }
 
@@ -53,6 +57,7 @@ class UserModel {
     DateTime? lastLoginAt,
     List<String>? trousseauIds,
     List<String>? sharedTrousseauIds,
+    List<String>? pinnedSharedTrousseauIds,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -62,6 +67,7 @@ class UserModel {
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       trousseauIds: trousseauIds ?? this.trousseauIds,
       sharedTrousseauIds: sharedTrousseauIds ?? this.sharedTrousseauIds,
+      pinnedSharedTrousseauIds: pinnedSharedTrousseauIds ?? this.pinnedSharedTrousseauIds,
     );
   }
 }

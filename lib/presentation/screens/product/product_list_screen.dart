@@ -13,6 +13,8 @@ import '../../../core/themes/design_system.dart';
 import '../../widgets/common/filter_pill.dart';
 import '../../widgets/common/responsive_container.dart';
 import '../../widgets/common/icon_color_picker.dart';
+import '../../../core/utils/currency_formatter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProductListScreen extends StatefulWidget {
   final String trousseauId;
@@ -37,12 +39,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      // Force load products immediately
       final productProv = Provider.of<ProductProvider>(context, listen: false);
       productProv.loadProducts(widget.trousseauId);
+
       // Bind category provider for dynamic categories of this trousseau
-  final catProv = Provider.of<CategoryProvider>(context, listen: false);
-  final trProv = Provider.of<TrousseauProvider>(context, listen: false);
-  catProv.bind(widget.trousseauId, userId: trProv.currentUserId ?? '');
+      final catProv = Provider.of<CategoryProvider>(context, listen: false);
+      final trProv = Provider.of<TrousseauProvider>(context, listen: false);
+      catProv.bind(widget.trousseauId, userId: trProv.currentUserId ?? '');
     });
   }
 
@@ -331,7 +335,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   final category = Provider.of<CategoryProvider>(context, listen: false)
     .getById(product.category);
 
-    return Card(
+    final cardContent = Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () => context.push(
@@ -411,41 +415,117 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     ],
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: category.color.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                category.icon,
-                                size: 12,
-                                color: category.color,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                category.displayName,
-                                style: TextStyle(
-                                  fontSize: 11,
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: category.color.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  category.icon,
+                                  size: 12,
                                   color: category.color,
-                                  fontWeight: FontWeight.w500,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    category.displayName,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: category.color,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        if (product.quantity > 1)
+                        if (product.quantity > 1) ...[
+                          const SizedBox(width: 8),
                           Text(
-                            '${product.quantity} adet',
+                            '${product.quantity}x',
                             style: theme.textTheme.bodySmall,
                           ),
+                        ],
+                        if (product.link.isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () async {
+                              final url = product.link;
+                              if (url.isEmpty) return;
+                              
+                              try {
+                                String normalized = url.trim();
+                                if (!normalized.startsWith('http://') && 
+                                    !normalized.startsWith('https://')) {
+                                  normalized = 'https://$normalized';
+                                }
+                                
+                                final uri = Uri.parse(normalized);
+                                final launched = await launchUrl(
+                                  uri,
+                                  mode: LaunchMode.externalApplication,
+                                );
+                                
+                                if (!launched && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Link açılamadı'),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Geçersiz link'),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: Colors.blue.withValues(alpha: 0.3),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.link,
+                                    size: 12,
+                                    color: Colors.blue[700],
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    'Link',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.blue[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ],
@@ -458,7 +538,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '₺${product.price.toStringAsFixed(2)}',
+                    CurrencyFormatter.formatWithSymbol(product.price),
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -467,7 +547,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   if (product.quantity > 1) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Toplam: ₺${product.totalPrice.toStringAsFixed(2)}',
+                      'Toplam: ${CurrencyFormatter.formatWithSymbol(product.totalPrice)}',
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
@@ -497,6 +577,110 @@ class _ProductListScreenState extends State<ProductListScreen> {
           ),
         ),
       ),
+    );
+
+    // Wrap with Dismissible only if user can edit
+    if (!canEdit) {
+      return cardContent;
+    }
+
+    return Dismissible(
+      key: Key(product.id),
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        child: const Row(
+          children: [
+            Icon(Icons.edit, color: Colors.white),
+            SizedBox(width: 8),
+            Text(
+              'Düzenle',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+      secondaryBackground: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              'Sil',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(width: 8),
+            Icon(Icons.delete, color: Colors.white),
+          ],
+        ),
+      ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          // Left to right swipe - Edit
+          context.push(
+            '/trousseau/${widget.trousseauId}/products/${product.id}/edit',
+          );
+          return false; // Don't dismiss, just navigate
+        } else {
+          // Right to left swipe - Delete
+          return await showDialog<bool>(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Ürünü Sil'),
+                content: Text('${product.name} ürününü silmek istediğinizden emin misiniz?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('İptal'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
+                    ),
+                    child: const Text('Sil'),
+                  ),
+                ],
+              );
+            },
+          ) ?? false;
+        }
+      },
+      onDismissed: (direction) async {
+        // Only called if confirmDismiss returns true (delete confirmed)
+        final provider = Provider.of<ProductProvider>(
+          context,
+          listen: false,
+        );
+        await provider.deleteProduct(product.id);
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${product.name} silindi'),
+            ),
+          );
+        }
+      },
+      child: cardContent,
     );
   }
 

@@ -61,7 +61,34 @@ class SharedTrousseauListScreen extends StatelessWidget {
 												),
 											],
 										),
-										trailing: const Icon(Icons.chevron_right),
+										trailing: Row(
+											mainAxisSize: MainAxisSize.min,
+											children: [
+												// Pin/Unpin butonu
+												IconButton(
+													icon: Icon(
+														provider.isSharedTrousseauPinned(t.id)
+																? Icons.push_pin
+																: Icons.push_pin_outlined,
+														color: provider.isSharedTrousseauPinned(t.id)
+																? theme.colorScheme.primary
+																: null,
+													),
+													tooltip: provider.isSharedTrousseauPinned(t.id)
+															? 'Ana sayfadan kaldır'
+															: 'Ana sayfaya ekle',
+													onPressed: () async {
+														final success = await provider.togglePinSharedTrousseau(t.id);
+														if (context.mounted && !success) {
+															ScaffoldMessenger.of(context).showSnackBar(
+																SnackBar(content: Text(provider.errorMessage)),
+															);
+														}
+													},
+												),
+												const Icon(Icons.chevron_right),
+											],
+										),
 										onTap: () => context.push('/trousseau/${t.id}'),
 									),
 								);

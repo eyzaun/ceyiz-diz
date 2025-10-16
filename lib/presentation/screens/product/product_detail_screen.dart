@@ -9,6 +9,7 @@ import '../../widgets/common/custom_dialog.dart';
 import '../../providers/category_provider.dart';
 import '../../../core/themes/design_system.dart';
 import '../../widgets/common/responsive_container.dart';
+import '../../../core/utils/currency_formatter.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final String trousseauId;
@@ -27,20 +28,109 @@ class ProductDetailScreen extends StatelessWidget {
     return hasScheme ? trimmed : 'https://$trimmed';
   }
 
+  Future<String?> _selectTargetTrousseau(
+    BuildContext context,
+    TrousseauProvider trousseauProvider,
+  ) async {
+    final myTrousseaus = trousseauProvider.trousseaus;
+    
+    if (myTrousseaus.isEmpty) {
+      return null;
+    }
+    
+    // Sadece 1 çeyiz varsa doğrudan döndür
+    if (myTrousseaus.length == 1) {
+      return myTrousseaus.first.id;
+    }
+    
+    // Birden fazla çeyiz varsa seçim diyalogu göster
+    return await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        final theme = Theme.of(context);
+        return AlertDialog(
+          title: const Text('Hangi Çeyize Eklensin?'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: myTrousseaus.length,
+              separatorBuilder: (_, __) => const Divider(),
+              itemBuilder: (context, index) {
+                final trousseau = myTrousseaus[index];
+                final progress = trousseau.totalProducts > 0
+                    ? trousseau.purchasedProducts / trousseau.totalProducts
+                    : 0.0;
+                
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(trousseau.name),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (trousseau.description.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          trousseau.description,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Text(
+                            '${trousseau.totalProducts} ürün',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${(progress * 100).toInt()}% tamamlandı',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).pop(trousseau.id),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('İptal'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final semantics = theme.extension<AppSemanticColors>();
-    final productProvider = Provider.of<ProductProvider>(context);
-    final trousseauProvider = Provider.of<TrousseauProvider>(context);
+    // Use listen: false to prevent unnecessary rebuilds when products change
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    final trousseauProvider = Provider.of<TrousseauProvider>(context, listen: false);
     final product = productProvider.getProductById(productId);
     final trousseau = trousseauProvider.getTrousseauById(trousseauId);
 
     if (product == null || trousseau == null) {
+      // Navigate back if product or trousseau not found
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.pop();
+        }
+      });
       return Scaffold(
         appBar: AppBar(),
         body: const Center(
-          child: Text('Ürün bulunamadı'),
+          child: CircularProgressIndicator(),
         ),
       );
     }
@@ -48,7 +138,7 @@ class ProductDetailScreen extends StatelessWidget {
   final currentUserId = trousseauProvider.currentUserId ?? '';
   final canEdit = trousseau.canEdit(currentUserId);
   final isOwnedByUser = trousseau.ownerId == currentUserId;
-  final category = Provider.of<CategoryProvider>(context).getById(product.category);
+  final category = Provider.of<CategoryProvider>(context, listen: false).getById(product.category);
 
     return Scaffold(
       appBar: AppBar(
@@ -236,7 +326,7 @@ class ProductDetailScreen extends StatelessWidget {
                               style: theme.textTheme.bodySmall,
                             ),
                             Text(
-                              '₺${product.price.toStringAsFixed(2)}',
+                              CurrencyFormatter.formatWithSymbol(product.price),
                               style: theme.textTheme.titleLarge?.copyWith(
                                 color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.bold,
@@ -265,7 +355,7 @@ class ProductDetailScreen extends StatelessWidget {
                               style: theme.textTheme.bodySmall,
                             ),
                             Text(
-                              '₺${product.totalPrice.toStringAsFixed(2)}',
+                              CurrencyFormatter.formatWithSymbol(product.totalPrice),
                               style: theme.textTheme.titleLarge?.copyWith(
                                 color: theme.colorScheme.secondary,
                                 fontWeight: FontWeight.bold,
@@ -287,29 +377,6 @@ class ProductDetailScreen extends StatelessWidget {
                     Text(
                       product.description,
                       style: theme.textTheme.bodyLarge,
-                    ),
-                  ],
-                  
-                  if (product.notes.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    Text(
-                      'Notlar',
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: (semantics?.warning ?? theme.colorScheme.secondary).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: (semantics?.warning ?? theme.colorScheme.secondary).withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Text(
-                        product.notes,
-                        style: theme.textTheme.bodyMedium,
-                      ),
                     ),
                   ],
                   
@@ -472,11 +539,24 @@ class ProductDetailScreen extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
+                      // Çeyiz seçimi yap
+                      final targetId = await _selectTargetTrousseau(context, trousseauProvider);
+                      if (targetId == null) {
+                        // Kullanıcı iptal etti veya çeyiz yok
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('İşlem iptal edildi')),
+                          );
+                        }
+                        return;
+                      }
+                      
                       final ok = await productProvider.cloneProductToTrousseau(
-                        targetTrousseauId: myId,
+                        targetTrousseauId: targetId,
                         source: product,
                       );
                       if (context.mounted) {
+                        // Başarı veya hata mesajı göster - sayfayı kapatma
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(ok
@@ -485,6 +565,7 @@ class ProductDetailScreen extends StatelessWidget {
                             backgroundColor: ok
                                 ? (semantics?.success ?? theme.colorScheme.tertiary)
                                 : theme.colorScheme.error,
+                            duration: const Duration(seconds: 2),
                           ),
                         );
                       }
@@ -516,11 +597,24 @@ class ProductDetailScreen extends StatelessWidget {
             ),
             child: ElevatedButton.icon(
               onPressed: () async {
+                // Çeyiz seçimi yap
+                final targetId = await _selectTargetTrousseau(context, trousseauProvider);
+                if (targetId == null) {
+                  // Kullanıcı iptal etti veya çeyiz yok
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('İşlem iptal edildi')),
+                    );
+                  }
+                  return;
+                }
+                
                 final ok = await productProvider.cloneProductToTrousseau(
-                  targetTrousseauId: myId,
+                  targetTrousseauId: targetId,
                   source: product,
                 );
                 if (context.mounted) {
+                  // Başarı veya hata mesajı göster - sayfayı kapatma
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(ok
@@ -529,6 +623,7 @@ class ProductDetailScreen extends StatelessWidget {
                       backgroundColor: ok
                           ? (semantics?.success ?? theme.colorScheme.tertiary)
                           : theme.colorScheme.error,
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 }

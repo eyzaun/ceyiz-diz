@@ -49,6 +49,7 @@ class ProductProvider extends ChangeNotifier {
   
   void _clearData() {
     _productsSub?.cancel();
+    _productsSub = null;
     _listeningTrousseauId = null;
     _products = [];
     _filteredProducts = [];
@@ -58,19 +59,54 @@ class ProductProvider extends ChangeNotifier {
     _searchQuery = '';
     notifyListeners();
   }
+
+  @override
+  void dispose() {
+    _productsSub?.cancel();
+    _productsSub = null;
+    super.dispose();
+  }
   
   Future<void> loadProducts(String trousseauId) async {
-    if (_authProvider?.currentUser == null) return;
-    
+    debugPrint('📦 loadProducts called for trousseau: $trousseauId');
+
+    // PREVENT DOUBLE LOADING: If already loading this same trousseau, skip
+    if (_isLoading && _listeningTrousseauId == trousseauId) {
+      debugPrint('⚠️  Already loading this trousseau, skipping duplicate call');
+      return;
+    }
+
     try {
       _isLoading = true;
       _errorMessage = '';
       notifyListeners();
 
-      // Re-bind live listener if trousseau changed
-      if (_listeningTrousseauId != trousseauId) {
+      // Re-bind live listener if trousseau changed or no active listener
+      if (_listeningTrousseauId != trousseauId || _productsSub == null) {
         _productsSub?.cancel();
         _listeningTrousseauId = trousseauId;
+
+        debugPrint('📥 Fetching initial products for trousseau: $trousseauId');
+
+        // First load: get initial data immediately
+        final initialSnapshot = await _firestore
+            .collection('products')
+            .where('trousseauId', isEqualTo: trousseauId)
+            .orderBy('createdAt', descending: true)
+            .get();
+
+        debugPrint('📦 Fetched ${initialSnapshot.docs.length} products');
+
+        _products = initialSnapshot.docs
+            .map((doc) => ProductModel.fromFirestore(doc))
+            .toList();
+        _applyFilters();
+        _isLoading = false;
+
+        debugPrint('✅ Products loaded: ${_products.length} total, ${_filteredProducts.length} filtered');
+        notifyListeners();
+
+        // Then setup live listener for real-time updates
         _productsSub = _firestore
             .collection('products')
             .where('trousseauId', isEqualTo: trousseauId)
@@ -89,10 +125,8 @@ class ProductProvider extends ChangeNotifier {
           notifyListeners();
         });
       } else {
-        // Already listening to this trousseau; ensure UI leaves loading state.
-        if (_filteredProducts.isEmpty && _products.isNotEmpty) {
-          _applyFilters();
-        }
+        // Already listening to this trousseau; force refresh filters and notify
+        _applyFilters();
         _isLoading = false;
         notifyListeners();
       }
@@ -104,7 +138,8 @@ class ProductProvider extends ChangeNotifier {
   }
   
   void _applyFilters() {
-    _filteredProducts = _products.where((product) {
+    // Create a new filtered list from all products
+    final tempFiltered = _products.where((product) {
       // Apply purchase filter
       bool matchesFilter = true;
       switch (_currentFilter) {
@@ -118,18 +153,21 @@ class ProductProvider extends ChangeNotifier {
           matchesFilter = true;
           break;
       }
-      
+
       // Apply category filter
       bool matchesCategory = _selectedCategories.isEmpty ||
           _selectedCategories.contains(product.category);
-      
+
       // Apply search filter
       bool matchesSearch = _searchQuery.isEmpty ||
           product.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           product.description.toLowerCase().contains(_searchQuery.toLowerCase());
-      
+
       return matchesFilter && matchesCategory && matchesSearch;
     }).toList();
+
+    // Always update the filtered list, even if it's the same
+    _filteredProducts = tempFiltered;
   }
   
   void setFilter(ProductFilter filter) {
@@ -171,7 +209,6 @@ class ProductProvider extends ChangeNotifier {
     List<XFile>? imageFiles,
     String link = '',
     int quantity = 1,
-    String notes = '',
   }) async {
     if (_authProvider?.currentUser == null) return false;
     final fbUser = fb_auth.FirebaseAuth.instance.currentUser;
@@ -218,7 +255,6 @@ class ProductProvider extends ChangeNotifier {
         images: imageUrls,
         link: link,
         quantity: quantity,
-        notes: notes,
         addedBy: userId,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -258,7 +294,6 @@ class ProductProvider extends ChangeNotifier {
     List<String>? existingImages,
     String? link,
     int? quantity,
-    String? notes,
     bool? isPurchased,
   }) async {
     if (_authProvider?.currentUser == null) return false;
@@ -304,7 +339,6 @@ class ProductProvider extends ChangeNotifier {
       if (category != null) updates['category'] = category;
       if (link != null) updates['link'] = link;
       if (quantity != null) updates['quantity'] = quantity;
-      if (notes != null) updates['notes'] = notes;
       if (isPurchased != null) {
         updates['isPurchased'] = isPurchased;
         if (isPurchased) {
@@ -334,7 +368,6 @@ class ProductProvider extends ChangeNotifier {
         images: imageUrls,
         link: link ?? product.link,
         quantity: quantity ?? product.quantity,
-        notes: notes ?? product.notes,
         isPurchased: isPurchased ?? product.isPurchased,
         purchaseDate: isPurchased == true ? DateTime.now() : product.purchaseDate,
         purchasedBy: isPurchased == true ? _authProvider!.currentUser!.uid : product.purchasedBy,
@@ -435,7 +468,6 @@ class ProductProvider extends ChangeNotifier {
         purchaseDate: null,
         purchasedBy: '',
         quantity: source.quantity,
-        notes: source.notes,
         addedBy: currentUid,
         createdAt: now,
         updatedAt: now,

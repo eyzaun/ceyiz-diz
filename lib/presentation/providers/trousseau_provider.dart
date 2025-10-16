@@ -31,6 +31,13 @@ class TrousseauProvider extends ChangeNotifier {
   
   List<TrousseauModel> get allTrousseaus => [..._trousseaus, ..._sharedTrousseaus];
   
+  // Pinned trousseaus: owned + pinned shared trousseaus
+  List<TrousseauModel> get pinnedTrousseaus {
+    final pinnedIds = _authProvider?.currentUser?.pinnedSharedTrousseauIds ?? [];
+    final pinnedShared = _sharedTrousseaus.where((t) => pinnedIds.contains(t.id)).toList();
+    return [..._trousseaus, ...pinnedShared];
+  }
+  
   void updateAuth(AuthProvider authProvider) {
     _authProvider = authProvider;
     if (_authProvider?.isAuthenticated == true) {
@@ -544,5 +551,100 @@ class TrousseauProvider extends ChangeNotifier {
         .doc(trousseauId)
         .snapshots()
         .map((doc) => doc.exists ? TrousseauModel.fromFirestore(doc) : null);
+  }
+  
+  // Pin/Unpin shared trousseau
+  bool isSharedTrousseauPinned(String trousseauId) {
+    final pinnedIds = _authProvider?.currentUser?.pinnedSharedTrousseauIds ?? [];
+    return pinnedIds.contains(trousseauId);
+  }
+  
+  Future<bool> pinSharedTrousseau(String trousseauId) async {
+    if (_authProvider?.currentUser == null) return false;
+    
+    try {
+      _errorMessage = '';
+      
+      // Check if it's a shared trousseau
+      final trousseau = getTrousseauById(trousseauId);
+      if (trousseau == null) {
+        _errorMessage = 'Çeyiz bulunamadı';
+        return false;
+      }
+      
+      // Only shared trousseaus can be pinned
+      if (trousseau.ownerId == _authProvider!.currentUser!.uid) {
+        _errorMessage = 'Kendi çeyizinizi ana sayfaya ekleyemezsiniz (zaten görünüyor)';
+        return false;
+      }
+      
+      final userId = _authProvider!.currentUser!.uid;
+      
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .update({
+        'pinnedSharedTrousseauIds': FieldValue.arrayUnion([trousseauId]),
+      });
+      
+      // Update local user model
+      final currentUser = _authProvider!.currentUser!;
+      final updatedPinnedIds = [...currentUser.pinnedSharedTrousseauIds];
+      if (!updatedPinnedIds.contains(trousseauId)) {
+        updatedPinnedIds.add(trousseauId);
+      }
+      
+      _authProvider!.updateUser(
+        currentUser.copyWith(pinnedSharedTrousseauIds: updatedPinnedIds),
+      );
+      
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Ana sayfaya eklenemedi: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+  
+  Future<bool> unpinSharedTrousseau(String trousseauId) async {
+    if (_authProvider?.currentUser == null) return false;
+    
+    try {
+      _errorMessage = '';
+      
+      final userId = _authProvider!.currentUser!.uid;
+      
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .update({
+        'pinnedSharedTrousseauIds': FieldValue.arrayRemove([trousseauId]),
+      });
+      
+      // Update local user model
+      final currentUser = _authProvider!.currentUser!;
+      final updatedPinnedIds = [...currentUser.pinnedSharedTrousseauIds];
+      updatedPinnedIds.remove(trousseauId);
+      
+      _authProvider!.updateUser(
+        currentUser.copyWith(pinnedSharedTrousseauIds: updatedPinnedIds),
+      );
+      
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Ana sayfadan kaldırılamadı: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+  
+  Future<bool> togglePinSharedTrousseau(String trousseauId) async {
+    if (isSharedTrousseauPinned(trousseauId)) {
+      return await unpinSharedTrousseau(trousseauId);
+    } else {
+      return await pinSharedTrousseau(trousseauId);
+    }
   }
 }

@@ -98,6 +98,7 @@ class AuthProvider extends ChangeNotifier {
         lastLoginAt: DateTime.now(),
         trousseauIds: [],
         sharedTrousseauIds: [],
+        pinnedSharedTrousseauIds: [],
       );
       
       await _firestore
@@ -271,6 +272,7 @@ class AuthProvider extends ChangeNotifier {
           lastLoginAt: DateTime.now(),
           trousseauIds: [],
           sharedTrousseauIds: [],
+          pinnedSharedTrousseauIds: [],
         );
         
         await _firestore
@@ -522,5 +524,11 @@ class AuthProvider extends ChangeNotifier {
       // Silently fail, don't show error for update check
       debugPrint('Update check failed: $e');
     }
+  }
+  
+  // Update current user model (for external providers to modify user data)
+  void updateUser(UserModel updatedUser) {
+    _currentUser = updatedUser;
+    notifyListeners();
   }
 }

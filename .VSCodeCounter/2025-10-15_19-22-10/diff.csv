@@ -1,0 +1,21 @@
+"filename", "language", "Firebase Rules", "XML", "Dart", "Batch", "comment", "blank", "total"
+"e:\web_project2\ceyiz_diz\android\app\src\main\AndroidManifest.xml", "XML", 0, 8, 0, 0, 1, 0, 9
+"e:\web_project2\ceyiz_diz\build_release.bat", "Batch", 0, 0, 0, 47, 0, 8, 55
+"e:\web_project2\ceyiz_diz\firestore.rules", "Firebase Rules", 1, 0, 0, 0, 0, 0, 1
+"e:\web_project2\ceyiz_diz\lib\core\utils\currency_formatter.dart", "Dart", 0, 0, 79, 0, 22, 16, 117
+"e:\web_project2\ceyiz_diz\lib\data\models\product_model.dart", "Dart", 0, 0, -6, 0, 0, 0, -6
+"e:\web_project2\ceyiz_diz\lib\data\models\user_model.dart", "Dart", 0, 0, 6, 0, 0, 0, 6
+"e:\web_project2\ceyiz_diz\lib\main.dart", "Dart", 0, 0, 55, 0, 5, 3, 63
+"e:\web_project2\ceyiz_diz\lib\presentation\providers\auth_provider.dart", "Dart", 0, 0, 6, 0, 1, 1, 8
+"e:\web_project2\ceyiz_diz\lib\presentation\providers\product_provider.dart", "Dart", 0, 0, -6, 0, 0, 0, -6
+"e:\web_project2\ceyiz_diz\lib\presentation\providers\trousseau_provider.dart", "Dart", 0, 0, 77, 0, 6, 19, 102
+"e:\web_project2\ceyiz_diz\lib\presentation\screens\home\home_screen.dart", "Dart", 0, 0, 2, 0, 0, 2, 4
+"e:\web_project2\ceyiz_diz\lib\presentation\screens\product\add_product_screen.dart", "Dart", 0, 0, -11, 0, -1, -1, -13
+"e:\web_project2\ceyiz_diz\lib\presentation\screens\product\edit_product_screen.dart", "Dart", 0, 0, 81, 0, 2, 0, 83
+"e:\web_project2\ceyiz_diz\lib\presentation\screens\product\product_detail_screen.dart", "Dart", 0, 0, 79, 0, 10, 6, 95
+"e:\web_project2\ceyiz_diz\lib\presentation\screens\product\product_list_screen.dart", "Dart", 0, 0, 165, 0, 4, 6, 175
+"e:\web_project2\ceyiz_diz\lib\presentation\screens\trousseau\create_trousseau_screen.dart", "Dart", 0, 0, 2, 0, 0, 0, 2
+"e:\web_project2\ceyiz_diz\lib\presentation\screens\trousseau\edit_trousseau_screen.dart", "Dart", 0, 0, 2, 0, 0, 0, 2
+"e:\web_project2\ceyiz_diz\lib\presentation\screens\trousseau\shared_trousseau_list_screen.dart", "Dart", 0, 0, 26, 0, 1, 0, 27
+"e:\web_project2\ceyiz_diz\lib\presentation\screens\trousseau\trousseau_detail_screen.dart", "Dart", 0, 0, 202, 0, 8, 7, 217
+"Total", "-", 1, 8, 759, 47, 59, 67, 941
