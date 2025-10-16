@@ -1,42 +1,44 @@
 # Summary
 
-Date : 2025-10-10 02:15:05
+Date : 2025-10-16 15:44:33
 
 Directory e:\\web_project2\\ceyiz_diz
 
-Total : 138 files,  12014 codes, 963 comments, 1452 blanks, all 14429 lines
+Total : 152 files,  18464 codes, 1136 comments, 2118 blanks, all 21718 lines
 
 Summary / [Details](details.md) / [Diff Summary](diff.md) / [Diff Details](diff-details.md)
 
 ## Languages
 | language | files | code | comment | blank | total |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| Dart | 65 | 9,682 | 660 | 1,048 | 11,390 |
+| Dart | 72 | 13,094 | 822 | 1,296 | 15,212 |
+| Markdown | 6 | 3,020 | 0 | 433 | 3,453 |
 | C++ | 16 | 574 | 135 | 191 | 900 |
-| XML | 21 | 565 | 106 | 23 | 694 |
+| XML | 21 | 573 | 107 | 23 | 703 |
 | CMake | 8 | 469 | 0 | 92 | 561 |
-| JSON | 8 | 352 | 0 | 8 | 360 |
+| JSON | 11 | 372 | 0 | 11 | 383 |
 | HTML | 2 | 99 | 22 | 10 | 131 |
-| Markdown | 3 | 88 | 0 | 29 | 117 |
-| Swift | 6 | 73 | 7 | 21 | 101 |
-| Firebase Rules | 1 | 49 | 5 | 9 | 63 |
-| YAML | 4 | 47 | 28 | 17 | 92 |
+| Firebase Rules | 1 | 77 | 15 | 12 | 104 |
+| Swift | 6 | 75 | 7 | 21 | 103 |
+| YAML | 4 | 48 | 28 | 17 | 93 |
+| Batch | 1 | 47 | 0 | 8 | 55 |
 | Properties | 4 | 16 | 0 | 4 | 20 |
 
 ## Directories
 | path | files | code | comment | blank | total |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| . | 138 | 12,014 | 963 | 1,452 | 14,429 |
-| . (Files) | 8 | 214 | 33 | 39 | 286 |
+| . | 152 | 18,464 | 1,136 | 2,118 | 21,718 |
+| . (Files) | 12 | 3,230 | 43 | 454 | 3,727 |
+| .claude | 1 | 12 | 0 | 1 | 13 |
 | .github | 1 | 0 | 0 | 1 | 1 |
 | .github\\workflows | 1 | 0 | 0 | 1 | 1 |
-| android | 12 | 129 | 53 | 28 | 210 |
+| android | 12 | 137 | 54 | 28 | 219 |
 | android (Files) | 2 | 38 | 0 | 17 | 55 |
-| android\\app | 9 | 86 | 53 | 10 | 149 |
-| android\\app\\src | 9 | 86 | 53 | 10 | 149 |
+| android\\app | 9 | 94 | 54 | 10 | 158 |
+| android\\app\\src | 9 | 94 | 54 | 10 | 158 |
 | android\\app\\src\\debug | 1 | 3 | 4 | 1 | 8 |
-| android\\app\\src\\main | 7 | 80 | 45 | 8 | 133 |
-| android\\app\\src\\main (Files) | 1 | 45 | 13 | 1 | 59 |
+| android\\app\\src\\main | 7 | 88 | 46 | 8 | 142 |
+| android\\app\\src\\main (Files) | 1 | 53 | 14 | 1 | 68 |
 | android\\app\\src\\main\\res | 6 | 35 | 32 | 7 | 74 |
 | android\\app\\src\\main\\res\\drawable | 1 | 4 | 7 | 2 | 13 |
 | android\\app\\src\\main\\res\\drawable-v21 | 1 | 4 | 7 | 2 | 13 |
@@ -70,38 +72,38 @@ Summary / [Details](details.md) / [Diff Summary](diff.md) / [Diff Details](diff-
 | ios\\Runner\\Assets.xcassets\\AppIcon.appiconset | 1 | 122 | 0 | 1 | 123 |
 | ios\\Runner\\Assets.xcassets\\LaunchImage.imageset | 2 | 26 | 0 | 3 | 29 |
 | ios\\Runner\\Base.lproj | 2 | 61 | 2 | 2 | 65 |
-| lib | 64 | 9,668 | 654 | 1,045 | 11,367 |
-| lib (Files) | 2 | 124 | 1 | 11 | 136 |
-| lib\\core | 10 | 980 | 80 | 112 | 1,172 |
-| lib\\core\\constants | 3 | 73 | 21 | 25 | 119 |
+| lib | 73 | 13,080 | 816 | 1,295 | 15,191 |
+| lib (Files) | 2 | 179 | 6 | 14 | 199 |
+| lib\\core | 11 | 1,067 | 104 | 129 | 1,300 |
+| lib\\core\\constants | 3 | 81 | 23 | 26 | 130 |
 | lib\\core\\errors | 1 | 17 | 0 | 7 | 24 |
 | lib\\core\\localization | 1 | 0 | 0 | 1 | 1 |
 | lib\\core\\themes | 3 | 844 | 59 | 68 | 971 |
-| lib\\core\\utils | 2 | 46 | 0 | 11 | 57 |
-| lib\\data | 10 | 616 | 7 | 80 | 703 |
-| lib\\data\\models | 4 | 408 | 6 | 27 | 441 |
-| lib\\data\\repositories | 4 | 173 | 0 | 40 | 213 |
+| lib\\core\\utils | 3 | 125 | 22 | 27 | 174 |
+| lib\\data | 12 | 1,039 | 54 | 132 | 1,225 |
+| lib\\data\\models | 5 | 737 | 46 | 65 | 848 |
+| lib\\data\\repositories | 5 | 267 | 7 | 54 | 328 |
 | lib\\data\\services | 2 | 35 | 1 | 13 | 49 |
-| lib\\l10n | 6 | 465 | 400 | 239 | 1,104 |
-| lib\\l10n (Files) | 3 | 64 | 70 | 22 | 156 |
+| lib\\l10n | 8 | 465 | 400 | 241 | 1,106 |
+| lib\\l10n (Files) | 5 | 64 | 70 | 24 | 158 |
 | lib\\l10n\\generated | 3 | 401 | 330 | 217 | 948 |
-| lib\\presentation | 36 | 7,483 | 166 | 603 | 8,252 |
-| lib\\presentation\\providers | 5 | 1,351 | 57 | 209 | 1,617 |
-| lib\\presentation\\router | 1 | 199 | 3 | 6 | 208 |
-| lib\\presentation\\screens | 19 | 5,152 | 86 | 330 | 5,568 |
-| lib\\presentation\\screens\\auth | 3 | 684 | 13 | 58 | 755 |
-| lib\\presentation\\screens\\home | 2 | 395 | 10 | 37 | 442 |
-| lib\\presentation\\screens\\product | 5 | 1,906 | 27 | 98 | 2,031 |
-| lib\\presentation\\screens\\settings | 4 | 1,021 | 22 | 70 | 1,113 |
-| lib\\presentation\\screens\\trousseau | 5 | 1,146 | 14 | 67 | 1,227 |
-| lib\\presentation\\widgets | 11 | 781 | 20 | 58 | 859 |
-| lib\\presentation\\widgets\\common | 11 | 781 | 20 | 58 | 859 |
+| lib\\presentation | 40 | 10,330 | 252 | 779 | 11,361 |
+| lib\\presentation\\providers | 6 | 1,674 | 93 | 280 | 2,047 |
+| lib\\presentation\\router | 1 | 216 | 3 | 6 | 225 |
+| lib\\presentation\\screens | 21 | 7,510 | 134 | 425 | 8,069 |
+| lib\\presentation\\screens\\auth | 3 | 857 | 15 | 64 | 936 |
+| lib\\presentation\\screens\\home | 2 | 1,024 | 17 | 66 | 1,107 |
+| lib\\presentation\\screens\\product | 5 | 2,605 | 52 | 115 | 2,772 |
+| lib\\presentation\\screens\\settings | 6 | 1,450 | 26 | 96 | 1,572 |
+| lib\\presentation\\screens\\trousseau | 5 | 1,574 | 24 | 84 | 1,682 |
+| lib\\presentation\\widgets | 12 | 930 | 22 | 68 | 1,020 |
+| lib\\presentation\\widgets\\common | 12 | 930 | 22 | 68 | 1,020 |
 | linux | 9 | 343 | 41 | 94 | 478 |
 | linux (Files) | 1 | 104 | 0 | 25 | 129 |
 | linux\\flutter | 4 | 115 | 9 | 27 | 151 |
 | linux\\runner | 4 | 124 | 32 | 42 | 198 |
-| macos | 6 | 465 | 5 | 17 | 487 |
-| macos\\Flutter | 1 | 24 | 3 | 4 | 31 |
+| macos | 6 | 467 | 5 | 17 | 489 |
+| macos\\Flutter | 1 | 26 | 3 | 4 | 33 |
 | macos\\Runner | 4 | 434 | 0 | 9 | 443 |
 | macos\\Runner (Files) | 2 | 23 | 0 | 7 | 30 |
 | macos\\RunnerTests | 1 | 7 | 2 | 4 | 13 |

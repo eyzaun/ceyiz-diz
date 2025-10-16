@@ -3,7 +3,8 @@
     "allow": [
       "Bash(firebase deploy:*)",
       "Bash(flutter analyze:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
