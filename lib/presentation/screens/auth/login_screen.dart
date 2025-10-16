@@ -1,11 +1,11 @@
-/// Login Screen - Yeni Tasarım Sistemi v2.0
-///
-/// TASARIM KURALLARI:
-/// ✅ Jakob Yasası: Standart login layout (logo + form + alt link)
-/// ✅ Fitts Yasası: Primary button 56dp, full width, kolay erişim
-/// ✅ Hick Yasası: 1 primary action (Giriş Yap)
-/// ✅ Miller Yasası: 2 form alanı (email + şifre) - ideal
-/// ✅ Gestalt: İlgili öğeler gruplanmış, tutarlı spacing
+// Login Screen - Yeni Tasarım Sistemi v2.0
+//
+// TASARIM KURALLARI:
+// ✅ Jakob Yasası: Standart login layout (logo + form + alt link)
+// ✅ Fitts Yasası: Primary button 56dp, full width, kolay erişim
+// ✅ Hick Yasası: 1 primary action (Giriş Yap)
+// ✅ Miller Yasası: 2 form alanı (email + şifre) - ideal
+// ✅ Gestalt: İlgili öğeler gruplanmış, tutarlı spacing
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -307,7 +307,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             opacity: _fadeAnimation,
             child: Center(
               child: SingleChildScrollView(
-                padding: context.safePaddingHorizontal.horizontalSpace,
+                padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
                 child: ConstrainedBox(
                   // Responsive: Web'de maksimum genişlik
                   constraints: BoxConstraints(

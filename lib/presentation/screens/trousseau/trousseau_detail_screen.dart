@@ -1,11 +1,11 @@
-/// Trousseau Detail Screen - Yeni Tasarım Sistemi v2.0
-///
-/// TASARIM KURALLARI:
-/// ✅ Jakob Yasası: Standart list + tab selector layout
-/// ✅ Fitts Yasası: FAB 56dp, filter chips 48dp, product cards 48dp touch
-/// ✅ Hick Yasası: Max 3 AppBar actions, max 3 filter pills
-/// ✅ Miller Yasası: Trousseau selector shows max 5 at once, scrollable
-/// ✅ Gestalt: İlgili öğeler gruplanmış (selector, filters, products)
+// Trousseau Detail Screen - Yeni Tasarım Sistemi v2.0
+//
+// TASARIM KURALLARI:
+// ✅ Jakob Yasası: Standart list + tab selector layout
+// ✅ Fitts Yasası: FAB 56dp, filter chips 48dp, product cards 48dp touch
+// ✅ Hick Yasası: Max 3 AppBar actions, max 3 filter pills
+// ✅ Miller Yasası: Trousseau selector shows max 5 at once, scrollable
+// ✅ Gestalt: İlgili öğeler gruplanmış (selector, filters, products)
 
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -161,7 +161,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                     // ─────────────────────────────────────────────────────
                     SliverToBoxAdapter(
                       child: Container(
-                        padding: context.safePaddingHorizontal.horizontalSpace,
+                        padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
                         color: theme.cardColor,
                         child: Padding(
                           padding: EdgeInsets.symmetric(vertical: AppSpacing.md),

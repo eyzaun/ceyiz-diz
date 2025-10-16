@@ -1,8 +1,8 @@
-/// App Button - Tasarım Kurallarına Uyumlu Buton Sistemi
-///
-/// FITTS YASASI: Her buton minimum 48dp touch area
-/// GESTALT (Benzerlik): Aynı türdeki butonlar aynı görünür
-/// JAKOB YASASI: Standart Material Design pattern'leri
+// App Button - Tasarım Kurallarına Uyumlu Buton Sistemi
+//
+// FITTS YASASI: Her buton minimum 48dp touch area
+// GESTALT (Benzerlik): Aynı türdeki butonlar aynı görünür
+// JAKOB YASASI: Standart Material Design pattern'leri
 
 import 'package:flutter/material.dart';
 import '../../../core/theme/design_tokens.dart';
@@ -20,6 +20,8 @@ class AppPrimaryButton extends StatelessWidget {
   final IconData? icon;
   final bool isLoading;
   final bool isFullWidth;
+  final Color? backgroundColor;
+  final Color? iconColor;
 
   const AppPrimaryButton({
     super.key,
@@ -28,6 +30,8 @@ class AppPrimaryButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.isFullWidth = false,
+    this.backgroundColor,
+    this.iconColor,
   });
 
   @override
@@ -40,7 +44,7 @@ class AppPrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: theme.colorScheme.primary,
+          backgroundColor: backgroundColor ?? theme.colorScheme.primary,
           foregroundColor: theme.colorScheme.onPrimary,
           disabledBackgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
           disabledForegroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.38),
@@ -73,7 +77,7 @@ class AppPrimaryButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: AppDimensions.iconSizeMedium),
+                    Icon(icon, size: AppDimensions.iconSizeMedium, color: iconColor),
                     AppSpacing.sm.horizontalSpace,
                   ],
                   Text(
@@ -103,6 +107,8 @@ class AppSecondaryButton extends StatelessWidget {
   final IconData? icon;
   final bool isLoading;
   final bool isFullWidth;
+  final Color? backgroundColor;
+  final Color? iconColor;
 
   const AppSecondaryButton({
     super.key,
@@ -111,6 +117,8 @@ class AppSecondaryButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.isFullWidth = false,
+    this.backgroundColor,
+    this.iconColor,
   });
 
   @override
@@ -123,7 +131,7 @@ class AppSecondaryButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: theme.colorScheme.primary,
+          foregroundColor: iconColor ?? theme.colorScheme.primary,
           side: BorderSide(
             color: theme.colorScheme.outline,
             width: 1.5,
@@ -155,7 +163,7 @@ class AppSecondaryButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: AppDimensions.iconSizeMedium),
+                    Icon(icon, size: AppDimensions.iconSizeMedium, color: iconColor),
                     AppSpacing.sm.horizontalSpace,
                   ],
                   Text(
@@ -180,12 +188,14 @@ class AppTextButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
+  final Color? iconColor;
 
   const AppTextButton({
     super.key,
     required this.label,
     this.onPressed,
     this.icon,
+    this.iconColor,
   });
 
   @override
@@ -208,11 +218,11 @@ class AppTextButton extends StatelessWidget {
           AppDimensions.buttonHeightMedium,
         ),
       ),
-      child: Row(
+        child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: AppDimensions.iconSizeMedium),
+            Icon(icon, size: AppDimensions.iconSizeMedium, color: iconColor),
             AppSpacing.sm.horizontalSpace,
           ],
           Text(
@@ -240,6 +250,9 @@ class AppIconButton extends StatelessWidget {
   final String? tooltip;
   final Color? color;
   final double? iconSize;
+  final Color? iconColor;
+  // Backwards-compatible alias some callers pass
+  final Color? backgroundColor;
 
   const AppIconButton({
     super.key,
@@ -248,12 +261,14 @@ class AppIconButton extends StatelessWidget {
     this.tooltip,
     this.color,
     this.iconSize,
+    this.iconColor,
+    this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final button = IconButton(
-      icon: Icon(icon),
+      icon: Icon(icon, color: iconColor ?? color),
       onPressed: onPressed,
       color: color,
       iconSize: iconSize ?? AppDimensions.iconSizeMedium,
@@ -264,6 +279,7 @@ class AppIconButton extends StatelessWidget {
       ),
       padding: EdgeInsets.zero,
       style: IconButton.styleFrom(
+        backgroundColor: backgroundColor,
         shape: RoundedRectangleBorder(
           borderRadius: AppRadius.radiusMD,
         ),
@@ -294,6 +310,7 @@ class AppDangerButton extends StatelessWidget {
   final IconData? icon;
   final bool isLoading;
   final bool isOutlined;
+  final bool isFullWidth;
 
   const AppDangerButton({
     super.key,
@@ -302,6 +319,7 @@ class AppDangerButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.isOutlined = false,
+    this.isFullWidth = false,
   });
 
   @override
@@ -312,6 +330,7 @@ class AppDangerButton extends StatelessWidget {
     if (isOutlined) {
       return SizedBox(
         height: AppDimensions.buttonHeightMedium,
+        width: isFullWidth ? AppDimensions.buttonFullWidth : null,
         child: OutlinedButton(
           onPressed: isLoading ? null : onPressed,
           style: OutlinedButton.styleFrom(
@@ -336,6 +355,7 @@ class AppDangerButton extends StatelessWidget {
 
     return SizedBox(
       height: AppDimensions.buttonHeightMedium,
+      width: isFullWidth ? AppDimensions.buttonFullWidth : null,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(

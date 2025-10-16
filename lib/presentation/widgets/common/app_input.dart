@@ -1,8 +1,8 @@
-/// App Input - Tutarlı Form Input Bileşenleri
-///
-/// FITTS YASASI: Minimum 56dp yükseklik (kolay dokunma)
-/// MILLER YASASI: Form'ları max 5 alana böl
-/// GESTALT: Tüm input'lar aynı stil
+// App Input - Tutarlı Form Input Bileşenleri
+//
+// FITTS YASASI: Minimum 56dp yükseklik (kolay dokunma)
+// MILLER YASASI: Form'ları max 5 alana böl
+// GESTALT: Tüm input'lar aynı stil
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -279,6 +279,7 @@ class AppDropdown<T> extends StatelessWidget {
   final List<DropdownMenuItem<T>> items;
   final void Function(T?)? onChanged;
   final String? Function(T?)? validator;
+  final Widget? prefixIcon;
 
   const AppDropdown({
     super.key,
@@ -288,6 +289,7 @@ class AppDropdown<T> extends StatelessWidget {
     required this.items,
     this.onChanged,
     this.validator,
+    this.prefixIcon,
   });
 
   @override
@@ -295,13 +297,14 @@ class AppDropdown<T> extends StatelessWidget {
     final theme = Theme.of(context);
 
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       items: items,
       onChanged: onChanged,
       validator: validator,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
+        prefixIcon: prefixIcon,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.md,

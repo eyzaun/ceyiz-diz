@@ -1,9 +1,9 @@
-/// Design Tokens - Universal Design System
-///
-/// Bu dosya, uygulamanın tüm tasarım kurallarını içerir.
-/// HER EKRAN bu değerleri kullanmalıdır - asla hard-coded değer kullanma.
-///
-/// Tasarım Prensipleri:
+// Design Tokens - Universal Design System
+//
+// Bu dosya, uygulamanın tüm tasarım kurallarını içerir.
+// HER EKRAN bu değerleri kullanmalıdır - asla hard-coded değer kullanma.
+//
+// Tasarım Prensipleri:
 /// 1. JAKOB YASASI: Standart UI pattern'leri kullan
 /// 2. FITTS YASASI: Minimum 48dp touch target
 /// 3. HICK YASASI: Maksimum 3-5 seçenek göster
@@ -36,6 +36,8 @@ class AppSpacing {
 
   /// Major section ayırıcı
   static const double xl = 32.0;
+  /// Extra large 2 - used in several screens (approx 40dp)
+  static const double xl2 = 40.0;
 
   /// Ekstra büyük (ekran kenarları, hero sections)
   static const double xxl = 48.0;
@@ -143,6 +145,8 @@ class AppRadius {
 
   // Circular (avatars, badges)
   static const BorderRadius circular = BorderRadius.all(Radius.circular(999));
+  // Alias for full/circular radius historically referenced as `radiusFull`
+  static const BorderRadius radiusFull = circular;
 }
 
 /// ═══════════════════════════════════════════════════════════════════════════
@@ -205,6 +209,8 @@ class AppTypography {
   static const FontWeight medium = FontWeight.w500;
   static const FontWeight semiBold = FontWeight.w600;
   static const FontWeight bold = FontWeight.w700;
+  // Backwards-compatible alias used in some files
+  static const FontWeight semibold = semiBold;
 
   // Font Sizes (Type Scale)
   static const double sizeXS = 11.0;

@@ -1,11 +1,11 @@
-/// Product List Screen - Yeni Tasarım Sistemi v2.0
-///
-/// TASARIM KURALLARI:
-/// ✅ Jakob Yasası: Standart list + filter layout
-/// ✅ Fitts Yasası: FAB 56dp, filter chips 48dp height, product cards 48dp touch
-/// ✅ Hick Yasası: Max 3 filter pills (Tümü, Alınanlar, Alınmayanlar)
-/// ✅ Miller Yasası: Filter chips max 5 visible at once
-/// ✅ Gestalt: İlgili filter'lar gruplanmış (status + category ayrı rows)
+// Product List Screen - Yeni Tasarım Sistemi v2.0
+//
+// TASARIM KURALLARI:
+// ✅ Jakob Yasası: Standart list + filter layout
+// ✅ Fitts Yasası: FAB 56dp, filter chips 48dp height, product cards 48dp touch
+// ✅ Hick Yasası: Max 3 filter pills (Tümü, Alınanlar, Alınmayanlar)
+// ✅ Miller Yasası: Filter chips max 5 visible at once
+// ✅ Gestalt: İlgili filter'lar gruplanmış (status + category ayrı rows)
 
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -21,7 +21,7 @@ import '../../widgets/common/app_input.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/filter_pill.dart';
 import '../../widgets/common/icon_color_picker.dart';
-import '../../../data/models/product_model.dart';
+// removed unused import of product_model.dart
 
 class ProductListScreen extends StatefulWidget {
   final String trousseauId;
@@ -166,7 +166,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: AppRadius.radiusXL),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (context) {
         final theme = Theme.of(context);
@@ -314,7 +314,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
           // FITTS YASASI: 56dp height search input
           // ─────────────────────────────────────────────────────
           Container(
-            padding: context.safePaddingHorizontal.horizontalSpace,
+            padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
             color: theme.cardColor,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),

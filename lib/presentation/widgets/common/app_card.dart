@@ -1,6 +1,6 @@
-/// App Card - Tutarlı Kart Tasarımları
-///
-/// GESTALT PRENSİPLERİ:
+// App Card - Tutarlı Kart Tasarımları
+//
+// GESTALT PRENSİPLERİ:
 /// - ORTAK ALAN: Card içindeki öğeler aynı gruba ait
 /// - YAKINLIK: İlgili bilgiler birbirine yakın
 /// - BENZERLİK: Tüm card'lar aynı padding/radius kullanır
@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../data/models/category_model.dart';
+import '../../../data/models/product_model.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// BASE CARD - Temel Kart Bileşeni
@@ -27,6 +28,8 @@ class AppCard extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final Color? color;
+  // Backwards-compatible alias used in screens
+  final Color? backgroundColor;
 
   const AppCard({
     super.key,
@@ -35,6 +38,7 @@ class AppCard extends StatelessWidget {
     this.padding,
     this.margin,
     this.color,
+    this.backgroundColor,
   });
 
   @override
@@ -43,7 +47,7 @@ class AppCard extends StatelessWidget {
 
     return Card(
       margin: margin ?? const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      color: color,
+      color: color ?? backgroundColor,
       elevation: theme.brightness == Brightness.light
           ? AppElevation.subtle
           : AppElevation.flat,
@@ -55,14 +59,7 @@ class AppCard extends StatelessWidget {
           ),
         ),
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadius.radiusLG,
-        child: Padding(
-          padding: padding ?? AppSpacing.paddingMD,
-          child: child,
-        ),
-      ),
+      child: child,
     );
   }
 }
@@ -79,60 +76,72 @@ class AppCard extends StatelessWidget {
 /// FITTS YASASI: Tüm kart tıklanabilir (48dp+ yükseklik)
 
 class AppProductCard extends StatelessWidget {
-  final String name;
-  final String description;
-  final double price;
+  // Primary fields (new API)
+  final String? name;
+  final String? description;
+  final double? price;
   final int quantity;
   final bool isPurchased;
-  final List<String> images;
-  final CategoryModel category;
+  final List<String>? images;
+  final CategoryModel? category;
   final VoidCallback? onTap;
   final VoidCallback? onTogglePurchase;
   final bool canEdit;
 
+  // Backwards-compatible fields (old API)
+  final ProductModel? product;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+
   const AppProductCard({
     super.key,
-    required this.name,
-    required this.description,
-    required this.price,
+    this.name,
+    this.description,
+    this.price,
     this.quantity = 1,
     this.isPurchased = false,
-    required this.images,
-    required this.category,
+    this.images,
+    this.category,
     this.onTap,
     this.onTogglePurchase,
     this.canEdit = false,
-  });
+    // legacy
+    this.product,
+    this.onEdit,
+    this.onDelete,
+  }) : assert(
+          product != null || (name != null && price != null && images != null && category != null),
+          'Either product must be provided or name, price, images and category must be supplied',
+        );
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final displayName = product?.name ?? name!;
+    final displayDescription = product?.description ?? description ?? '';
+    final displayPrice = product?.price ?? price!;
+    final displayImages = product?.images ?? images ?? <String>[];
+
+    final effectiveCategory = category ?? (product != null
+        ? CategoryModel.getDefaultById(product!.category)
+        : CategoryModel.getDefaultById('other'));
 
     return AppCard(
       onTap: onTap,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
-          // ─────────────────────────────────────────────────────────────────
-          // SOL: Ürün Görseli veya Kategori İkonu
-          // ─────────────────────────────────────────────────────────────────
-          _buildThumbnail(context),
-
+          _buildThumbnail(context, effectiveCategory, displayImages),
           AppSpacing.md.horizontalSpace,
-
-          // ─────────────────────────────────────────────────────────────────
-          // ORTA: Ürün Bilgileri (Expanded)
-          // ─────────────────────────────────────────────────────────────────
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Ürün Adı + Satın Alındı İkonu
                 Row(
                   children: [
                     Expanded(
                       child: Text(
-                        name,
+                        displayName,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: AppTypography.semiBold,
                           fontSize: AppTypography.sizeMD,
@@ -151,12 +160,10 @@ class AppProductCard extends StatelessWidget {
                     ],
                   ],
                 ),
-
-                // Açıklama (eğer varsa)
-                if (description.isNotEmpty) ...[
+                if (displayDescription.isNotEmpty) ...[
                   AppSpacing.xs.verticalSpace,
                   Text(
-                    description,
+                    displayDescription,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontSize: AppTypography.sizeSM,
@@ -165,13 +172,10 @@ class AppProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
-
                 AppSpacing.xs.verticalSpace,
-
-                // Kategori Badge + Adet Bilgisi
                 Row(
                   children: [
-                    _buildCategoryBadge(context),
+                    _buildCategoryBadge(context, effectiveCategory),
                     if (quantity > 1) ...[
                       AppSpacing.sm.horizontalSpace,
                       Text(
@@ -187,42 +191,31 @@ class AppProductCard extends StatelessWidget {
               ],
             ),
           ),
-
           AppSpacing.md.horizontalSpace,
-
-          // ─────────────────────────────────────────────────────────────────
-          // SAĞ: Fiyat + Checkbox
-          // ─────────────────────────────────────────────────────────────────
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Birim Fiyat
               Text(
-                '₺${price.toStringAsFixed(2)}',
+                '₺${displayPrice.toStringAsFixed(2)}',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: AppTypography.bold,
                   fontSize: AppTypography.sizeMD,
                 ),
               ),
-
-              // Toplam Fiyat (eğer adet > 1)
               if (quantity > 1) ...[
                 AppSpacing.xs.verticalSpace,
                 Text(
-                  'Top: ₺${(price * quantity).toStringAsFixed(2)}',
+                  'Top: ₺${(displayPrice * quantity).toStringAsFixed(2)}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontSize: AppTypography.sizeXS,
                   ),
                 ),
               ],
-
-              // Checkbox (eğer düzenleme izni varsa)
               if (canEdit) ...[
                 AppSpacing.xs.verticalSpace,
-                // FITTS YASASI: 48x48dp touch area
                 SizedBox(
                   width: AppDimensions.touchTargetSize,
                   height: AppDimensions.touchTargetSize,
@@ -251,66 +244,65 @@ class AppProductCard extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildThumbnail(BuildContext context) {
+  Widget _buildThumbnail(BuildContext context, CategoryModel effectiveCategory, List<String> displayImages) {
     return Container(
       width: AppDimensions.cardImageSize,
       height: AppDimensions.cardImageSize,
       decoration: BoxDecoration(
-        color: category.color.withValues(alpha: 0.1),
+        color: effectiveCategory.color.withValues(alpha: 0.1),
         borderRadius: AppRadius.radiusMD,
       ),
-      child: images.isNotEmpty
+      child: displayImages.isNotEmpty
           ? ClipRRect(
               borderRadius: AppRadius.radiusMD,
               child: CachedNetworkImage(
-                imageUrl: images.first,
+                imageUrl: displayImages.first,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Center(
                   child: CircularProgressIndicator(
-                    color: category.color,
+                    color: effectiveCategory.color,
                     strokeWidth: 2,
                   ),
                 ),
                 errorWidget: (context, url, error) => Icon(
-                  category.icon,
-                  color: category.color,
+                  effectiveCategory.icon,
+                  color: effectiveCategory.color,
                   size: AppDimensions.iconSizeLarge,
                 ),
               ),
             )
           : Icon(
-              category.icon,
-              color: category.color,
+              effectiveCategory.icon,
+              color: effectiveCategory.color,
               size: AppDimensions.iconSizeLarge,
             ),
     );
   }
 
-  Widget _buildCategoryBadge(BuildContext context) {
+  Widget _buildCategoryBadge(BuildContext context, CategoryModel effectiveCategory) {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: category.color.withValues(alpha: 0.1),
+        color: effectiveCategory.color.withValues(alpha: 0.1),
         borderRadius: AppRadius.radiusSM,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            category.icon,
+            effectiveCategory.icon,
             size: 10,
-            color: category.color,
+            color: effectiveCategory.color,
           ),
           const SizedBox(width: AppSpacing.xs),
           Text(
-            category.displayName,
+            effectiveCategory.displayName,
             style: TextStyle(
               fontSize: AppTypography.sizeXS,
-              color: category.color,
+              color: effectiveCategory.color,
               fontWeight: AppTypography.medium,
             ),
           ),
@@ -425,6 +417,11 @@ class AppInfoCard extends StatelessWidget {
   final String? message;
   final InfoCardType type;
   final VoidCallback? onDismiss;
+  // Backwards-compatible fields used by screens
+  final IconData? icon;
+  final String? subtitle;
+  final Color? color;
+  final Color? backgroundColor;
 
   const AppInfoCard({
     super.key,
@@ -432,20 +429,26 @@ class AppInfoCard extends StatelessWidget {
     this.message,
     this.type = InfoCardType.info,
     this.onDismiss,
+    this.icon,
+    this.subtitle,
+    this.color,
+    this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final config = _getConfig(theme);
+  final config = _getConfig(theme);
+  final accentColor = color ?? config.color;
+  final leadingIcon = icon ?? config.icon;
 
     return AppCard(
-      color: config.color.withValues(alpha: 0.1),
+      color: (backgroundColor ?? accentColor.withValues(alpha: 0.1)),
       child: Row(
         children: [
           Icon(
-            config.icon,
-            color: config.color,
+            leadingIcon,
+            color: accentColor,
             size: AppDimensions.iconSizeMedium,
           ),
           AppSpacing.md.horizontalSpace,
@@ -456,10 +459,20 @@ class AppInfoCard extends StatelessWidget {
                 Text(
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: config.color,
+                    color: accentColor,
                     fontWeight: AppTypography.semiBold,
                   ),
                 ),
+                if (subtitle != null) ...[
+                  AppSpacing.xs.verticalSpace,
+                  Text(
+                    subtitle!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: AppTypography.sizeSM,
+                    ),
+                  ),
+                ],
                 if (message != null) ...[
                   AppSpacing.xs.verticalSpace,
                   Text(
@@ -477,7 +490,7 @@ class AppInfoCard extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.close),
               iconSize: AppDimensions.iconSizeSmall,
-              color: config.color,
+              color: accentColor,
               onPressed: onDismiss,
               constraints: const BoxConstraints(
                 minWidth: AppDimensions.touchTargetSize,

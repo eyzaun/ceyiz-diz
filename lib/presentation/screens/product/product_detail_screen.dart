@@ -1,11 +1,11 @@
-/// Product Detail Screen - Yeni Tasarım Sistemi v2.0
-///
-/// TASARIM KURALLARI:
-/// ✅ Jakob Yasası: Standart product detail layout
-/// ✅ Fitts Yasası: Primary button 56dp, AppBar actions 48x48dp
-/// ✅ Hick Yasası: 1 primary action (Satın Al/İşaretle), max 2 AppBar actions (Edit, More menu)
-/// ✅ Miller Yasası: Bilgiler 3 bölüme ayrılmış (Görsel, Fiyat Bilgisi, Açıklama)
-/// ✅ Gestalt: İlgili bilgiler gruplanmış (fiyat+adet+toplam bir kartta)
+// Product Detail Screen - Yeni Tasarım Sistemi v2.0
+//
+// TASARIM KURALLARI:
+// ✅ Jakob Yasası: Standart product detail layout
+// ✅ Fitts Yasası: Primary button 56dp, AppBar actions 48x48dp
+// ✅ Hick Yasası: 1 primary action (Satın Al/İşaretle), max 2 AppBar actions (Edit, More menu)
+// ✅ Miller Yasası: Bilgiler 3 bölüme ayrılmış (Görsel, Fiyat Bilgisi, Açıklama)
+// ✅ Gestalt: İlgili bilgiler gruplanmış (fiyat+adet+toplam bir kartta)
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -130,7 +130,7 @@ class ProductDetailScreen extends StatelessWidget {
       context: context,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: AppRadius.radiusXL,
+          top: Radius.circular(AppRadius.xl),
         ),
       ),
       builder: (ctx) {
@@ -337,7 +337,7 @@ class ProductDetailScreen extends StatelessWidget {
               ),
 
             Padding(
-              padding: context.safePaddingHorizontal.horizontalSpace,
+              padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -557,8 +557,8 @@ class ProductDetailScreen extends StatelessWidget {
 
         if (isOwnedByUser && canEdit) {
           // Owned by user: Primary action is purchase toggle
-          return Container(
-            padding: context.safePaddingHorizontal.horizontalSpace,
+      return Container(
+        padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
             decoration: BoxDecoration(
               color: theme.cardColor,
               boxShadow: [
@@ -594,7 +594,7 @@ class ProductDetailScreen extends StatelessWidget {
           // Not owned, but can edit: Show both actions
           // HICK YASASI: 2 buton ama farklı önem seviyesi (primary + secondary)
           return Container(
-            padding: context.safePaddingHorizontal.horizontalSpace,
+            padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
             decoration: BoxDecoration(
               color: theme.cardColor,
               boxShadow: [
@@ -677,8 +677,8 @@ class ProductDetailScreen extends StatelessWidget {
 
         if (canClone) {
           // Not owned and cannot edit: Only cloning available
-          return Container(
-            padding: context.safePaddingHorizontal.horizontalSpace,
+            return Container(
+              padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
             decoration: BoxDecoration(
               color: theme.cardColor,
               boxShadow: [

@@ -1,6 +1,6 @@
-/// Statistics Screen - Yeni Tasarım Sistemi v2.0
-///
-/// TASARIM KURALLARI:
+// Statistics Screen - Yeni Tasarım Sistemi v2.0
+//
+// TASARIM KURALLARI:
 /// ✅ Jakob Yasası: Standart istatistik card layout
 /// ✅ Fitts Yasası: Trousseau selector 48dp height, kolay dokunma
 /// ✅ Hick Yasası: Info button tek secondary action

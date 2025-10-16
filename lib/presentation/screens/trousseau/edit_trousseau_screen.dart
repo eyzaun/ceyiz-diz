@@ -1,11 +1,11 @@
-/// Edit Trousseau Screen - Yeni Tasarım Sistemi v2.0
-///
-/// TASARIM KURALLARI:
-/// ✅ Jakob Yasası: Standart edit form layout
-/// ✅ Fitts Yasası: Primary button 56dp, inputs 56dp height
-/// ✅ Hick Yasası: 1 primary (Güncelle), 2 secondary (İptal, Sil)
-/// ✅ Miller Yasası: 3 form alanı (Ad, Açıklama, Bütçe) - ideal
-/// ✅ Gestalt: Form alanları gruplanmış, danger zone görsel olarak ayrı
+// Edit Trousseau Screen - Yeni Tasarım Sistemi v2.0
+//
+// TASARIM KURALLARI:
+// ✅ Jakob Yasası: Standart edit form layout
+// ✅ Fitts Yasası: Primary button 56dp, inputs 56dp height
+// ✅ Hick Yasası: 1 primary (Güncelle), 2 secondary (İptal, Sil)
+// ✅ Miller Yasası: 3 form alanı (Ad, Açıklama, Bütçe) - ideal
+// ✅ Gestalt: Form alanları gruplanmış, danger zone görsel olarak ayrı
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -257,7 +257,7 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: context.safePaddingHorizontal.horizontalSpace,
+            padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: AppBreakpoints.maxFormWidth,

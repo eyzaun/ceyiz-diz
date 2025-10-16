@@ -1,11 +1,11 @@
-/// Add Product Screen - Yeni Tasarım Sistemi v2.0
-///
-/// TASARIM KURALLARI:
-/// ✅ Jakob Yasası: Standart form layout
-/// ✅ Fitts Yasası: Primary button 56dp, full width, tüm input'lar 56dp height
-/// ✅ Hick Yasası: 1 primary action (Ürün Ekle), 1 secondary (İptal - AppBar back)
-/// ✅ Miller Yasası: 8 alan → 2 bölüme ayrılmış (Temel Bilgiler 4 alan + Ek Bilgiler 4 alan)
-/// ✅ Gestalt: Form bölümleri gruplanmış, ilgili alanlar yakın (fiyat+adet)
+// Add Product Screen - Yeni Tasarım Sistemi v2.0
+//
+// TASARIM KURALLARI:
+// ✅ Jakob Yasası: Standart form layout
+// ✅ Fitts Yasası: Primary button 56dp, full width, tüm input'lar 56dp height
+// ✅ Hick Yasası: 1 primary action (Ürün Ekle), 1 secondary (İptal - AppBar back)
+// ✅ Miller Yasası: 8 alan → 2 bölüme ayrılmış (Temel Bilgiler 4 alan + Ek Bilgiler 4 alan)
+// ✅ Gestalt: Form bölümleri gruplanmış, ilgili alanlar yakın (fiyat+adet)
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -251,7 +251,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  // theme is not used in this widget; keep retrieval commented to avoid analyzer unused var
+  // final theme = Theme.of(context);
     final categoryProvider = Provider.of<CategoryProvider>(context);
 
     // Ensure selected category exists in current categories
@@ -292,7 +293,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: context.safePaddingHorizontal.horizontalSpace,
+            padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: AppBreakpoints.maxFormWidth,
