@@ -1,9 +1,9 @@
-// Design Tokens - Universal Design System
-//
-// Bu dosya, uygulamanın tüm tasarım kurallarını içerir.
-// HER EKRAN bu değerleri kullanmalıdır - asla hard-coded değer kullanma.
-//
-// Tasarım Prensipleri:
+/// Design Tokens - Universal Design System
+///
+/// Bu dosya, uygulamanın tüm tasarım kurallarını içerir.
+/// HER EKRAN bu değerleri kullanmalıdır - asla hard-coded değer kullanma.
+///
+/// Tasarım Prensipleri:
 /// 1. JAKOB YASASI: Standart UI pattern'leri kullan
 /// 2. FITTS YASASI: Minimum 48dp touch target
 /// 3. HICK YASASI: Maksimum 3-5 seçenek göster
@@ -23,24 +23,25 @@ class AppSpacing {
   AppSpacing._();
 
   /// İlgili öğeler arası (örn: icon + text)
-  static const double xs = 4.0;
+  static const double xs = 2.0;  // 4.0 -> 2.0
 
   /// Küçük elemanlar arası (örn: chip'ler, butonlar)
-  static const double sm = 8.0;
+  static const double sm = 6.0;  // 8.0 -> 6.0
 
   /// Standart boşluk (en çok kullanılan - card içi, list item'lar)
-  static const double md = 16.0;
+  static const double md = 12.0; // 16.0 -> 12.0
 
   /// Grup ayırıcı (örn: form sections)
-  static const double lg = 24.0;
+  static const double lg = 16.0; // 24.0 -> 16.0
 
   /// Major section ayırıcı
-  static const double xl = 32.0;
-  /// Extra large 2 - used in several screens (approx 40dp)
-  static const double xl2 = 40.0;
+  static const double xl = 24.0; // 32.0 -> 24.0
 
   /// Ekstra büyük (ekran kenarları, hero sections)
-  static const double xxl = 48.0;
+  static const double xxl = 32.0; // 48.0 -> 32.0
+
+  /// Çok büyük boşluk (major sections arası)
+  static const double xl2 = 48.0; // 64.0 -> 48.0
 
   // Padding shortcuts
   static const EdgeInsets paddingXS = EdgeInsets.all(xs);
@@ -100,9 +101,9 @@ class AppDimensions {
   static const double inputHeightSmall = 48.0;
 
   // CARD PROPERTIES
-  static const double cardMinHeight = 80.0;
-  static const double cardImageSize = 64.0; // Product card thumbnails
-  static const double cardImageSizeLarge = 120.0; // Detail screens
+  static const double cardMinHeight = 64.0; // 80.0 -> 64.0
+  static const double cardImageSize = 56.0; // 64.0 -> 56.0 Product card thumbnails
+  static const double cardImageSizeLarge = 100.0; // 120.0 -> 100.0 Detail screens
 
   // FAB (Floating Action Button)
   static const double fabSize = 56.0;
@@ -114,8 +115,8 @@ class AppDimensions {
   static const double avatarSizeLarge = 64.0;
 
   // BOTTOM NAV
-  static const double bottomNavHeight = 72.0; // iOS stil - daha kolay erişim
-  static const double bottomNavIconSize = 28.0; // Daha büyük, daha kolay
+  static const double bottomNavHeight = 60.0; // iOS stil - daha kolay erişim
+  static const double bottomNavIconSize = 24.0; // Daha büyük, daha kolay
 }
 
 /// ═══════════════════════════════════════════════════════════════════════════
@@ -145,7 +146,8 @@ class AppRadius {
 
   // Circular (avatars, badges)
   static const BorderRadius circular = BorderRadius.all(Radius.circular(999));
-  // Alias for full/circular radius historically referenced as `radiusFull`
+
+  // Alias for circular - fully rounded
   static const BorderRadius radiusFull = circular;
 }
 
@@ -209,8 +211,6 @@ class AppTypography {
   static const FontWeight medium = FontWeight.w500;
   static const FontWeight semiBold = FontWeight.w600;
   static const FontWeight bold = FontWeight.w700;
-  // Backwards-compatible alias used in some files
-  static const FontWeight semibold = semiBold;
 
   // Font Sizes (Type Scale)
   static const double sizeXS = 11.0;
@@ -320,7 +320,9 @@ extension ResponsiveExtension on BuildContext {
   bool get isDesktop => screenWidth >= AppBreakpoints.desktop;
 
   /// Safe horizontal padding (ekran kenarlarından güvenli mesafe)
-  double get safePaddingHorizontal => isMobile ? AppSpacing.md : AppSpacing.lg;
+  EdgeInsets get safePaddingHorizontal => EdgeInsets.symmetric(
+    horizontal: isMobile ? AppSpacing.md : AppSpacing.lg,
+  );
 }
 
 extension SpacingExtension on num {

@@ -1,11 +1,11 @@
-// Register Screen - Yeni Tasarım Sistemi v2.0
-//
-// TASARIM KURALLARI:
-// ✅ Jakob Yasası: Standart kayıt formu layout
-// ✅ Fitts Yasası: Primary button 56dp, checkbox 48x48dp touch area
-// ✅ Hick Yasası: 1 primary action (Kayıt Ol)
-// ✅ Miller Yasası: 4 alan ama 2 gruba bölünmüş (Kişisel + Güvenlik)
-// ✅ Gestalt: Form bölümleri gruplanmış, ilgili alanlar yakın
+/// Register Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
+/// ✅ Jakob Yasası: Standart kayıt formu layout
+/// ✅ Fitts Yasası: Primary button 56dp, checkbox 48x48dp touch area
+/// ✅ Hick Yasası: 1 primary action (Kayıt Ol)
+/// ✅ Miller Yasası: 4 alan ama 2 gruba bölünmüş (Kişisel + Güvenlik)
+/// ✅ Gestalt: Form bölümleri gruplanmış, ilgili alanlar yakın
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -184,7 +184,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             opacity: _fadeAnimation,
             child: Center(
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
+                padding: context.safePaddingHorizontal,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     maxWidth: AppBreakpoints.maxFormWidth,

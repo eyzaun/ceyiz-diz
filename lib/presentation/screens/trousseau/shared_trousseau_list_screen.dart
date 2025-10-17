@@ -1,6 +1,6 @@
-// Shared Trousseau List Screen - Yeni Tasarım Sistemi v2.0
-//
-// TASARIM KURALLARI:
+/// Shared Trousseau List Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
 /// ✅ Jakob Yasası: Standart list layout
 /// ✅ Fitts Yasası: Card touch area 48dp+, icon buttons 48x48dp
 /// ✅ Hick Yasası: 1 primary action per card (tap to open)

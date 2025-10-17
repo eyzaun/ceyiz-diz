@@ -1,17 +1,19 @@
-// Trousseau Detail Screen - Yeni Tasarım Sistemi v2.0
-//
-// TASARIM KURALLARI:
-// ✅ Jakob Yasası: Standart list + tab selector layout
-// ✅ Fitts Yasası: FAB 56dp, filter chips 48dp, product cards 48dp touch
-// ✅ Hick Yasası: Max 3 AppBar actions, max 3 filter pills
-// ✅ Miller Yasası: Trousseau selector shows max 5 at once, scrollable
-// ✅ Gestalt: İlgili öğeler gruplanmış (selector, filters, products)
+/// Trousseau Detail Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
+/// ✅ Jakob Yasası: Standart list + tab selector layout
+/// ✅ Fitts Yasası: FAB 56dp, filter chips 48dp, product cards 48dp touch
+/// ✅ Hick Yasası: Max 3 AppBar actions, max 3 filter pills
+/// ✅ Miller Yasası: Trousseau selector shows max 5 at once, scrollable
+/// ✅ Gestalt: İlgili öğeler gruplanmış (selector, filters, products)
 
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../../core/services/excel_export_service.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/category_provider.dart';
@@ -80,6 +82,98 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
     super.dispose();
   }
 
+  Future<void> _exportToExcel(BuildContext context, TrousseauModel trousseau) async {
+    print('🚀 _exportToExcel başladı');
+    print('📋 Trousseau: ${trousseau.name} (ID: ${trousseau.id})');
+
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
+
+    print('📦 Ürün sayısı: ${productProvider.products.length}');
+    print('🏷️ Kategori sayısı: ${categoryProvider.allCategories.length}');
+
+    // Loading göster
+    print('⏳ Loading dialog gösteriliyor...');
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      // Kullanıcı email map'i oluştur (userId -> email)
+      print('👥 Kullanıcı bilgileri toplanıyor...');
+      final userIds = productProvider.products
+          .map((p) => p.addedBy)
+          .where((id) => id.isNotEmpty)
+          .toSet();
+
+      final Map<String, String> userEmailMap = {};
+      for (final userId in userIds) {
+        try {
+          final userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .get();
+          if (userDoc.exists) {
+            userEmailMap[userId] = userDoc.data()?['email'] ?? userId;
+          }
+        } catch (e) {
+          print('⚠️ User bilgisi alınamadı: $userId');
+          userEmailMap[userId] = userId; // Fallback to userId
+        }
+      }
+      print('✅ ${userEmailMap.length} kullanıcı bilgisi alındı');
+
+      print('📊 ExcelExportService.exportAndShareTrousseau çağrılıyor...');
+      await ExcelExportService.exportAndShareTrousseau(
+        trousseau: trousseau,
+        products: productProvider.products,
+        categories: categoryProvider.allCategories,
+        userEmailMap: userEmailMap,
+      );
+
+      print('✅ Excel export başarılı');
+      if (context.mounted) {
+        print('🔙 Loading dialog kapatılıyor...');
+        Navigator.of(context).pop(); // Loading'i kapat
+
+        print('✅ Başarı mesajı gösteriliyor...');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Excel dosyası başarıyla oluşturuldu'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusMD,
+            ),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('❌ Excel export hatası: $e');
+      print('📍 Stack trace: $stackTrace');
+
+      if (context.mounted) {
+        print('🔙 Loading dialog kapatılıyor (hata durumu)...');
+        Navigator.of(context).pop(); // Loading'i kapat
+
+        print('⚠️ Hata mesajı gösteriliyor...');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hata: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusMD,
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -128,11 +222,52 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                   tooltip: 'Düzenle',
                 ),
               if (isOwner)
-                AppIconButton(
-                  icon: Icons.share,
-                  onPressed: () =>
-                      context.push('/trousseau/$_currentTrousseauId/share'),
+                PopupMenuButton<String>(
+                  icon: Icon(
+                    Icons.share,
+                    size: AppDimensions.iconSizeMedium,
+                  ),
                   tooltip: 'Paylaş',
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppRadius.radiusMD,
+                  ),
+                  onSelected: (value) async {
+                    if (value == 'share_trousseau') {
+                      context.push('/trousseau/$_currentTrousseauId/share');
+                    } else if (value == 'export_excel') {
+                      await _exportToExcel(context, trousseau);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'share_trousseau',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.person_add,
+                            size: 20,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          AppSpacing.sm.horizontalSpace,
+                          const Text('Çeyiz Paylaş'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'export_excel',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.table_chart,
+                            size: 20,
+                            color: theme.colorScheme.primary,
+                          ),
+                          AppSpacing.sm.horizontalSpace,
+                          const Text('Excel Olarak Paylaş'),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
             ],
           ),
@@ -161,7 +296,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                     // ─────────────────────────────────────────────────────
                     SliverToBoxAdapter(
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
+                        padding: context.safePaddingHorizontal,
                         color: theme.cardColor,
                         child: Padding(
                           padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
@@ -192,10 +327,10 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                       child: Consumer<ProductProvider>(
                         builder: (context, productProvider, _) {
                           return Container(
-                            height: 60,
+                            height: 44,
                             padding: EdgeInsets.symmetric(
                               horizontal: AppSpacing.md,
-                              vertical: AppSpacing.sm,
+                              vertical: AppSpacing.xs,
                             ),
                             child: ListView(
                               scrollDirection: Axis.horizontal,
@@ -248,11 +383,11 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                           return Consumer<ProductProvider>(
                             builder: (context, productProvider, _) {
                               return Container(
-                                height: 48,
+                                height: 40,
                                 padding: EdgeInsets.only(
                                   left: AppSpacing.md,
                                   right: AppSpacing.md,
-                                  bottom: AppSpacing.sm,
+                                  bottom: AppSpacing.xs,
                                 ),
                                 child: ListView.separated(
                                   scrollDirection: Axis.horizontal,
@@ -343,21 +478,106 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                                     categoryProvider.getById(product.category);
 
                                 return Padding(
-                                  padding: EdgeInsets.only(bottom: AppSpacing.sm),
-                                  child: AppProductCard(
-                                    product: product,
-                                    category: category,
-                                    canEdit: canEdit,
-                                    onTap: () => context.push(
-                                      '/trousseau/$_currentTrousseauId/products/${product.id}',
-                                    ),
-                                    onTogglePurchase: canEdit
-                                        ? () async {
-                                            await productProvider
-                                                .togglePurchaseStatus(product.id);
-                                          }
-                                        : null,
-                                  ),
+                                  padding: EdgeInsets.only(bottom: 1),
+                                  child: canEdit
+                                      ? Dismissible(
+                                          key: Key(product.id),
+                                          background: Container(
+                                            margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                                            decoration: BoxDecoration(
+                                              color: theme.colorScheme.primary,
+                                              borderRadius: AppRadius.radiusLG,
+                                            ),
+                                            alignment: Alignment.centerLeft,
+                                            padding: const EdgeInsets.only(left: AppSpacing.lg),
+                                            child: Icon(
+                                              Icons.edit,
+                                              color: theme.colorScheme.onPrimary,
+                                              size: AppDimensions.iconSizeLarge,
+                                            ),
+                                          ),
+                                          secondaryBackground: Container(
+                                            margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                                            decoration: BoxDecoration(
+                                              color: theme.colorScheme.error,
+                                              borderRadius: AppRadius.radiusLG,
+                                            ),
+                                            alignment: Alignment.centerRight,
+                                            padding: const EdgeInsets.only(right: AppSpacing.lg),
+                                            child: Icon(
+                                              Icons.delete,
+                                              color: theme.colorScheme.onError,
+                                              size: AppDimensions.iconSizeLarge,
+                                            ),
+                                          ),
+                                          confirmDismiss: (direction) async {
+                                            if (direction == DismissDirection.startToEnd) {
+                                              // Sağa kaydır -> Edit
+                                              context.push(
+                                                '/trousseau/$_currentTrousseauId/products/${product.id}/edit',
+                                              );
+                                              return false;
+                                            } else {
+                                              // Sola kaydır -> Delete
+                                              final confirmed = await showDialog<bool>(
+                                                context: context,
+                                                builder: (ctx) => AlertDialog(
+                                                  title: const Text('Ürünü Sil'),
+                                                  content: Text(
+                                                    '${product.name} ürününü silmek istediğinizden emin misiniz?',
+                                                  ),
+                                                  actions: [
+                                                    AppTextButton(
+                                                      label: 'İptal',
+                                                      onPressed: () => Navigator.pop(ctx, false),
+                                                    ),
+                                                    AppDangerButton(
+                                                      label: 'Sil',
+                                                      icon: Icons.delete,
+                                                      onPressed: () => Navigator.pop(ctx, true),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                              return confirmed ?? false;
+                                            }
+                                          },
+                                          onDismissed: (direction) async {
+                                            if (direction == DismissDirection.endToStart) {
+                                              await productProvider.deleteProduct(product.id);
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text('${product.name} silindi'),
+                                                    behavior: SnackBarBehavior.floating,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: AppRadius.radiusMD,
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                          },
+                                          child: AppProductCard(
+                                            product: product,
+                                            category: category,
+                                            canEdit: canEdit,
+                                            onTap: () => context.push(
+                                              '/trousseau/$_currentTrousseauId/products/${product.id}',
+                                            ),
+                                            onTogglePurchase: () async {
+                                              await productProvider.togglePurchaseStatus(product.id);
+                                            },
+                                          ),
+                                        )
+                                      : AppProductCard(
+                                          product: product,
+                                          category: category,
+                                          canEdit: false,
+                                          onTap: () => context.push(
+                                            '/trousseau/$_currentTrousseauId/products/${product.id}',
+                                          ),
+                                        ),
                                 );
                               },
                               childCount: productProvider.filteredProducts.length,
@@ -525,7 +745,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                             style: TextStyle(
                               fontSize: AppTypography.sizeSM,
                               fontWeight: isSelected
-                                  ? AppTypography.semibold
+                                  ? AppTypography.semiBold
                                   : AppTypography.regular,
                               color: isSelected
                                   ? theme.colorScheme.onPrimaryContainer

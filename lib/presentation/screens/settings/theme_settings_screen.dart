@@ -45,27 +45,27 @@ class ThemeSettingsScreen extends StatelessWidget {
           ),
           _buildThemeOption(
             context,
-            'Gece Mavisi',
-            'Koyu ve şık: lacivert-mavi tonlar',
-            const Color(0xFF3B82F6), // primary
-            const Color(0xFF60A5FA), // secondary
-            const Color(0xFF334155), // accent
+            'Monokrom',
+            'Saf siyah üzerine beyaz vurgu',
+            DesignSystem.palettes[AppThemeType.modern]!.primary,
+            DesignSystem.palettes[AppThemeType.modern]!.secondary,
+            DesignSystem.palettes[AppThemeType.modern]!.tertiary,
             AppThemeType.modern,
             true,
           ),
           _buildThemeOption(
             context,
-            'Monokrom',
-            'Saf siyah üzerine beyaz vurgu',
-            const Color(0xFFFFFFFF), // primary on black
-            const Color(0xFFCCCCCC), // secondary
-            const Color(0xFF1A1A1A), // accent/border
+            'Mor Okyanus',
+            'Koyu gri zemin, mor vurgular',
+            DesignSystem.palettes[AppThemeType.ocean]!.primary,
+            DesignSystem.palettes[AppThemeType.ocean]!.secondary,
+            DesignSystem.palettes[AppThemeType.ocean]!.tertiary,
             AppThemeType.ocean,
             true,
           ),
           _buildThemeOption(
             context,
-            'Orman',
+            'Orman Yeşili',
             'Doğal yeşil tonlar',
             DesignSystem.palettes[AppThemeType.forest]!.primary,
             DesignSystem.palettes[AppThemeType.forest]!.secondary,
@@ -73,7 +73,17 @@ class ThemeSettingsScreen extends StatelessWidget {
             AppThemeType.forest,
             true,
           ),
-          // Not showing additional duplicates (rose/night) to keep the list concise
+          _buildThemeOption(
+            context,
+            'Gün Batımı',
+            'Sıcak turuncu, pembe ve mor tonlar',
+            DesignSystem.palettes[AppThemeType.sunset]!.primary,
+            DesignSystem.palettes[AppThemeType.sunset]!.secondary,
+            DesignSystem.palettes[AppThemeType.sunset]!.tertiary,
+            AppThemeType.sunset,
+            true,
+          ),
+          // Not showing deprecated themes (rose/night)
           
           const SizedBox(height: 32),
           

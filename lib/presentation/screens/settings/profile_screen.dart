@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
 
@@ -15,6 +18,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   bool _isLoading = false;
+  final ImagePicker _imagePicker = ImagePicker();
   
   @override
   void initState() {
@@ -35,22 +39,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
   
+  Future<void> _uploadProfilePhoto() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUser == null) return;
+
+    try {
+      final XFile? image = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Upload to Firebase Storage
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_photos')
+          .child('${authProvider.currentUser!.uid}.jpg');
+
+      await storageRef.putFile(File(image.path));
+      final photoURL = await storageRef.getDownloadURL();
+
+      // Update profile
+      final success = await authProvider.updateProfile(photoURL: photoURL);
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profil fotoğrafı güncellendi'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hata: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _updateProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.updateProfile(
       displayName: _nameController.text,
     );
-    
+
     setState(() {
       _isLoading = false;
     });
-    
+
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -91,18 +146,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.all(24),
                   child: Stack(
                     children: [
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundColor: theme.colorScheme.primary,
-                        child: Text(
-                          authProvider.currentUser?.displayName.substring(0, 1).toUpperCase() ?? 'K',
-                          style: const TextStyle(
-                            fontSize: 48,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      authProvider.firebaseUser?.photoURL != null
+                          ? CircleAvatar(
+                              radius: 60,
+                              backgroundImage: NetworkImage(authProvider.firebaseUser!.photoURL!),
+                              backgroundColor: theme.colorScheme.primary,
+                            )
+                          : CircleAvatar(
+                              radius: 60,
+                              backgroundColor: theme.colorScheme.primary,
+                              child: Text(
+                                authProvider.currentUser?.displayName.substring(0, 1).toUpperCase() ?? 'K',
+                                style: const TextStyle(
+                                  fontSize: 48,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                       Positioned(
                         bottom: 0,
                         right: 0,
@@ -116,13 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Icons.camera_alt,
                               color: Colors.white,
                             ),
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Profil fotoğrafı yükleme yakında eklenecek'),
-                                ),
-                              );
-                            },
+                            onPressed: _uploadProfilePhoto,
                           ),
                         ),
                       ),

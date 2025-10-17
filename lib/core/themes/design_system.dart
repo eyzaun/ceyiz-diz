@@ -307,7 +307,7 @@ class DesignSystem {
     // Monochrome Dark Theme - Minimalist black and white
     // Inspired by GitHub dark mode
     AppThemeType.modern: const DesignPalette(
-      name: 'Gece Mavisi',
+      name: 'Monokrom',
       isDark: true,
       primary: Color(0xFFE5E7EB),        // Light gray accent
       secondary: Color(0xFF9CA3AF),      // Medium gray
@@ -316,11 +316,11 @@ class DesignSystem {
       surface: Color(0xFF161B22),        // Dark gray surface
       outline: Color(0xFF30363D),        // Subtle border
     ),
-    
+
     // Purple Dark Theme - Dark gray with purple accents
     // Inspired by Discord's color system
     AppThemeType.ocean: const DesignPalette(
-      name: 'Okyanus',
+      name: 'Mor Okyanus',
       isDark: true,
       primary: Color(0xFFA78BFA),        // Soft purple (desaturated)
       secondary: Color(0xFFC4B5FD),      // Light purple
@@ -329,11 +329,11 @@ class DesignSystem {
       surface: Color(0xFF1A1A23),        // Dark gray-purple tint
       outline: Color(0xFF2D2D3D),        // Subtle purple-gray border
     ),
-    
+
     // Green Dark Theme - Dark gray with emerald accents
     // Inspired by Material Design with green tones
     AppThemeType.forest: const DesignPalette(
-      name: 'Orman',
+      name: 'Orman Yeşili',
       isDark: true,
       primary: Color(0xFF34D399),        // Emerald green (desaturated)
       secondary: Color(0xFF6EE7B7),      // Light emerald
@@ -342,10 +342,23 @@ class DesignSystem {
       surface: Color(0xFF1A1F1E),        // Dark gray-green tint
       outline: Color(0xFF2D3432),        // Subtle green-gray border
     ),
+
+    // Sunset Gradient Theme - Warm and vibrant
+    // Inspired by sunset colors: orange, pink, purple
+    AppThemeType.sunset: const DesignPalette(
+      name: 'Gün Batımı',
+      isDark: true,
+      primary: Color(0xFFF59E0B),        // Warm orange
+      secondary: Color(0xFFEC4899),      // Pink
+      tertiary: Color(0xFFA855F7),       // Purple
+      background: Color(0xFF0F0A14),     // Very dark purple-tinted
+      surface: Color(0xFF1A1420),        // Dark purple-gray
+      outline: Color(0xFF3D2D45),        // Purple-tinted border
+    ),
     
-    // Backward compatibility aliases
+    // Backward compatibility aliases (deprecated)
     AppThemeType.rose: const DesignPalette(
-      name: 'Gece Mavisi',
+      name: 'Monokrom (Eski)',
       isDark: true,
       primary: Color(0xFFE5E7EB),
       secondary: Color(0xFF9CA3AF),
@@ -355,7 +368,7 @@ class DesignSystem {
       outline: Color(0xFF30363D),
     ),
     AppThemeType.night: const DesignPalette(
-      name: 'Okyanus',
+      name: 'Mor Okyanus (Eski)',
       isDark: true,
       primary: Color(0xFFA78BFA),
       secondary: Color(0xFFC4B5FD),

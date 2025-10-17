@@ -1,8 +1,8 @@
-// App Button - Tasarım Kurallarına Uyumlu Buton Sistemi
-//
-// FITTS YASASI: Her buton minimum 48dp touch area
-// GESTALT (Benzerlik): Aynı türdeki butonlar aynı görünür
-// JAKOB YASASI: Standart Material Design pattern'leri
+/// App Button - Tasarım Kurallarına Uyumlu Buton Sistemi
+///
+/// FITTS YASASI: Her buton minimum 48dp touch area
+/// GESTALT (Benzerlik): Aynı türdeki butonlar aynı görünür
+/// JAKOB YASASI: Standart Material Design pattern'leri
 
 import 'package:flutter/material.dart';
 import '../../../core/theme/design_tokens.dart';
@@ -21,7 +21,6 @@ class AppPrimaryButton extends StatelessWidget {
   final bool isLoading;
   final bool isFullWidth;
   final Color? backgroundColor;
-  final Color? iconColor;
 
   const AppPrimaryButton({
     super.key,
@@ -31,7 +30,6 @@ class AppPrimaryButton extends StatelessWidget {
     this.isLoading = false,
     this.isFullWidth = false,
     this.backgroundColor,
-    this.iconColor,
   });
 
   @override
@@ -77,7 +75,7 @@ class AppPrimaryButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: AppDimensions.iconSizeMedium, color: iconColor),
+                    Icon(icon, size: AppDimensions.iconSizeMedium),
                     AppSpacing.sm.horizontalSpace,
                   ],
                   Text(
@@ -108,7 +106,6 @@ class AppSecondaryButton extends StatelessWidget {
   final bool isLoading;
   final bool isFullWidth;
   final Color? backgroundColor;
-  final Color? iconColor;
 
   const AppSecondaryButton({
     super.key,
@@ -118,7 +115,6 @@ class AppSecondaryButton extends StatelessWidget {
     this.isLoading = false,
     this.isFullWidth = false,
     this.backgroundColor,
-    this.iconColor,
   });
 
   @override
@@ -131,7 +127,8 @@ class AppSecondaryButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: iconColor ?? theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.primary,
+          backgroundColor: backgroundColor,
           side: BorderSide(
             color: theme.colorScheme.outline,
             width: 1.5,
@@ -163,7 +160,7 @@ class AppSecondaryButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: AppDimensions.iconSizeMedium, color: iconColor),
+                    Icon(icon, size: AppDimensions.iconSizeMedium),
                     AppSpacing.sm.horizontalSpace,
                   ],
                   Text(
@@ -188,14 +185,12 @@ class AppTextButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
-  final Color? iconColor;
 
   const AppTextButton({
     super.key,
     required this.label,
     this.onPressed,
     this.icon,
-    this.iconColor,
   });
 
   @override
@@ -218,11 +213,11 @@ class AppTextButton extends StatelessWidget {
           AppDimensions.buttonHeightMedium,
         ),
       ),
-        child: Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: AppDimensions.iconSizeMedium, color: iconColor),
+            Icon(icon, size: AppDimensions.iconSizeMedium),
             AppSpacing.sm.horizontalSpace,
           ],
           Text(
@@ -248,11 +243,10 @@ class AppIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
   final String? tooltip;
-  final Color? color;
-  final double? iconSize;
-  final Color? iconColor;
-  // Backwards-compatible alias some callers pass
+  final Color? color; // Backward compatibility (alias for iconColor)
   final Color? backgroundColor;
+  final Color? iconColor;
+  final double? iconSize;
 
   const AppIconButton({
     super.key,
@@ -260,17 +254,17 @@ class AppIconButton extends StatelessWidget {
     this.onPressed,
     this.tooltip,
     this.color,
-    this.iconSize,
-    this.iconColor,
     this.backgroundColor,
+    this.iconColor,
+    this.iconSize,
   });
 
   @override
   Widget build(BuildContext context) {
     final button = IconButton(
-      icon: Icon(icon, color: iconColor ?? color),
+      icon: Icon(icon),
       onPressed: onPressed,
-      color: color,
+      color: iconColor ?? color, // Use iconColor first, fallback to color
       iconSize: iconSize ?? AppDimensions.iconSizeMedium,
       // Touch target garanti
       constraints: const BoxConstraints(
@@ -489,12 +483,13 @@ class AppButtonGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: alignment,
+      mainAxisSize: MainAxisSize.min,
       children: [
         if (secondaryButton != null) ...[
-          secondaryButton!,
+          Flexible(child: secondaryButton!),
           AppSpacing.md.horizontalSpace,
         ],
-        primaryButton,
+        Flexible(child: primaryButton),
       ],
     );
   }

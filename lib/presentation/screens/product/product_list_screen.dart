@@ -1,11 +1,11 @@
-// Product List Screen - Yeni Tasarım Sistemi v2.0
-//
-// TASARIM KURALLARI:
-// ✅ Jakob Yasası: Standart list + filter layout
-// ✅ Fitts Yasası: FAB 56dp, filter chips 48dp height, product cards 48dp touch
-// ✅ Hick Yasası: Max 3 filter pills (Tümü, Alınanlar, Alınmayanlar)
-// ✅ Miller Yasası: Filter chips max 5 visible at once
-// ✅ Gestalt: İlgili filter'lar gruplanmış (status + category ayrı rows)
+/// Product List Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
+/// ✅ Jakob Yasası: Standart list + filter layout
+/// ✅ Fitts Yasası: FAB 56dp, filter chips 48dp height, product cards 48dp touch
+/// ✅ Hick Yasası: Max 3 filter pills (Tümü, Alınanlar, Alınmayanlar)
+/// ✅ Miller Yasası: Filter chips max 5 visible at once
+/// ✅ Gestalt: İlgili filter'lar gruplanmış (status + category ayrı rows)
 
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -21,7 +21,6 @@ import '../../widgets/common/app_input.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/filter_pill.dart';
 import '../../widgets/common/icon_color_picker.dart';
-// removed unused import of product_model.dart
 
 class ProductListScreen extends StatefulWidget {
   final String trousseauId;
@@ -314,7 +313,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
           // FITTS YASASI: 56dp height search input
           // ─────────────────────────────────────────────────────
           Container(
-            padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
+            padding: context.safePaddingHorizontal,
             color: theme.cardColor,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
@@ -464,61 +463,79 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             final product = productProvider.filteredProducts[index];
                             final category = categoryProvider.getById(product.category);
 
-                            // Use AppProductCard from design system
+                            // Use AppProductCard with swipe-to-delete/edit
                             return Padding(
-                              padding: EdgeInsets.only(bottom: AppSpacing.sm),
-                              child: AppProductCard(
-                                product: product,
-                                category: category,
-                                canEdit: canEdit,
-                                onTap: () => context.push(
-                                  '/trousseau/${widget.trousseauId}/products/${product.id}',
-                                ),
-                                onTogglePurchase: canEdit
-                                    ? () async {
-                                        await productProvider
-                                            .togglePurchaseStatus(product.id);
-                                      }
-                                    : null,
-                                onEdit: canEdit
-                                    ? () => context.push(
-                                          '/trousseau/${widget.trousseauId}/products/${product.id}/edit',
-                                        )
-                                    : null,
-                                onDelete: canEdit
-                                    ? () async {
-                                        final confirmed = await showDialog<bool>(
-                                          context: context,
-                                          builder: (ctx) => AlertDialog(
-                                            title: const Text('Ürünü Sil'),
-                                            content: Text(
-                                              '${product.name} ürününü silmek istediğinizden emin misiniz?',
+                              padding: EdgeInsets.only(bottom: 1),
+                              child: canEdit
+                                  ? Dismissible(
+                                      key: Key(product.id),
+                                      background: Container(
+                                        margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary,
+                                          borderRadius: AppRadius.radiusLG,
+                                        ),
+                                        alignment: Alignment.centerLeft,
+                                        padding: const EdgeInsets.only(left: AppSpacing.lg),
+                                        child: Icon(
+                                          Icons.edit,
+                                          color: theme.colorScheme.onPrimary,
+                                          size: AppDimensions.iconSizeLarge,
+                                        ),
+                                      ),
+                                      secondaryBackground: Container(
+                                        margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.error,
+                                          borderRadius: AppRadius.radiusLG,
+                                        ),
+                                        alignment: Alignment.centerRight,
+                                        padding: const EdgeInsets.only(right: AppSpacing.lg),
+                                        child: Icon(
+                                          Icons.delete,
+                                          color: theme.colorScheme.onError,
+                                          size: AppDimensions.iconSizeLarge,
+                                        ),
+                                      ),
+                                      confirmDismiss: (direction) async {
+                                        if (direction == DismissDirection.startToEnd) {
+                                          // Sağa kaydır -> Edit
+                                          context.push(
+                                            '/trousseau/${widget.trousseauId}/products/${product.id}/edit',
+                                          );
+                                          return false;
+                                        } else {
+                                          // Sola kaydır -> Delete
+                                          final confirmed = await showDialog<bool>(
+                                            context: context,
+                                            builder: (ctx) => AlertDialog(
+                                              title: const Text('Ürünü Sil'),
+                                              content: Text(
+                                                '${product.name} ürününü silmek istediğinizden emin misiniz?',
+                                              ),
+                                              actions: [
+                                                AppTextButton(
+                                                  label: 'İptal',
+                                                  onPressed: () => Navigator.pop(ctx, false),
+                                                ),
+                                                AppDangerButton(
+                                                  label: 'Sil',
+                                                  icon: Icons.delete,
+                                                  onPressed: () => Navigator.pop(ctx, true),
+                                                ),
+                                              ],
                                             ),
-                                            actions: [
-                                              AppTextButton(
-                                                label: 'İptal',
-                                                onPressed: () =>
-                                                    Navigator.pop(ctx, false),
-                                              ),
-                                              AppDangerButton(
-                                                label: 'Sil',
-                                                icon: Icons.delete,
-                                                onPressed: () =>
-                                                    Navigator.pop(ctx, true),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-
-                                        if (confirmed == true) {
-                                          await productProvider
-                                              .deleteProduct(product.id);
+                                          );
+                                          return confirmed ?? false;
+                                        }
+                                      },
+                                      onDismissed: (direction) async {
+                                        if (direction == DismissDirection.endToStart) {
+                                          await productProvider.deleteProduct(product.id);
                                           if (context.mounted) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
+                                            ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(
-                                                content:
-                                                    Text('${product.name} silindi'),
+                                                content: Text('${product.name} silindi'),
                                                 behavior: SnackBarBehavior.floating,
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius: AppRadius.radiusMD,
@@ -527,9 +544,27 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                             );
                                           }
                                         }
-                                      }
-                                    : null,
-                              ),
+                                      },
+                                      child: AppProductCard(
+                                        product: product,
+                                        category: category,
+                                        canEdit: canEdit,
+                                        onTap: () => context.push(
+                                          '/trousseau/${widget.trousseauId}/products/${product.id}',
+                                        ),
+                                        onTogglePurchase: () async {
+                                          await productProvider.togglePurchaseStatus(product.id);
+                                        },
+                                      ),
+                                    )
+                                  : AppProductCard(
+                                      product: product,
+                                      category: category,
+                                      canEdit: false,
+                                      onTap: () => context.push(
+                                        '/trousseau/${widget.trousseauId}/products/${product.id}',
+                                      ),
+                                    ),
                             );
                           },
                         ),

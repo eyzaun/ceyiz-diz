@@ -1,11 +1,11 @@
-// Feedback Screen - Yeni Tasarım Sistemi v2.0
-//
-// TASARIM KURALLARI:
-// ✅ Jakob Yasası: Standart feedback form layout
-// ✅ Fitts Yasası: Primary button 56dp, star buttons 48x48dp, inputs 56dp
-// ✅ Hick Yasası: 1 primary action (Gönder), 1 secondary (History)
-// ✅ Miller Yasası: 3 alan (Rating, Mesaj, Email) - ideal
-// ✅ Gestalt: Form alanları gruplanmış, info text ayrı
+/// Feedback Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
+/// ✅ Jakob Yasası: Standart feedback form layout
+/// ✅ Fitts Yasası: Primary button 56dp, star buttons 48x48dp, inputs 56dp
+/// ✅ Hick Yasası: 1 primary action (Gönder), 1 secondary (History)
+/// ✅ Miller Yasası: 3 alan (Rating, Mesaj, Email) - ideal
+/// ✅ Gestalt: Form alanları gruplanmış, info text ayrı
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -56,7 +56,7 @@ class _FeedbackForm extends StatelessWidget {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
+          padding: context.safePaddingHorizontal,
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: AppBreakpoints.maxFormWidth,

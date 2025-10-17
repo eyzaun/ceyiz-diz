@@ -1,11 +1,11 @@
-// Create Trousseau Screen - Yeni Tasarım Sistemi v2.0
-//
-// TASARIM KURALLARI:
-// ✅ Jakob Yasası: Standart create form layout
-// ✅ Fitts Yasası: Primary button 56dp, inputs 56dp height
-// ✅ Hick Yasası: 1 primary action (Oluştur), 1 secondary (İptal - back button)
-// ✅ Miller Yasası: 3 form alanı (Ad, Açıklama, Bütçe) - ideal
-// ✅ Gestalt: Form alanları gruplanmış, info card ayrı
+/// Create Trousseau Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
+/// ✅ Jakob Yasası: Standart create form layout
+/// ✅ Fitts Yasası: Primary button 56dp, inputs 56dp height
+/// ✅ Hick Yasası: 1 primary action (Oluştur), 1 secondary (İptal - back button)
+/// ✅ Miller Yasası: 3 form alanı (Ad, Açıklama, Bütçe) - ideal
+/// ✅ Gestalt: Form alanları gruplanmış, info card ayrı
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -133,7 +133,7 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
+            padding: context.safePaddingHorizontal,
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: AppBreakpoints.maxFormWidth,

@@ -376,6 +376,8 @@ class AuthProvider extends ChangeNotifier {
       
       if (photoURL != null) {
         await _firebaseUser!.updatePhotoURL(photoURL);
+        await _firebaseUser!.reload();
+        _firebaseUser = _auth.currentUser;
       }
       
       Map<String, dynamic> updates = {};

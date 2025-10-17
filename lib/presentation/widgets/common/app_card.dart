@@ -1,13 +1,15 @@
-// App Card - Tutarlı Kart Tasarımları
-//
-// GESTALT PRENSİPLERİ:
+/// App Card - Tutarlı Kart Tasarımları
+///
+/// GESTALT PRENSİPLERİ:
 /// - ORTAK ALAN: Card içindeki öğeler aynı gruba ait
 /// - YAKINLIK: İlgili bilgiler birbirine yakın
 /// - BENZERLİK: Tüm card'lar aynı padding/radius kullanır
 
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/category_model.dart';
 import '../../../data/models/product_model.dart';
 
@@ -28,8 +30,7 @@ class AppCard extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final Color? color;
-  // Backwards-compatible alias used in screens
-  final Color? backgroundColor;
+  final Color? backgroundColor; // Alias for color
 
   const AppCard({
     super.key,
@@ -47,7 +48,7 @@ class AppCard extends StatelessWidget {
 
     return Card(
       margin: margin ?? const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      color: color ?? backgroundColor,
+      color: backgroundColor ?? color, // Use backgroundColor first, fallback to color
       elevation: theme.brightness == Brightness.light
           ? AppElevation.subtle
           : AppElevation.flat,
@@ -59,7 +60,14 @@ class AppCard extends StatelessWidget {
           ),
         ),
       ),
-      child: child,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.radiusLG,
+        child: Padding(
+          padding: padding ?? AppSpacing.paddingMD,
+          child: child,
+        ),
+      ),
     );
   }
 }
@@ -76,67 +84,113 @@ class AppCard extends StatelessWidget {
 /// FITTS YASASI: Tüm kart tıklanabilir (48dp+ yükseklik)
 
 class AppProductCard extends StatelessWidget {
-  // Primary fields (new API)
+  // Accept product directly or individual fields (backwards compatibility)
+  final ProductModel? product;
   final String? name;
   final String? description;
   final double? price;
-  final int quantity;
-  final bool isPurchased;
+  final int? quantity;
+  final bool? isPurchased;
   final List<String>? images;
-  final CategoryModel? category;
+  final CategoryModel category;
   final VoidCallback? onTap;
   final VoidCallback? onTogglePurchase;
-  final bool canEdit;
-
-  // Backwards-compatible fields (old API)
-  final ProductModel? product;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final bool canEdit;
 
   const AppProductCard({
     super.key,
+    this.product,
     this.name,
     this.description,
     this.price,
-    this.quantity = 1,
-    this.isPurchased = false,
+    this.quantity,
+    this.isPurchased,
     this.images,
-    this.category,
+    required this.category,
     this.onTap,
     this.onTogglePurchase,
-    this.canEdit = false,
-    // legacy
-    this.product,
     this.onEdit,
     this.onDelete,
-  }) : assert(
-          product != null || (name != null && price != null && images != null && category != null),
-          'Either product must be provided or name, price, images and category must be supplied',
+    this.canEdit = false,
+  });
+
+  String _normalizeUrl(String url) {
+    final trimmed = url.trim();
+    if (trimmed.isEmpty) return trimmed;
+    final hasScheme = RegExp(r'^[a-zA-Z][a-zA-Z0-9+.-]*://').hasMatch(trimmed);
+    return hasScheme ? trimmed : 'https://$trimmed';
+  }
+
+  Future<void> _openLink(BuildContext context, String link) async {
+    try {
+      final normalized = _normalizeUrl(link);
+      if (normalized.isEmpty) return;
+      final uri = Uri.parse(normalized);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Link açılamadı'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusMD,
+            ),
+          ),
         );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Geçersiz link'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusMD,
+            ),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final displayName = product?.name ?? name!;
-    final displayDescription = product?.description ?? description ?? '';
-    final displayPrice = product?.price ?? price!;
-    final displayImages = product?.images ?? images ?? <String>[];
 
-    final effectiveCategory = category ?? (product != null
-        ? CategoryModel.getDefaultById(product!.category)
-        : CategoryModel.getDefaultById('other'));
+    // Use product if provided, otherwise use individual fields
+    final String displayName = product?.name ?? name ?? '';
+    final String displayDescription = product?.description ?? description ?? '';
+    final double displayPrice = product?.price ?? price ?? 0.0;
+    final int displayQuantity = product?.quantity ?? quantity ?? 1;
+    final bool displayIsPurchased = product?.isPurchased ?? isPurchased ?? false;
+    final List<String> displayImages = product?.images ?? images ?? [];
+    final String displayLink = product?.link ?? '';
 
     return AppCard(
       onTap: onTap,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
-          _buildThumbnail(context, effectiveCategory, displayImages),
+          // ─────────────────────────────────────────────────────────────────
+          // SOL: Ürün Görseli veya Kategori İkonu
+          // ─────────────────────────────────────────────────────────────────
+          _buildThumbnail(context, displayImages),
+
           AppSpacing.md.horizontalSpace,
+
+          // ─────────────────────────────────────────────────────────────────
+          // ORTA: Ürün Bilgileri (Expanded)
+          // ─────────────────────────────────────────────────────────────────
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Ürün Adı + Satın Alındı İkonu
                 Row(
                   children: [
                     Expanded(
@@ -150,7 +204,7 @@ class AppProductCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (isPurchased) ...[
+                    if (displayIsPurchased) ...[
                       AppSpacing.xs.horizontalSpace,
                       Icon(
                         Icons.check_circle,
@@ -160,6 +214,8 @@ class AppProductCard extends StatelessWidget {
                     ],
                   ],
                 ),
+
+                // Açıklama (eğer varsa)
                 if (displayDescription.isNotEmpty) ...[
                   AppSpacing.xs.verticalSpace,
                   Text(
@@ -172,17 +228,39 @@ class AppProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
+
                 AppSpacing.xs.verticalSpace,
+
+                // Kategori Badge + Adet Bilgisi + Link İkonu
                 Row(
                   children: [
-                    _buildCategoryBadge(context, effectiveCategory),
-                    if (quantity > 1) ...[
+                    _buildCategoryBadge(context),
+                    if (displayQuantity > 1) ...[
                       AppSpacing.sm.horizontalSpace,
                       Text(
-                        '$quantity adet',
+                        '$displayQuantity adet',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                           fontSize: AppTypography.sizeXS,
+                        ),
+                      ),
+                    ],
+                    // Link İkonu (eğer link varsa)
+                    if (displayLink.isNotEmpty) ...[
+                      AppSpacing.sm.horizontalSpace,
+                      GestureDetector(
+                        onTap: () => _openLink(context, displayLink),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Icon(
+                            Icons.link,
+                            size: 14,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
                       ),
                     ],
@@ -191,42 +269,53 @@ class AppProductCard extends StatelessWidget {
               ],
             ),
           ),
+
           AppSpacing.md.horizontalSpace,
+
+          // ─────────────────────────────────────────────────────────────────
+          // SAĞ: Fiyat + Checkbox
+          // ─────────────────────────────────────────────────────────────────
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Birim Fiyat
               Text(
-                '₺${displayPrice.toStringAsFixed(2)}',
+                CurrencyFormatter.formatWithSymbol(displayPrice),
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: AppTypography.bold,
                   fontSize: AppTypography.sizeMD,
                 ),
               ),
-              if (quantity > 1) ...[
+
+              // Toplam Fiyat (eğer adet > 1)
+              if (displayQuantity > 1) ...[
                 AppSpacing.xs.verticalSpace,
                 Text(
-                  'Top: ₺${(displayPrice * quantity).toStringAsFixed(2)}',
+                  'Top: ${CurrencyFormatter.formatWithSymbol(displayPrice * displayQuantity)}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontSize: AppTypography.sizeXS,
                   ),
                 ),
               ],
+
+              // Checkbox (eğer düzenleme izni varsa)
               if (canEdit) ...[
                 AppSpacing.xs.verticalSpace,
+                // FITTS YASASI: 48x48dp touch area
                 SizedBox(
                   width: AppDimensions.touchTargetSize,
                   height: AppDimensions.touchTargetSize,
                   child: IconButton(
                     icon: Icon(
-                      isPurchased
+                      displayIsPurchased
                           ? Icons.check_box
                           : Icons.check_box_outline_blank,
                       size: AppDimensions.iconSizeMedium,
                     ),
-                    color: isPurchased
+                    color: displayIsPurchased
                         ? theme.colorScheme.tertiary
                         : theme.colorScheme.onSurfaceVariant,
                     onPressed: onTogglePurchase,
@@ -244,65 +333,66 @@ class AppProductCard extends StatelessWidget {
       ),
     );
   }
-  Widget _buildThumbnail(BuildContext context, CategoryModel effectiveCategory, List<String> displayImages) {
+
+  Widget _buildThumbnail(BuildContext context, List<String> images) {
     return Container(
       width: AppDimensions.cardImageSize,
       height: AppDimensions.cardImageSize,
       decoration: BoxDecoration(
-        color: effectiveCategory.color.withValues(alpha: 0.1),
+        color: category.color.withValues(alpha: 0.1),
         borderRadius: AppRadius.radiusMD,
       ),
-      child: displayImages.isNotEmpty
+      child: images.isNotEmpty
           ? ClipRRect(
               borderRadius: AppRadius.radiusMD,
               child: CachedNetworkImage(
-                imageUrl: displayImages.first,
+                imageUrl: images.first,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Center(
                   child: CircularProgressIndicator(
-                    color: effectiveCategory.color,
+                    color: category.color,
                     strokeWidth: 2,
                   ),
                 ),
                 errorWidget: (context, url, error) => Icon(
-                  effectiveCategory.icon,
-                  color: effectiveCategory.color,
+                  category.icon,
+                  color: category.color,
                   size: AppDimensions.iconSizeLarge,
                 ),
               ),
             )
           : Icon(
-              effectiveCategory.icon,
-              color: effectiveCategory.color,
+              category.icon,
+              color: category.color,
               size: AppDimensions.iconSizeLarge,
             ),
     );
   }
 
-  Widget _buildCategoryBadge(BuildContext context, CategoryModel effectiveCategory) {
+  Widget _buildCategoryBadge(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: effectiveCategory.color.withValues(alpha: 0.1),
+        color: category.color.withValues(alpha: 0.1),
         borderRadius: AppRadius.radiusSM,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            effectiveCategory.icon,
+            category.icon,
             size: 10,
-            color: effectiveCategory.color,
+            color: category.color,
           ),
           const SizedBox(width: AppSpacing.xs),
           Text(
-            effectiveCategory.displayName,
+            category.displayName,
             style: TextStyle(
               fontSize: AppTypography.sizeXS,
-              color: effectiveCategory.color,
+              color: category.color,
               fontWeight: AppTypography.medium,
             ),
           ),
@@ -415,22 +505,21 @@ enum InfoCardType { info, success, warning, error }
 class AppInfoCard extends StatelessWidget {
   final String title;
   final String? message;
+  final String? subtitle; // Alias for message
   final InfoCardType type;
   final VoidCallback? onDismiss;
-  // Backwards-compatible fields used by screens
-  final IconData? icon;
-  final String? subtitle;
-  final Color? color;
-  final Color? backgroundColor;
+  final IconData? icon; // Custom icon (overrides type-based icon)
+  final Color? color; // Custom color (overrides type-based color)
+  final Color? backgroundColor; // Custom background color
 
   const AppInfoCard({
     super.key,
     required this.title,
     this.message,
+    this.subtitle,
     this.type = InfoCardType.info,
     this.onDismiss,
     this.icon,
-    this.subtitle,
     this.color,
     this.backgroundColor,
   });
@@ -438,17 +527,21 @@ class AppInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-  final config = _getConfig(theme);
-  final accentColor = color ?? config.color;
-  final leadingIcon = icon ?? config.icon;
+    final config = _getConfig(theme);
+
+    // Use custom values if provided, otherwise use config from type
+    final displayIcon = icon ?? config.icon;
+    final displayColor = color ?? config.color;
+    final displayMessage = message ?? subtitle;
+    final displayBackgroundColor = backgroundColor ?? displayColor.withValues(alpha: 0.1);
 
     return AppCard(
-      color: (backgroundColor ?? accentColor.withValues(alpha: 0.1)),
+      color: displayBackgroundColor,
       child: Row(
         children: [
           Icon(
-            leadingIcon,
-            color: accentColor,
+            displayIcon,
+            color: displayColor,
             size: AppDimensions.iconSizeMedium,
           ),
           AppSpacing.md.horizontalSpace,
@@ -459,24 +552,14 @@ class AppInfoCard extends StatelessWidget {
                 Text(
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: accentColor,
+                    color: displayColor,
                     fontWeight: AppTypography.semiBold,
                   ),
                 ),
-                if (subtitle != null) ...[
+                if (displayMessage != null) ...[
                   AppSpacing.xs.verticalSpace,
                   Text(
-                    subtitle!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontSize: AppTypography.sizeSM,
-                    ),
-                  ),
-                ],
-                if (message != null) ...[
-                  AppSpacing.xs.verticalSpace,
-                  Text(
-                    message!,
+                    displayMessage,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface,
                     ),
@@ -490,7 +573,7 @@ class AppInfoCard extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.close),
               iconSize: AppDimensions.iconSizeSmall,
-              color: accentColor,
+              color: displayColor,
               onPressed: onDismiss,
               constraints: const BoxConstraints(
                 minWidth: AppDimensions.touchTargetSize,

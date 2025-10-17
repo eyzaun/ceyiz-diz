@@ -1,11 +1,11 @@
-// Product Detail Screen - Yeni Tasarım Sistemi v2.0
-//
-// TASARIM KURALLARI:
-// ✅ Jakob Yasası: Standart product detail layout
-// ✅ Fitts Yasası: Primary button 56dp, AppBar actions 48x48dp
-// ✅ Hick Yasası: 1 primary action (Satın Al/İşaretle), max 2 AppBar actions (Edit, More menu)
-// ✅ Miller Yasası: Bilgiler 3 bölüme ayrılmış (Görsel, Fiyat Bilgisi, Açıklama)
-// ✅ Gestalt: İlgili bilgiler gruplanmış (fiyat+adet+toplam bir kartta)
+/// Product Detail Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
+/// ✅ Jakob Yasası: Standart product detail layout
+/// ✅ Fitts Yasası: Primary button 56dp, AppBar actions 48x48dp
+/// ✅ Hick Yasası: 1 primary action (Satın Al/İşaretle), max 2 AppBar actions (Edit, More menu)
+/// ✅ Miller Yasası: Bilgiler 3 bölüme ayrılmış (Görsel, Fiyat Bilgisi, Açıklama)
+/// ✅ Gestalt: İlgili bilgiler gruplanmış (fiyat+adet+toplam bir kartta)
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -337,7 +337,7 @@ class ProductDetailScreen extends StatelessWidget {
               ),
 
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
+              padding: context.safePaddingHorizontal,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -422,6 +422,28 @@ class ProductDetailScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+
+                  // Ekleyen Bilgisi (Added By)
+                  if (product.addedBy.isNotEmpty) ...[
+                    AppSpacing.sm.verticalSpace,
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.person_outline,
+                          size: 14,
+                          color: theme.colorScheme.outline,
+                        ),
+                        AppSpacing.xs.horizontalSpace,
+                        Text(
+                          'Ekleyen: ${product.addedBy}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.outline,
+                            fontSize: AppTypography.sizeXS,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
 
                   AppSpacing.lg.verticalSpace,
 
@@ -557,8 +579,8 @@ class ProductDetailScreen extends StatelessWidget {
 
         if (isOwnedByUser && canEdit) {
           // Owned by user: Primary action is purchase toggle
-      return Container(
-        padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
+          return Container(
+            padding: context.safePaddingHorizontal,
             decoration: BoxDecoration(
               color: theme.cardColor,
               boxShadow: [
@@ -594,7 +616,7 @@ class ProductDetailScreen extends StatelessWidget {
           // Not owned, but can edit: Show both actions
           // HICK YASASI: 2 buton ama farklı önem seviyesi (primary + secondary)
           return Container(
-            padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
+            padding: context.safePaddingHorizontal,
             decoration: BoxDecoration(
               color: theme.cardColor,
               boxShadow: [
@@ -677,8 +699,8 @@ class ProductDetailScreen extends StatelessWidget {
 
         if (canClone) {
           // Not owned and cannot edit: Only cloning available
-            return Container(
-              padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
+          return Container(
+            padding: context.safePaddingHorizontal,
             decoration: BoxDecoration(
               color: theme.cardColor,
               boxShadow: [

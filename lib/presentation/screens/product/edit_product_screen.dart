@@ -1,6 +1,6 @@
-// Edit Product Screen - Yeni Tasarım Sistemi v2.0
-//
-// TASARIM KURALLARI:
+/// Edit Product Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
 /// ✅ Jakob Yasası: Standart edit form layout
 /// ✅ Fitts Yasası: Primary button 56dp, full width, tüm input'lar 56dp height
 /// ✅ Hick Yasası: 1 primary (Güncelle), 2 secondary (İptal, Sil)
@@ -394,7 +394,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: context.safePaddingHorizontal),
+            padding: context.safePaddingHorizontal,
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: AppBreakpoints.maxFormWidth,

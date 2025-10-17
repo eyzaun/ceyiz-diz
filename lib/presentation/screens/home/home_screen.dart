@@ -1,6 +1,6 @@
-// Home Screen - Yeni Tasarım Sistemi v2.0
-//
-// TASARIM KURALLARI:
+/// Home Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
 /// ✅ Jakob Yasası: Standart bottom navigation (3 tab - ideal)
 /// ✅ Fitts Yasası: Bottom nav icons 28dp, 72dp height (kolay erişim)
 /// ✅ Hick Yasası: Maksimum 3 ana sekme (Çeyiz, İstatistikler, Profil)

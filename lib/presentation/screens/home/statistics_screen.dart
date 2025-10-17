@@ -1,6 +1,6 @@
-// Statistics Screen - Yeni Tasarım Sistemi v2.0
-//
-// TASARIM KURALLARI:
+/// Statistics Screen - Yeni Tasarım Sistemi v2.0
+///
+/// TASARIM KURALLARI:
 /// ✅ Jakob Yasası: Standart istatistik card layout
 /// ✅ Fitts Yasası: Trousseau selector 48dp height, kolay dokunma
 /// ✅ Hick Yasası: Info button tek secondary action
@@ -16,6 +16,7 @@ import '../../providers/trousseau_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../widgets/common/app_button.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../widgets/common/app_card.dart';
 
 class StatisticsScreen extends StatefulWidget {
