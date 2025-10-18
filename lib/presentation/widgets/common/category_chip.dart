@@ -54,17 +54,17 @@ class CategoryChip extends StatelessWidget {
                   ? category.color
                   : colorful
                       ? category.color
-                      : theme.colorScheme.onSurfaceVariant,
+                      : theme.colorScheme.onSurface,
             ),
             const SizedBox(width: 6),
             Text(
               category.displayName,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: isSelected
-                    ? category.color
-                    : colorful
-                        ? category.color
-                        : theme.colorScheme.onSurfaceVariant,
+        color: isSelected
+          ? category.color
+          : colorful
+            ? category.color
+            : theme.colorScheme.onSurface,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
@@ -84,10 +84,10 @@ class CategoryChip extends StatelessWidget {
                   count.toString(),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: isSelected
-                        ? category.color
-                        : colorful
-                            ? category.color
-                            : theme.colorScheme.onSurfaceVariant,
+              ? category.color
+              : colorful
+                ? category.color
+                : theme.colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

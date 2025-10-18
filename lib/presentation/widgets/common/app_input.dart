@@ -73,9 +73,9 @@ class AppTextInput extends StatelessWidget {
       onTap: onTap,
       inputFormatters: inputFormatters,
       textInputAction: textInputAction,
-      style: TextStyle(
-        fontSize: AppTypography.sizeBase,
+      style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurface,
+        fontSize: AppTypography.sizeSM,
       ),
       decoration: InputDecoration(
         labelText: label,
@@ -299,7 +299,7 @@ class AppDropdown<T> extends StatelessWidget {
     final theme = Theme.of(context);
 
     return DropdownButtonFormField<T>(
-      value: value,
+  initialValue: value,
       items: items,
       onChanged: onChanged,
       validator: validator,
@@ -339,9 +339,9 @@ class AppDropdown<T> extends StatelessWidget {
         Icons.arrow_drop_down,
         size: AppDimensions.iconSizeMedium,
       ),
-      style: TextStyle(
-        fontSize: AppTypography.sizeBase,
-        color: theme.colorScheme.onSurface,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface,
+            fontSize: AppTypography.sizeSM,
       ),
       dropdownColor: theme.colorScheme.surface,
     );
@@ -387,7 +387,7 @@ class AppFormSection extends StatelessWidget {
             Text(
               subtitle!,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+                color: theme.colorScheme.onSurface,
                 fontSize: AppTypography.sizeSM,
               ),
             ),

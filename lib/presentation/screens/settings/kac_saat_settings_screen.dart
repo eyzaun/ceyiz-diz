@@ -8,6 +8,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/services/kac_saat_calculator.dart';
 import '../../providers/auth_provider.dart';
@@ -60,27 +61,79 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
   void initState() {
     super.initState();
     _loadSettings();
+    // Text değişikliklerini dinle ve otomatik kaydet
+    _salaryController.addListener(_saveDraft);
+    _hoursController.addListener(_saveDraft);
+    _quarterlyPrimController.addListener(_saveDraft);
+    _yearlyPrimController.addListener(_saveDraft);
   }
 
-  void _loadSettings() {
+  Future<void> _loadSettings() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final settings = authProvider.currentUser?.kacSaatSettings ?? const KacSaatSettings();
 
+    // Önce draft verileri yükle (varsa)
+    final prefs = await SharedPreferences.getInstance();
+    final hasDraft = prefs.containsKey('kacSaat_draft_salary');
+
     setState(() {
       _enabled = settings.enabled;
-      _salaryController.text = settings.monthlySalary > 0 ? settings.monthlySalary.toStringAsFixed(0) : '';
-      _hoursController.text = settings.dailyHours > 0 ? settings.dailyHours.toString() : '8';
-      _selectedDays = List.from(settings.workingDays);
-      _hasPrim = settings.hasPrim;
-      _quarterlyPrim = settings.quarterlyPrim;
-      _yearlyPrim = settings.yearlyPrim;
-      _quarterlyPrimController.text = settings.quarterlyPrimAmount > 0 ? settings.quarterlyPrimAmount.toStringAsFixed(0) : '';
-      _yearlyPrimController.text = settings.yearlyPrimAmount > 0 ? settings.yearlyPrimAmount.toStringAsFixed(0) : '';
+      
+      // Draft varsa draft'tan yükle, yoksa settings'den yükle
+      if (hasDraft) {
+        _salaryController.text = prefs.getString('kacSaat_draft_salary') ?? '';
+        _hoursController.text = prefs.getString('kacSaat_draft_hours') ?? '8';
+        _quarterlyPrimController.text = prefs.getString('kacSaat_draft_quarterlyPrim') ?? '';
+        _yearlyPrimController.text = prefs.getString('kacSaat_draft_yearlyPrim') ?? '';
+        _selectedDays = prefs.getStringList('kacSaat_draft_days') ?? settings.workingDays;
+        _hasPrim = prefs.getBool('kacSaat_draft_hasPrim') ?? settings.hasPrim;
+        _quarterlyPrim = prefs.getBool('kacSaat_draft_quarterlyPrimEnabled') ?? settings.quarterlyPrim;
+        _yearlyPrim = prefs.getBool('kacSaat_draft_yearlyPrimEnabled') ?? settings.yearlyPrim;
+      } else {
+        _salaryController.text = settings.monthlySalary > 0 ? settings.monthlySalary.toStringAsFixed(0) : '';
+        _hoursController.text = settings.dailyHours > 0 ? settings.dailyHours.toString() : '8';
+        _selectedDays = List.from(settings.workingDays);
+        _hasPrim = settings.hasPrim;
+        _quarterlyPrim = settings.quarterlyPrim;
+        _yearlyPrim = settings.yearlyPrim;
+        _quarterlyPrimController.text = settings.quarterlyPrimAmount > 0 ? settings.quarterlyPrimAmount.toStringAsFixed(0) : '';
+        _yearlyPrimController.text = settings.yearlyPrimAmount > 0 ? settings.yearlyPrimAmount.toStringAsFixed(0) : '';
+      }
     });
+  }
+
+  // Draft verileri kaydet (otomatik)
+  Future<void> _saveDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('kacSaat_draft_salary', _salaryController.text);
+    await prefs.setString('kacSaat_draft_hours', _hoursController.text);
+    await prefs.setString('kacSaat_draft_quarterlyPrim', _quarterlyPrimController.text);
+    await prefs.setString('kacSaat_draft_yearlyPrim', _yearlyPrimController.text);
+    await prefs.setStringList('kacSaat_draft_days', _selectedDays);
+    await prefs.setBool('kacSaat_draft_hasPrim', _hasPrim);
+    await prefs.setBool('kacSaat_draft_quarterlyPrimEnabled', _quarterlyPrim);
+    await prefs.setBool('kacSaat_draft_yearlyPrimEnabled', _yearlyPrim);
+  }
+
+  // Draft verileri temizle (kayıt başarılı olduğunda)
+  Future<void> _clearDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('kacSaat_draft_salary');
+    await prefs.remove('kacSaat_draft_hours');
+    await prefs.remove('kacSaat_draft_quarterlyPrim');
+    await prefs.remove('kacSaat_draft_yearlyPrim');
+    await prefs.remove('kacSaat_draft_days');
+    await prefs.remove('kacSaat_draft_hasPrim');
+    await prefs.remove('kacSaat_draft_quarterlyPrimEnabled');
+    await prefs.remove('kacSaat_draft_yearlyPrimEnabled');
   }
 
   @override
   void dispose() {
+    _salaryController.removeListener(_saveDraft);
+    _hoursController.removeListener(_saveDraft);
+    _quarterlyPrimController.removeListener(_saveDraft);
+    _yearlyPrimController.removeListener(_saveDraft);
     _salaryController.dispose();
     _hoursController.dispose();
     _quarterlyPrimController.dispose();
@@ -167,6 +220,9 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
 
       await authProvider.updateKacSaatSettings(settings);
 
+      // Başarılı kayıttan sonra draft'ı temizle
+      await _clearDraft();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -239,6 +295,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                 value: _enabled,
                 onChanged: (value) {
                   setState(() => _enabled = value);
+                  _saveDraft(); // Draft kaydet
                 },
               ),
             ),
@@ -302,6 +359,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                               _selectedDays.remove(day);
                             }
                           });
+                          _saveDraft(); // Draft kaydet
                         },
                         selectedColor: theme.colorScheme.primaryContainer,
                         checkmarkColor: theme.colorScheme.onPrimaryContainer,
@@ -366,6 +424,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                             _yearlyPrim = false;
                           }
                         });
+                        _saveDraft(); // Draft kaydet
                       },
                     ),
                     if (_hasPrim) ...[
@@ -380,6 +439,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                               _quarterlyPrimController.text = _salaryController.text;
                             }
                           });
+                          _saveDraft(); // Draft kaydet
                         },
                       ),
                       if (_quarterlyPrim)
@@ -418,6 +478,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                               _yearlyPrimController.text = _salaryController.text;
                             }
                           });
+                          _saveDraft(); // Draft kaydet
                         },
                       ),
                       if (_yearlyPrim)

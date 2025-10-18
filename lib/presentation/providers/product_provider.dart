@@ -76,6 +76,15 @@ class ProductProvider extends ChangeNotifier {
       return;
     }
 
+    // If switching to a different trousseau, cancel any ongoing loading
+    if (_listeningTrousseauId != null && _listeningTrousseauId != trousseauId) {
+      debugPrint('🔄 Switching from $_listeningTrousseauId to $trousseauId');
+      _productsSub?.cancel();
+      _productsSub = null;
+      _listeningTrousseauId = null;
+      _isLoading = false;
+    }
+
     try {
       _isLoading = true;
       _errorMessage = '';

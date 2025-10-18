@@ -25,8 +25,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     final onboardingProvider = Provider.of<OnboardingProvider>(context, listen: false);
     await onboardingProvider.completeOnboarding();
+    // Ensure SharedPreferences is updated before navigating
+    await Future.delayed(const Duration(milliseconds: 200));
     if (mounted) {
-      context.go('/login');
+      final currentLoc = GoRouterState.of(context).uri.toString();
+      if (currentLoc != '/login') {
+        context.go('/login');
+      }
     }
   }
 
@@ -188,7 +193,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -220,7 +225,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: TextStyle(
               fontSize: AppTypography.sizeMD,
               fontWeight: FontWeight.w400,
-              color: colorScheme.onSurfaceVariant,
+              color: colorScheme.onSurface,
               height: 1.5,
               fontFamily: AppTypography.fontFamily,
             ),

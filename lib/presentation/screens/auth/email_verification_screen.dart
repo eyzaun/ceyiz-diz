@@ -59,11 +59,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
             duration: Duration(seconds: 3),
           ),
         );
-        Future.delayed(const Duration(seconds: 1), () {
-          if (mounted) {
-            context.go('/login');
-          }
-        });
+        await Future.delayed(const Duration(milliseconds: 500));
+        final currentLoc = GoRouterState.of(context).uri.toString();
+        if (mounted && currentLoc != '/login') {
+          context.go('/login');
+        }
       }
     });
   }
@@ -109,7 +109,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     setState(() => _isChecking = true);
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final isVerified = await authProvider.checkEmailVerified();
+  final isVerified = await authProvider.checkEmailVerified();
 
     setState(() => _isChecking = false);
 
@@ -122,11 +122,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           duration: Duration(seconds: 3),
         ),
       );
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          context.go('/login');
-        }
-      });
+      await Future.delayed(const Duration(milliseconds: 500));
+      final currentLoc = GoRouterState.of(context).uri.toString();
+      if (mounted && currentLoc != '/login') {
+        context.go('/login');
+      }
     } else if (!isVerified && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -141,8 +141,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     _pollTimer?.cancel();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     await authProvider.signOut();
+    await Future.delayed(const Duration(milliseconds: 200));
     if (mounted) {
-      context.go('/login');
+      final currentLoc = GoRouterState.of(context).uri.toString();
+      if (currentLoc != '/login') {
+        context.go('/login');
+      }
     }
   }
 
@@ -198,7 +202,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               Text(
                 '${widget.email} adresine bir doğrulama e-postası gönderdik.',
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: theme.colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -208,7 +212,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               Text(
                 'Lütfen e-postanızdaki bağlantıya tıklayarak hesabınızı doğrulayın.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: theme.colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -239,7 +243,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
               // Info Card
               Card(
-                color: theme.colorScheme.surfaceVariant.withValues(alpha: 0.3),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   child: Column(
@@ -268,7 +272,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                         '• E-posta birkaç dakika içinde gelmezse "Tekrar Gönder" butonunu kullanın\n'
                         '• Doğrulama tamamlandığında otomatik olarak giriş sayfasına yönlendirileceksiniz',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                          color: theme.colorScheme.onSurface,
                           height: 1.5,
                         ),
                       ),

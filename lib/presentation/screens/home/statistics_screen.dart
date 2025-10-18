@@ -160,7 +160,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           Text(
             'Genel Bakış',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: theme.colorScheme.onSurface,
               fontSize: AppTypography.sizeBase,
             ),
           ),
@@ -512,7 +512,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   Text(
                     'Planlanan Toplam',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: theme.colorScheme.onSurface,
                       fontSize: AppTypography.sizeSM,
                     ),
                   ),
@@ -528,7 +528,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   Text(
                     '≈ ${plannedDays.toStringAsFixed(1)} iş günü',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: theme.colorScheme.onSurface,
                       fontSize: AppTypography.sizeXS,
                     ),
                   ),
@@ -553,7 +553,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   Text(
                     'Harcanan Toplam',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: theme.colorScheme.onSurface,
                       fontSize: AppTypography.sizeSM,
                     ),
                   ),
@@ -569,7 +569,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   Text(
                     '≈ ${spentDays.toStringAsFixed(1)} iş günü',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: theme.colorScheme.onSurface,
                       fontSize: AppTypography.sizeXS,
                     ),
                   ),
@@ -679,7 +679,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+            color: theme.colorScheme.onSurface,
             fontSize: AppTypography.sizeSM,
           ),
         ),
@@ -710,13 +710,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 Icon(
                   Icons.category_outlined,
                   size: 64,
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                 ),
                 AppSpacing.md.verticalSpace,
                 Text(
                   'Henüz kategori verisi yok',
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -783,7 +783,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       Text(
                         '$count ürün • ₺${categorySpending.toStringAsFixed(0)}',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                          color: theme.colorScheme.onSurface,
                           fontSize: AppTypography.sizeSM,
                         ),
                       ),

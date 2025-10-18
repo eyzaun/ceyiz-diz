@@ -78,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedFontSize: AppTypography.sizeSM,
         unselectedFontSize: AppTypography.sizeXS,
         selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
+  unselectedItemColor: Theme.of(context).colorScheme.onSurface,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
         items: [
@@ -162,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   'İlk çeyizinizi oluşturarak başlayın',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                   textAlign: TextAlign.center,
                 ),

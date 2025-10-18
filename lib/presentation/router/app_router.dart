@@ -29,51 +29,67 @@ import '../screens/trousseau/shared_trousseau_list_screen.dart';
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   
+  static String? _lastRedirect;
+  static DateTime? _lastRedirectTime;
   static final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
-    // Re-evaluate redirects whenever auth state changes
     refreshListenable: GoRouterRefreshStream(
       FirebaseAuth.instance.authStateChanges(),
     ),
     redirect: (context, state) async {
-      // Check onboarding status
+      // Debounce: aynı redirect'ı 500ms içinde tekrar yapma
+      final now = DateTime.now();
+      if (_lastRedirect != null && _lastRedirect == state.matchedLocation && _lastRedirectTime != null && now.difference(_lastRedirectTime!).inMilliseconds < 500) {
+        return null;
+      }
+
       final prefs = await SharedPreferences.getInstance();
       final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+      String currentLoc = state.matchedLocation;
 
-      // If onboarding not completed and not on onboarding screen
-      if (!onboardingCompleted && state.matchedLocation != '/onboarding') {
+      // Onboarding
+      if (!onboardingCompleted && currentLoc != '/onboarding') {
+        _lastRedirect = '/onboarding';
+        _lastRedirectTime = now;
         return '/onboarding';
       }
 
-      // Determine auth from Firebase
+      // Auth
       final user = FirebaseAuth.instance.currentUser;
       final isAuthenticated = user != null;
-      final isAuthRoute = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register' ||
-          state.matchedLocation == '/forgot-password' ||
-          state.matchedLocation == '/onboarding' ||
-          state.matchedLocation.startsWith('/verify-email');
+      final isAuthRoute = currentLoc == '/login' ||
+          currentLoc == '/register' ||
+          currentLoc == '/forgot-password' ||
+          currentLoc == '/onboarding' ||
+          currentLoc.startsWith('/verify-email');
 
-      // If user is logged in but email is not verified, redirect to verification page
+      // Email verification
       if (isAuthenticated && !user.emailVerified) {
-        if (!state.matchedLocation.startsWith('/verify-email')) {
-          final encodedEmail = Uri.encodeComponent(user.email ?? '');
+        final encodedEmail = Uri.encodeComponent(user.email ?? '');
+        if (!currentLoc.startsWith('/verify-email')) {
+          _lastRedirect = '/verify-email/$encodedEmail';
+          _lastRedirectTime = now;
           return '/verify-email/$encodedEmail';
         }
         return null;
       }
 
-      // Not authenticated and not on auth route -> go to login
+      // Not authenticated
       if (!isAuthenticated && !isAuthRoute) {
+        _lastRedirect = '/login';
+        _lastRedirectTime = now;
         return '/login';
       }
 
-      // Authenticated with verified email and on auth route -> go to home
+      // Authenticated and on auth route
       if (isAuthenticated && isAuthRoute && user.emailVerified) {
+        _lastRedirect = '/';
+        _lastRedirectTime = now;
         return '/';
       }
 
+      _lastRedirect = null;
       return null;
     },
     routes: [

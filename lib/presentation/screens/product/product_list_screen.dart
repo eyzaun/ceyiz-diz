@@ -279,9 +279,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
     final categoryProvider = Provider.of<CategoryProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
 
-    // Kaç Saat ayarını kontrol et
-    final showKacSaat = authProvider.currentUser?.kacSaatSettings?.enabled ?? false;
-    final kacSaatSettings = authProvider.currentUser?.kacSaatSettings;
+  // Kaç Saat ayarını kontrol et
+  final kacSaatSettings = authProvider.currentUser?.kacSaatSettings;
+  final showKacSaat = kacSaatSettings?.enabled ?? false;
 
     if (trousseau == null) {
       return Scaffold(

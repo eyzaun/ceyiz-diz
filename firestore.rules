@@ -63,6 +63,17 @@ service cloud.firestore {
         );
         allow create, update, delete: if isAuthed() && canWriteTrousseau(trousseauId);
       }
+
+      // Subcollection: products
+      match /products/{productId} {
+        // Read products if user can read the parent trousseau
+        allow read: if isAuthed() && (
+          get(/databases/$(database)/documents/trousseaus/$(trousseauId)).data.ownerId == request.auth.uid ||
+          request.auth.uid in get(/databases/$(database)/documents/trousseaus/$(trousseauId)).data.get('sharedWith', []) ||
+          request.auth.uid in get(/databases/$(database)/documents/trousseaus/$(trousseauId)).data.get('editors', [])
+        );
+        allow create, update, delete: if isAuthed() && canWriteTrousseau(trousseauId);
+      }
     }
 
     // Products (kept permissive for now, as in current project rules)
@@ -73,7 +84,7 @@ service cloud.firestore {
     // App Versions - Public read for version checking
     match /app_versions/{versionId} {
       allow read: if true; // Everyone can check for updates
-      allow write: if false; // Only admin/console can update
+      allow write: if isAdmin(); // Only admin can update
     }
 
     // Feedback - Users can submit and read their own feedback

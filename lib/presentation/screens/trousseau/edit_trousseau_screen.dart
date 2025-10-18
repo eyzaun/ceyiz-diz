@@ -41,14 +41,20 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
   @override
   void initState() {
     super.initState();
-    final trousseau = Provider.of<TrousseauProvider>(context, listen: false)
-        .getTrousseauById(widget.trousseauId);
-
-    _nameController = TextEditingController(text: trousseau?.name ?? '');
-    _descriptionController = TextEditingController(text: trousseau?.description ?? '');
-    _budgetController = TextEditingController(
-      text: trousseau != null ? CurrencyFormatter.format(trousseau.totalBudget) : '0',
-    );
+    _nameController = TextEditingController();
+    _descriptionController = TextEditingController();
+    _budgetController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final trousseau = Provider.of<TrousseauProvider>(context, listen: false)
+          .getTrousseauById(widget.trousseauId);
+      if (mounted) {
+        setState(() {
+          _nameController.text = trousseau?.name ?? '';
+          _descriptionController.text = trousseau?.description ?? '';
+          _budgetController.text = trousseau != null ? CurrencyFormatter.format(trousseau.totalBudget) : '0';
+        });
+      }
+    });
   }
 
   @override
@@ -226,7 +232,9 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
           ),
         ),
       );
-      context.go('/');
+      // Silme sonrası kısa gecikme ile yönlendirme
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (mounted) context.go('/');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

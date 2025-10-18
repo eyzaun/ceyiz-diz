@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -24,7 +25,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
-      print('📸 Picking image from gallery...');
+  debugPrint('📸 Picking image from gallery...');
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
         source: ImageSource.gallery,
@@ -34,21 +35,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
       if (image == null) {
-        print('❌ No image selected');
+  debugPrint('❌ No image selected');
         return;
       }
 
-      print('✅ Image picked: ${image.path}');
+  debugPrint('✅ Image picked: ${image.path}');
       setState(() => _isUploadingPhoto = true);
 
-      final file = File(image.path);
       final storageRef = FirebaseStorage.instance
           .ref()
           .child('profile_photos')
           .child('${authProvider.currentUser!.uid}.jpg');
 
-      print('⬆️ Uploading to Firebase Storage...');
-      final uploadTask = storageRef.putFile(file);
+  debugPrint('⬆️ Uploading to Firebase Storage...');
+      
+      // Web ve mobil için farklı upload yöntemleri
+      final UploadTask uploadTask;
+      if (kIsWeb) {
+        // Web: putData kullan
+        final bytes = await image.readAsBytes();
+        uploadTask = storageRef.putData(
+          bytes,
+          SettableMetadata(contentType: 'image/jpeg'),
+        );
+      } else {
+        // Mobile: putFile kullan
+        final file = File(image.path);
+        uploadTask = storageRef.putFile(file);
+      }
 
       // Timeout ve progress tracking
       await uploadTask.timeout(
@@ -58,16 +72,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         },
       );
 
-      print('✅ Upload complete, getting download URL...');
+  debugPrint('✅ Upload complete, getting download URL...');
       final photoURL = await storageRef.getDownloadURL();
-      print('✅ Download URL: $photoURL');
+  debugPrint('✅ Download URL: $photoURL');
 
-      print('💾 Updating user profile...');
+  debugPrint('💾 Updating user profile...');
       final success = await authProvider.updateProfile(photoURL: photoURL);
 
       if (mounted) {
         if (success) {
-          print('✅ Profile updated successfully');
+          debugPrint('✅ Profile updated successfully');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Profil fotoğrafı güncellendi'),
@@ -75,7 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           );
         } else {
-          print('❌ Profile update failed');
+          debugPrint('❌ Profile update failed');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Profil güncellenemedi: ${authProvider.errorMessage}'),
@@ -85,7 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         }
       }
     } catch (e) {
-      print('❌ Error uploading photo: $e');
+  debugPrint('❌ Error uploading photo: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

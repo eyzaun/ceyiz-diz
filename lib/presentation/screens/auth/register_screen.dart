@@ -213,7 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                         Text(
                           'Çeyiz planlamanıza hemen başlayın',
                           style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                            color: theme.colorScheme.onSurface,
                             fontSize: AppTypography.sizeMD,
                           ),
                         ),

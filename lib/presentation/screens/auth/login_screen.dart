@@ -68,11 +68,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     try {
       final prefs = await SharedPreferences.getInstance();
       final rememberMe = prefs.getBool('remember_me') ?? false;
-      print('🔐 Loading Remember Me: $rememberMe');
+  debugPrint('🔐 Loading Remember Me: $rememberMe');
       if (rememberMe) {
         final email = prefs.getString('saved_email') ?? '';
         final password = prefs.getString('saved_password') ?? '';
-        print('✅ Loaded email: $email');
+  debugPrint('✅ Loaded email: $email');
         setState(() {
           _rememberMe = rememberMe;
           _emailController.text = email;
@@ -80,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         });
       }
     } catch (e) {
-      print('❌ Error loading Remember Me: $e');
+  debugPrint('❌ Error loading Remember Me: $e');
     }
   }
 
@@ -123,29 +123,29 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    print('🔑 Login attempt - Remember Me: $_rememberMe');
+  debugPrint('🔑 Login attempt - Remember Me: $_rememberMe');
 
     // Save Remember Me BEFORE login to avoid mounted issues
     try {
-      print('💾 Saving Remember Me BEFORE login - Value: $_rememberMe');
+  debugPrint('💾 Saving Remember Me BEFORE login - Value: $_rememberMe');
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('remember_me', _rememberMe);
 
       if (_rememberMe) {
         await prefs.setString('saved_email', _emailController.text.trim());
         await prefs.setString('saved_password', _passwordController.text);
-        print('💾 Remember Me credentials saved: ${_emailController.text.trim()}');
+  debugPrint('💾 Remember Me credentials saved: ${_emailController.text.trim()}');
       } else {
         await prefs.remove('saved_email');
         await prefs.remove('saved_password');
-        print('🗑️ Remember Me credentials cleared');
+  debugPrint('🗑️ Remember Me credentials cleared');
       }
 
       // Verify save
       final saved = prefs.getBool('remember_me');
-      print('✅ Remember Me saved and verified: $saved');
+  debugPrint('✅ Remember Me saved and verified: $saved');
     } catch (e) {
-      print('❌ Error saving Remember Me: $e');
+  debugPrint('❌ Error saving Remember Me: $e');
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -157,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
     if (!mounted) return;
 
-    print('🔑 Login result: $success');
+    debugPrint('🔑 Login result: $success');
 
     if (success) {
       if (!mounted) return;
@@ -186,6 +186,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 onPressed: () {
                   Navigator.of(dialogContext).pop();
                   final encodedEmail = Uri.encodeComponent(_emailController.text.trim());
+                  if (!mounted) return;
                   context.go('/verify-email/$encodedEmail');
                 },
               ),
@@ -193,6 +194,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           ),
         );
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(authProvider.errorMessage),
@@ -447,7 +449,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 onChanged: (value) {
                                   setState(() {
                                     _rememberMe = value ?? false;
-                                    print('✔️ Remember Me checkbox changed to: $_rememberMe');
+                                    debugPrint('✔️ Remember Me checkbox changed to: $_rememberMe');
                                   });
                                 },
                                 title: const Text('Beni Hatırla'),
@@ -562,7 +564,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         Text(
           'Hayalinizdeki çeyizi kolayca yönetin',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+            color: theme.colorScheme.onSurface,
             fontSize: AppTypography.sizeMD,
           ),
           textAlign: TextAlign.center,

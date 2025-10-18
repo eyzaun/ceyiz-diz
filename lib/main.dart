@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 import 'core/themes/theme_provider.dart';
+import 'core/services/version_service.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/onboarding_provider.dart';
@@ -15,6 +16,7 @@ import 'presentation/providers/product_provider.dart';
 import 'presentation/providers/category_provider.dart';
 import 'presentation/router/app_router.dart';
 import 'presentation/widgets/common/web_frame.dart';
+import 'presentation/widgets/dialogs/update_available_dialog.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -98,17 +100,54 @@ void main() async {
   runApp(MyApp(prefs: prefs));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final SharedPreferences prefs;
   
   const MyApp({super.key, required this.prefs});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Web version check (4 saniye sonra kontrol et - uygulama tamamen yüklendikten sonra)
+    if (kIsWeb) {
+      Future.delayed(const Duration(seconds: 4), _checkVersion);
+    }
+  }
+
+  Future<void> _checkVersion() async {
+    try {
+      final result = await VersionService.checkVersion();
+      
+      if (result.needsUpdate && mounted) {
+        // Navigator hazır olana kadar bekle
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        if (mounted) {
+          // Get the navigator context
+          final navigatorContext = AppRouter.router.routerDelegate.navigatorKey.currentContext;
+          if (navigatorContext != null) {
+            UpdateAvailableDialog.show(navigatorContext, result);
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Version check failed: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => ThemeProvider(prefs),
+          create: (_) => ThemeProvider(widget.prefs),
         ),
         ChangeNotifierProvider(
           create: (_) => OnboardingProvider(),

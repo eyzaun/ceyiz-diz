@@ -332,7 +332,8 @@ class TrousseauProvider extends ChangeNotifier {
         return false;
       }
       
-      // Delete all products first
+      // Delete all subcollections first
+      // 1. Delete products
       final productsSnapshot = await _firestore
           .collection('trousseaus')
           .doc(trousseauId)
@@ -340,6 +341,17 @@ class TrousseauProvider extends ChangeNotifier {
           .get();
       
       for (var doc in productsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+      
+      // 2. Delete categories
+      final categoriesSnapshot = await _firestore
+          .collection('trousseaus')
+          .doc(trousseauId)
+          .collection('categories')
+          .get();
+      
+      for (var doc in categoriesSnapshot.docs) {
         await doc.reference.delete();
       }
       

@@ -193,7 +193,7 @@ class AppProductCard extends StatelessWidget {
       child: Row(
         children: [
           // ─────────────────────────────────────────────────────────────────
-          // SOL: Ürün Görseli veya Kategori İkonu
+          // SOL: Ürün Görseli veya Kategori İkonu (Checkmark kaldırıldı)
           // ─────────────────────────────────────────────────────────────────
           _buildThumbnail(context, displayImages),
 
@@ -220,14 +220,6 @@ class AppProductCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (displayIsPurchased) ...[
-                      AppSpacing.xs.horizontalSpace,
-                      Icon(
-                        Icons.check_circle,
-                        color: theme.colorScheme.tertiary,
-                        size: AppDimensions.iconSizeSmall,
-                      ),
-                    ],
                   ],
                 ),
 
@@ -237,7 +229,7 @@ class AppProductCard extends StatelessWidget {
                   Text(
                     displayDescription,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: theme.colorScheme.onSurface,
                       fontSize: AppTypography.sizeSM,
                     ),
                     maxLines: 1,
@@ -247,57 +239,53 @@ class AppProductCard extends StatelessWidget {
 
                 AppSpacing.xs.verticalSpace,
 
-                // Kategori Badge + Adet Bilgisi + Link İkonu
-                Row(
+                // Kategori Badge + Adet Bilgisi + Link İkonu (Wrap ile taşma önlenir)
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.xs,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     _buildCategoryBadge(context),
-                    if (displayQuantity > 1) ...[
-                      AppSpacing.sm.horizontalSpace,
+                    if (displayQuantity > 1)
                       Text(
                         '$displayQuantity adet',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                          color: theme.colorScheme.onSurface,
                           fontSize: AppTypography.sizeXS,
                         ),
                       ),
-                    ],
                     // Link İkonları (tüm linkler için)
                     ...allLinks.asMap().entries.map((entry) {
                       final index = entry.key;
                       final link = entry.value;
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          left: index == 0 && displayQuantity <= 1 ? 0 : AppSpacing.sm,
-                        ),
-                        child: GestureDetector(
-                          onTap: () => _openLink(context, link),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.link,
-                                  size: 14,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                if (allLinks.length > 1) ...[
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    '${index + 1}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: theme.colorScheme.primary,
-                                      fontWeight: AppTypography.bold,
-                                    ),
+                      return GestureDetector(
+                        onTap: () => _openLink(context, link),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.link,
+                                size: 14,
+                                color: theme.colorScheme.primary,
+                              ),
+                              if (allLinks.length > 1) ...[
+                                const SizedBox(width: 2),
+                                Text(
+                                  '${index + 1}',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: AppTypography.bold,
                                   ),
-                                ],
+                                ),
                               ],
-                            ),
+                            ],
                           ),
                         ),
                       );
@@ -323,54 +311,59 @@ class AppProductCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Birim Fiyat
-              Text(
-                CurrencyFormatter.formatWithSymbol(displayPrice),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: AppTypography.bold,
-                  fontSize: AppTypography.sizeMD,
-                ),
-              ),
-
-              // Toplam Fiyat (eğer adet > 1)
-              if (displayQuantity > 1) ...[
-                AppSpacing.xs.verticalSpace,
-                Text(
-                  'Top: ${CurrencyFormatter.formatWithSymbol(displayPrice * displayQuantity)}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: AppTypography.sizeXS,
-                  ),
-                ),
-              ],
-
-              // Checkbox (eğer düzenleme izni varsa)
-              if (canEdit) ...[
-                AppSpacing.xs.verticalSpace,
-                // FITTS YASASI: 48x48dp touch area
-                SizedBox(
-                  width: AppDimensions.touchTargetSize,
-                  height: AppDimensions.touchTargetSize,
-                  child: IconButton(
-                    icon: Icon(
-                      displayIsPurchased
-                          ? Icons.check_box
-                          : Icons.check_box_outline_blank,
-                      size: AppDimensions.iconSizeMedium,
+                // Fiyat ve Checkbox yatayda hizalı
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      CurrencyFormatter.formatWithSymbol(displayPrice),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: AppTypography.bold,
+                        fontSize: AppTypography.sizeMD,
+                      ),
                     ),
-                    color: displayIsPurchased
-                        ? theme.colorScheme.tertiary
-                        : theme.colorScheme.onSurfaceVariant,
-                    onPressed: onTogglePurchase,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: AppDimensions.touchTargetSize,
-                      minHeight: AppDimensions.touchTargetSize,
-                    ),
-                  ),
+                    if (canEdit) ...[
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: AppDimensions.touchTargetSize,
+                        height: AppDimensions.touchTargetSize,
+                        child: IconButton(
+                          icon: Icon(
+                            displayIsPurchased
+                                ? Icons.check_box
+                                : Icons.check_box_outline_blank,
+                            size: AppDimensions.iconSizeMedium,
+                          ),
+                          color: displayIsPurchased
+                              ? theme.colorScheme.tertiary
+                              : theme.colorScheme.onSurface,
+                          onPressed: onTogglePurchase,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: AppDimensions.touchTargetSize,
+                            minHeight: AppDimensions.touchTargetSize,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
+
+                // Toplam Fiyat (eğer adet > 1)
+                if (displayQuantity > 1) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Top: ${CurrencyFormatter.formatWithSymbol(displayPrice * displayQuantity)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: AppTypography.sizeSM,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
             ],
           ),
         ],
@@ -563,7 +556,7 @@ class AppStatCard extends StatelessWidget {
                 child: Text(
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: theme.colorScheme.onSurface,
                     fontSize: AppTypography.sizeBase,
                   ),
                 ),
@@ -589,7 +582,7 @@ class AppStatCard extends StatelessWidget {
             Text(
               subtitle!,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+                color: theme.colorScheme.onSurface,
                 fontSize: AppTypography.sizeSM,
               ),
             ),

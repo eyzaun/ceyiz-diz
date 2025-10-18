@@ -68,11 +68,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
       setState(() {
         _currentTrousseauId = widget.trousseauId;
       });
-      Provider.of<ProductProvider>(context, listen: false)
-          .loadProducts(_currentTrousseauId);
-      final trProv = Provider.of<TrousseauProvider>(context, listen: false);
-      Provider.of<CategoryProvider>(context, listen: false)
-          .bind(_currentTrousseauId, userId: trProv.currentUserId ?? '');
+      // Ürünler ve kategoriler stream ile güncellendiği için burada tekrar yüklemeye gerek yok.
     }
   }
 
@@ -165,12 +161,12 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context);
 
-    // Kaç Saat ayarını kontrol et
-    final showKacSaat = authProvider.currentUser?.kacSaatSettings?.enabled ?? false;
-    final kacSaatSettings = authProvider.currentUser?.kacSaatSettings;
+  // Kaç Saat ayarını kontrol et
+  final kacSaatSettings = authProvider.currentUser?.kacSaatSettings;
+  final showKacSaat = kacSaatSettings?.enabled ?? false;
 
     return StreamBuilder<TrousseauModel?>(
-      key: ValueKey(_currentTrousseauId),
+      // key: ValueKey(_currentTrousseauId), // Kaldırıldı, gereksiz tam rebuild engellendi
       stream: trousseauProvider.getSingleTrousseauStream(_currentTrousseauId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -701,15 +697,14 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                         setState(() {
                           _currentTrousseauId = trousseau.id;
                         });
-
-                        final productProvider =
-                            Provider.of<ProductProvider>(context, listen: false);
-                        productProvider.loadProducts(_currentTrousseauId);
-
-                        final categoryProvider =
-                            Provider.of<CategoryProvider>(context, listen: false);
-                        categoryProvider.bind(_currentTrousseauId,
-                            userId: trousseauProvider.currentUserId ?? '');
+                        
+                        // Yeni çeyiz seçildi, ürünleri yükle
+                        final productProv = Provider.of<ProductProvider>(context, listen: false);
+                        productProv.loadProducts(trousseau.id);
+                        
+                        // Kategorileri de güncelle
+                        final catProv = Provider.of<CategoryProvider>(context, listen: false);
+                        catProv.bind(trousseau.id, userId: trousseauProvider.currentUserId ?? '');
                       }
                     },
                     borderRadius: AppRadius.radiusSM,

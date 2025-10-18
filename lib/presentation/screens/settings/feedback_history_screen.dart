@@ -67,7 +67,7 @@ class FeedbackHistoryScreen extends StatelessWidget {
                   Icon(
                     Icons.feedback_outlined,
                     size: 64,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -78,7 +78,7 @@ class FeedbackHistoryScreen extends StatelessWidget {
                   Text(
                     'Görüş ve önerilerinizi bizimle paylaşın',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -127,13 +127,13 @@ class _FeedbackCard extends StatelessWidget {
                       Icon(
                         Icons.schedule,
                         size: 16,
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: theme.colorScheme.onSurface,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         dateFormat.format(feedback.createdAt),
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -236,7 +236,7 @@ class _FeedbackCard extends StatelessWidget {
                           Text(
                             dateFormat.format(feedback.repliedAt!),
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                              color: theme.colorScheme.onSurface,
                               fontSize: 10,
                             ),
                           ),
@@ -270,13 +270,13 @@ class _FeedbackCard extends StatelessWidget {
                     Icon(
                       Icons.pending,
                       size: 16,
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: theme.colorScheme.onSurface,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Henüz yanıtlanmadı',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: theme.colorScheme.onSurface,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -293,13 +293,13 @@ class _FeedbackCard extends StatelessWidget {
                   Icon(
                     _getPlatformIcon(feedback.platform!),
                     size: 14,
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: theme.colorScheme.onSurface,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     feedback.platform!.toUpperCase(),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: theme.colorScheme.onSurface,
                       fontSize: 10,
                     ),
                   ),
