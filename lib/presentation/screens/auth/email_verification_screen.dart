@@ -60,8 +60,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           ),
         );
         await Future.delayed(const Duration(milliseconds: 500));
+        if (!mounted) return;
         final currentLoc = GoRouterState.of(context).uri.toString();
-        if (mounted && currentLoc != '/login') {
+        if (currentLoc != '/login') {
           context.go('/login');
         }
       }
@@ -123,8 +124,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         ),
       );
       await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
       final currentLoc = GoRouterState.of(context).uri.toString();
-      if (mounted && currentLoc != '/login') {
+      if (currentLoc != '/login') {
         context.go('/login');
       }
     } else if (!isVerified && mounted) {

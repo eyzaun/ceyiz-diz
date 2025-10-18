@@ -127,12 +127,12 @@ class _MyAppState extends State<MyApp> {
         // Navigator hazır olana kadar bekle
         await Future.delayed(const Duration(milliseconds: 500));
         
-        if (mounted) {
-          // Get the navigator context
-          final navigatorContext = AppRouter.router.routerDelegate.navigatorKey.currentContext;
-          if (navigatorContext != null) {
-            UpdateAvailableDialog.show(navigatorContext, result);
-          }
+        if (!mounted) return;
+        
+        // Get the navigator context
+        final navigatorContext = AppRouter.router.routerDelegate.navigatorKey.currentContext;
+        if (navigatorContext != null && navigatorContext.mounted) {
+          UpdateAvailableDialog.show(navigatorContext, result);
         }
       }
     } catch (e) {
