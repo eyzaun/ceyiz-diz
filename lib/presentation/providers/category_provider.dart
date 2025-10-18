@@ -60,7 +60,6 @@ class CategoryProvider with ChangeNotifier {
 			_selected.removeWhere((id) => !_categories.any((c) => c.id == id));
 			notifyListeners();
 		}, onError: (e) {
-			debugPrint('❌ Category stream error: $e');
 			_error = e.toString();
 			_loading = false;
 			notifyListeners();

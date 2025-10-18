@@ -170,7 +170,7 @@ class AuthProvider extends ChangeNotifier {
         trousseauIds: [..._currentUser!.trousseauIds, trousseauRef.id],
       );
     } catch (e) {
-      debugPrint('İlk çeyiz oluşturulamadı: $e');
+      // First trousseau creation failed
     }
   }
   
@@ -185,7 +185,7 @@ class AuthProvider extends ChangeNotifier {
         'lastLoginAt': Timestamp.fromDate(DateTime.now()),
       });
     } catch (e) {
-      debugPrint('Son giriş güncellenemedi: ${e.toString()}');
+      // Last login update failed
     }
   }
   
@@ -538,12 +538,10 @@ class AuthProvider extends ChangeNotifier {
           _forceUpdate = forceUpdate;
           _updateMessage = updateMessage;
           notifyListeners();
-          debugPrint('Update available: $latestVersion (build $latestBuildNumber)');
         }
       }
     } catch (e) {
       // Silently fail, don't show error for update check
-      debugPrint('Update check failed: $e');
     }
   }
   
@@ -596,13 +594,9 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
 
-      debugPrint('Sending verification email to: ${_firebaseUser!.email}');
       await _firebaseUser!.sendEmailVerification();
-      debugPrint('Verification email sent successfully');
       return true;
     } on FirebaseAuthException catch (e) {
-      debugPrint('Firebase Auth Error: ${e.code} - ${e.message}');
-
       switch (e.code) {
         case 'too-many-requests':
           _errorMessage = 'Çok fazla istek gönderildi. Lütfen birkaç dakika bekleyin.';
@@ -619,7 +613,6 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     } catch (e) {
-      debugPrint('Unknown error sending verification email: $e');
       _errorMessage = 'Doğrulama e-postası gönderilemedi: ${e.toString()}';
       notifyListeners();
       return false;
@@ -635,7 +628,6 @@ class AuthProvider extends ChangeNotifier {
 
       return _firebaseUser?.emailVerified ?? false;
     } catch (e) {
-      debugPrint('Email verification check failed: $e');
       return false;
     }
   }

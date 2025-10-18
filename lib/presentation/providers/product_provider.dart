@@ -68,17 +68,13 @@ class ProductProvider extends ChangeNotifier {
   }
   
   Future<void> loadProducts(String trousseauId) async {
-    debugPrint('📦 loadProducts called for trousseau: $trousseauId');
-
     // PREVENT DOUBLE LOADING: If already loading this same trousseau, skip
     if (_isLoading && _listeningTrousseauId == trousseauId) {
-      debugPrint('⚠️  Already loading this trousseau, skipping duplicate call');
       return;
     }
 
     // If switching to a different trousseau, cancel any ongoing loading
     if (_listeningTrousseauId != null && _listeningTrousseauId != trousseauId) {
-      debugPrint('🔄 Switching from $_listeningTrousseauId to $trousseauId');
       _productsSub?.cancel();
       _productsSub = null;
       _listeningTrousseauId = null;
@@ -95,8 +91,6 @@ class ProductProvider extends ChangeNotifier {
         _productsSub?.cancel();
         _listeningTrousseauId = trousseauId;
 
-        debugPrint('📥 Fetching initial products for trousseau: $trousseauId');
-
         // First load: get initial data immediately
         final initialSnapshot = await _firestore
             .collection('products')
@@ -104,15 +98,12 @@ class ProductProvider extends ChangeNotifier {
             .orderBy('createdAt', descending: true)
             .get();
 
-        debugPrint('📦 Fetched ${initialSnapshot.docs.length} products');
-
         _products = initialSnapshot.docs
             .map((doc) => ProductModel.fromFirestore(doc))
             .toList();
         _applyFilters();
         _isLoading = false;
 
-        debugPrint('✅ Products loaded: ${_products.length} total, ${_filteredProducts.length} filtered');
         notifyListeners();
 
         // Then setup live listener for real-time updates
@@ -558,7 +549,7 @@ class ProductProvider extends ChangeNotifier {
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
     } catch (e) {
-      debugPrint('Trousseau stats update failed: ${e.toString()}');
+      // Trousseau stats update failed
     }
   }
   

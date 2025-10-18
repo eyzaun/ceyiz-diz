@@ -35,19 +35,8 @@ void main() async {
         ),
       );
       
-      if (kDebugMode) {
-        debugPrint('🌐 Web: App Check aktif (ReCAPTCHA Enterprise)');
-        try {
-          await FirebaseAppCheck.instance.getToken();
-          debugPrint('✅ Web App Check token alındı');
-        } catch (e) {
-          debugPrint('⚠️  Token hatası: $e');
-        }
-      } else {
-        debugPrint('🌐 Web: App Check aktif (Production mode)');
-      }
     } catch (e) {
-      debugPrint('❌ Web App Check başlatılamadı: $e');
+      // App Check initialization failed
     }
   } else {
     // Android/iOS: Use debug provider in debug mode, Play Integrity in release
@@ -58,40 +47,12 @@ void main() async {
         appleProvider: AppleProvider.debug,
       );
       
-      // Wait for token to be generated
-      await Future.delayed(const Duration(seconds: 2));
-      try {
-        final token = await FirebaseAppCheck.instance.getToken();
-        if (token != null) {
-          debugPrint('');
-          debugPrint('═══════════════════════════════════════════════════════════════');
-          debugPrint('🔐 FIREBASE APP CHECK DEBUG TOKEN');
-          debugPrint('═══════════════════════════════════════════════════════════════');
-          debugPrint('');
-          debugPrint('Token: $token');
-          debugPrint('');
-          debugPrint('📋 BU TOKEN\'I FIREBASE CONSOLE\'A EKLEYİN:');
-          debugPrint('');
-          debugPrint('1. https://console.firebase.google.com/project/ceyiz-diz/appcheck');
-          debugPrint('2. "Apps" sekmesinde Android app\'i bulun');
-          debugPrint('3. "Manage debug tokens" tıklayın');
-          debugPrint('4. "Add debug token" tıklayın');
-          debugPrint('5. Yukarıdaki token\'ı yapıştırın ve kaydedin');
-          debugPrint('');
-          debugPrint('⚠️  NOT: Token kaydettikten sonra uygulamayı yeniden başlatın!');
-          debugPrint('═══════════════════════════════════════════════════════════════');
-          debugPrint('');
-        }
-      } catch (e) {
-        debugPrint('⚠️  Debug token alınamadı: $e');
-      }
     } else {
       // Release mode: Use Play Integrity
       await FirebaseAppCheck.instance.activate(
         androidProvider: AndroidProvider.playIntegrity,
         appleProvider: AppleProvider.deviceCheck,
       );
-      debugPrint('✅ App Check: Play Integrity aktif (Release mode)');
     }
   }
   
@@ -136,9 +97,7 @@ class _MyAppState extends State<MyApp> {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('⚠️ Version check failed: $e');
-      }
+      // Version check failed
     }
   }
 

@@ -25,7 +25,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
-  debugPrint('📸 Picking image from gallery...');
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
         source: ImageSource.gallery,
@@ -35,11 +34,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
       if (image == null) {
-  debugPrint('❌ No image selected');
         return;
       }
 
-  debugPrint('✅ Image picked: ${image.path}');
       setState(() => _isUploadingPhoto = true);
 
       final storageRef = FirebaseStorage.instance
@@ -47,8 +44,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           .child('profile_photos')
           .child('${authProvider.currentUser!.uid}.jpg');
 
-  debugPrint('⬆️ Uploading to Firebase Storage...');
-      
       // Web ve mobil için farklı upload yöntemleri
       final UploadTask uploadTask;
       if (kIsWeb) {
@@ -72,16 +67,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         },
       );
 
-  debugPrint('✅ Upload complete, getting download URL...');
       final photoURL = await storageRef.getDownloadURL();
-  debugPrint('✅ Download URL: $photoURL');
 
-  debugPrint('💾 Updating user profile...');
       final success = await authProvider.updateProfile(photoURL: photoURL);
 
       if (mounted) {
         if (success) {
-          debugPrint('✅ Profile updated successfully');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Profil fotoğrafı güncellendi'),
@@ -89,7 +80,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           );
         } else {
-          debugPrint('❌ Profile update failed');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Profil güncellenemedi: ${authProvider.errorMessage}'),
@@ -99,7 +89,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         }
       }
     } catch (e) {
-  debugPrint('❌ Error uploading photo: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -1,24 +1,20 @@
 # Details
 
-Date : 2025-10-17 23:43:20
+Date : 2025-10-18 23:52:02
 
 Directory e:\\web_project2\\ceyiz_diz
 
-Total : 161 files,  22445 codes, 1856 comments, 2932 blanks, all 27233 lines
+Total : 162 files,  20998 codes, 1943 comments, 2660 blanks, all 25601 lines
 
 [Summary](results.md) / Details / [Diff Summary](diff.md) / [Diff Details](diff-details.md)
 
 ## Files
 | filename | language | code | comment | blank | total |
 | :--- | :--- | ---: | ---: | ---: | ---: |
-| [.claude/settings.local.json](/.claude/settings.local.json) | JSON | 15 | 0 | 1 | 16 |
+| [.claude/settings.local.json](/.claude/settings.local.json) | JSON | 18 | 0 | 1 | 19 |
 | [.github/workflows/build-android.yml](/.github/workflows/build-android.yml) | YAML | 0 | 0 | 1 | 1 |
-| [EKRAN\_GUNCELLEME\_OZETI.md](/EKRAN_GUNCELLEME_OZETI.md) | Markdown | 225 | 0 | 60 | 285 |
-| [FIREBASE\_VERSION\_SETUP\_STEPS.md](/FIREBASE_VERSION_SETUP_STEPS.md) | Markdown | 117 | 0 | 45 | 162 |
-| [HIZLI\_GUNCELLEME\_SABLONU.md](/HIZLI_GUNCELLEME_SABLONU.md) | Markdown | 354 | 0 | 89 | 443 |
-| [PROJE\_OZETI.md](/PROJE_OZETI.md) | Markdown | 2,783 | 0 | 351 | 3,134 |
+| [OZET.md](/OZET.md) | Markdown | 994 | 0 | 215 | 1,209 |
 | [README.md](/README.md) | Markdown | 50 | 0 | 11 | 61 |
-| [YENI\_TASARIM\_REHBERI.md](/YENI_TASARIM_REHBERI.md) | Markdown | 797 | 0 | 144 | 941 |
 | [analysis\_options.yaml](/analysis_options.yaml) | YAML | 3 | 22 | 4 | 29 |
 | [android/README-signing.md](/android/README-signing.md) | Markdown | 35 | 0 | 16 | 51 |
 | [android/app/src/debug/AndroidManifest.xml](/android/app/src/debug/AndroidManifest.xml) | XML | 3 | 4 | 1 | 8 |
@@ -44,10 +40,9 @@ Total : 161 files,  22445 codes, 1856 comments, 2932 blanks, all 27233 lines
 | [android\_backup\_20251009/gradle.properties](/android_backup_20251009/gradle.properties) | Properties | 3 | 0 | 1 | 4 |
 | [android\_backup\_20251009/gradle/wrapper/gradle-wrapper.properties](/android_backup_20251009/gradle/wrapper/gradle-wrapper.properties) | Properties | 5 | 0 | 1 | 6 |
 | [build\_release.bat](/build_release.bat) | Batch | 47 | 0 | 8 | 55 |
-| [firebase.json](/firebase.json) | JSON | 31 | 0 | 1 | 32 |
+| [firebase.json](/firebase.json) | JSON | 59 | 0 | 1 | 60 |
 | [firestore.indexes.json](/firestore.indexes.json) | JSON | 45 | 0 | 1 | 46 |
-| [firestore.rules](/firestore.rules) | Firebase Rules | 77 | 15 | 12 | 104 |
-| [firestore\_version\_setup.md](/firestore_version_setup.md) | Markdown | 32 | 0 | 8 | 40 |
+| [firestore.rules](/firestore.rules) | Firebase Rules | 85 | 17 | 13 | 115 |
 | [ios/RunnerTests/RunnerTests.swift](/ios/RunnerTests/RunnerTests.swift) | Swift | 7 | 2 | 4 | 13 |
 | [ios/Runner/AppDelegate.swift](/ios/Runner/AppDelegate.swift) | Swift | 12 | 0 | 2 | 14 |
 | [ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json](/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json) | JSON | 122 | 0 | 1 | 123 |
@@ -56,15 +51,17 @@ Total : 161 files,  22445 codes, 1856 comments, 2932 blanks, all 27233 lines
 | [ios/Runner/Base.lproj/LaunchScreen.storyboard](/ios/Runner/Base.lproj/LaunchScreen.storyboard) | XML | 36 | 1 | 1 | 38 |
 | [ios/Runner/Base.lproj/Main.storyboard](/ios/Runner/Base.lproj/Main.storyboard) | XML | 25 | 1 | 1 | 27 |
 | [ios/Runner/Runner-Bridging-Header.h](/ios/Runner/Runner-Bridging-Header.h) | C++ | 1 | 0 | 1 | 2 |
-| [l10n.yaml](/l10n.yaml) | YAML | 0 | 0 | 1 | 1 |
 | [lib/core/constants/app\_colors.dart](/lib/core/constants/app_colors.dart) | Dart | 50 | 14 | 13 | 77 |
 | [lib/core/constants/app\_constants.dart](/lib/core/constants/app_constants.dart) | Dart | 12 | 5 | 7 | 24 |
 | [lib/core/constants/app\_strings.dart](/lib/core/constants/app_strings.dart) | Dart | 19 | 4 | 6 | 29 |
 | [lib/core/errors/exceptions.dart](/lib/core/errors/exceptions.dart) | Dart | 17 | 0 | 7 | 24 |
 | [lib/core/localization/locale\_provider.dart](/lib/core/localization/locale_provider.dart) | Dart | 0 | 0 | 1 | 1 |
-| [lib/core/services/excel\_export\_service.dart](/lib/core/services/excel_export_service.dart) | Dart | 395 | 40 | 78 | 513 |
-| [lib/core/services/kac\_saat\_calculator.dart](/lib/core/services/kac_saat_calculator.dart) | Dart | 153 | 15 | 20 | 188 |
-| [lib/core/theme/design\_tokens.dart](/lib/core/theme/design_tokens.dart) | Dart | 157 | 105 | 73 | 335 |
+| [lib/core/services/excel\_export\_service.dart](/lib/core/services/excel_export_service.dart) | Dart | 366 | 40 | 77 | 483 |
+| [lib/core/services/kac\_saat\_calculator.dart](/lib/core/services/kac_saat_calculator.dart) | Dart | 154 | 15 | 21 | 190 |
+| [lib/core/services/version\_service.dart](/lib/core/services/version_service.dart) | Dart | 117 | 24 | 26 | 167 |
+| [lib/core/services/version\_service\_stub.dart](/lib/core/services/version_service_stub.dart) | Dart | 3 | 1 | 1 | 5 |
+| [lib/core/services/version\_service\_web.dart](/lib/core/services/version_service_web.dart) | Dart | 9 | 5 | 3 | 17 |
+| [lib/core/theme/design\_tokens.dart](/lib/core/theme/design_tokens.dart) | Dart | 158 | 105 | 74 | 337 |
 | [lib/core/themes/app\_theme.dart](/lib/core/themes/app_theme.dart) | Dart | 29 | 0 | 7 | 36 |
 | [lib/core/themes/design\_system.dart](/lib/core/themes/design_system.dart) | Dart | 777 | 58 | 53 | 888 |
 | [lib/core/themes/theme\_provider.dart](/lib/core/themes/theme_provider.dart) | Dart | 61 | 10 | 13 | 84 |
@@ -73,69 +70,72 @@ Total : 161 files,  22445 codes, 1856 comments, 2932 blanks, all 27233 lines
 | [lib/core/utils/validators.dart](/lib/core/utils/validators.dart) | Dart | 30 | 0 | 6 | 36 |
 | [lib/data/models/category\_model.dart](/lib/data/models/category_model.dart) | Dart | 379 | 44 | 39 | 462 |
 | [lib/data/models/feedback\_model.dart](/lib/data/models/feedback_model.dart) | Dart | 58 | 1 | 7 | 66 |
-| [lib/data/models/product\_model.dart](/lib/data/models/product_model.dart) | Dart | 119 | 0 | 6 | 125 |
+| [lib/data/models/product\_model.dart](/lib/data/models/product_model.dart) | Dart | 131 | 0 | 6 | 137 |
 | [lib/data/models/trousseau\_model.dart](/lib/data/models/trousseau_model.dart) | Dart | 114 | 0 | 7 | 121 |
 | [lib/data/models/user\_model.dart](/lib/data/models/user_model.dart) | Dart | 82 | 1 | 6 | 89 |
-| [lib/data/repositories/auth\_repository.dart](/lib/data/repositories/auth_repository.dart) | Dart | 43 | 0 | 11 | 54 |
+| [lib/data/repositories/auth\_repository.dart](/lib/data/repositories/auth_repository.dart) | Dart | 42 | 0 | 11 | 53 |
 | [lib/data/repositories/category\_repository.dart](/lib/data/repositories/category_repository.dart) | Dart | 88 | 3 | 12 | 103 |
 | [lib/data/repositories/feedback\_repository.dart](/lib/data/repositories/feedback_repository.dart) | Dart | 51 | 4 | 9 | 64 |
 | [lib/data/repositories/product\_repository.dart](/lib/data/repositories/product_repository.dart) | Dart | 45 | 0 | 11 | 56 |
 | [lib/data/repositories/trousseau\_repository.dart](/lib/data/repositories/trousseau_repository.dart) | Dart | 41 | 0 | 11 | 52 |
 | [lib/data/services/firebase\_service.dart](/lib/data/services/firebase_service.dart) | Dart | 13 | 0 | 6 | 19 |
-| [lib/data/services/storage\_service.dart](/lib/data/services/storage_service.dart) | Dart | 22 | 1 | 7 | 30 |
+| [lib/data/services/storage\_service.dart](/lib/data/services/storage_service.dart) | Dart | 31 | 6 | 8 | 45 |
 | [lib/firebase\_options.dart](/lib/firebase_options.dart) | Dart | 54 | 0 | 3 | 57 |
 | [lib/l10n/app\_en.arb](/lib/l10n/app_en.arb) | JSON | 0 | 0 | 1 | 1 |
-| [lib/l10n/app\_localizations.dart](/lib/l10n/app_localizations.dart) | Dart | 54 | 64 | 16 | 134 |
-| [lib/l10n/app\_localizations\_en.dart](/lib/l10n/app_localizations_en.dart) | Dart | 5 | 3 | 3 | 11 |
-| [lib/l10n/app\_localizations\_tr.dart](/lib/l10n/app_localizations_tr.dart) | Dart | 5 | 3 | 3 | 11 |
 | [lib/l10n/app\_tr.arb](/lib/l10n/app_tr.arb) | JSON | 0 | 0 | 1 | 1 |
 | [lib/l10n/generated/app\_localizations.dart](/lib/l10n/generated/app_localizations.dart) | Dart | 119 | 324 | 81 | 524 |
 | [lib/l10n/generated/app\_localizations\_en.dart](/lib/l10n/generated/app_localizations_en.dart) | Dart | 141 | 3 | 68 | 212 |
 | [lib/l10n/generated/app\_localizations\_tr.dart](/lib/l10n/generated/app_localizations_tr.dart) | Dart | 141 | 3 | 68 | 212 |
-| [lib/main.dart](/lib/main.dart) | Dart | 125 | 6 | 11 | 142 |
-| [lib/presentation/providers/auth\_provider.dart](/lib/presentation/providers/auth_provider.dart) | Dart | 479 | 17 | 70 | 566 |
-| [lib/presentation/providers/category\_provider.dart](/lib/presentation/providers/category_provider.dart) | Dart | 118 | 11 | 22 | 151 |
+| [lib/main.dart](/lib/main.dart) | Dart | 117 | 10 | 17 | 144 |
+| [lib/presentation/providers/auth\_provider.dart](/lib/presentation/providers/auth_provider.dart) | Dart | 531 | 23 | 82 | 636 |
+| [lib/presentation/providers/category\_provider.dart](/lib/presentation/providers/category_provider.dart) | Dart | 117 | 11 | 22 | 150 |
 | [lib/presentation/providers/feedback\_provider.dart](/lib/presentation/providers/feedback_provider.dart) | Dart | 80 | 0 | 11 | 91 |
 | [lib/presentation/providers/locale\_provider.dart](/lib/presentation/providers/locale_provider.dart) | Dart | 0 | 0 | 1 | 1 |
-| [lib/presentation/providers/product\_provider.dart](/lib/presentation/providers/product_provider.dart) | Dart | 504 | 33 | 83 | 620 |
-| [lib/presentation/providers/trousseau\_provider.dart](/lib/presentation/providers/trousseau_provider.dart) | Dart | 520 | 32 | 98 | 650 |
-| [lib/presentation/router/app\_router.dart](/lib/presentation/router/app_router.dart) | Dart | 216 | 3 | 6 | 225 |
+| [lib/presentation/providers/onboarding\_provider.dart](/lib/presentation/providers/onboarding_provider.dart) | Dart | 30 | 1 | 6 | 37 |
+| [lib/presentation/providers/product\_provider.dart](/lib/presentation/providers/product_provider.dart) | Dart | 512 | 35 | 81 | 628 |
+| [lib/presentation/providers/trousseau\_provider.dart](/lib/presentation/providers/trousseau_provider.dart) | Dart | 528 | 34 | 100 | 662 |
+| [lib/presentation/router/app\_router.dart](/lib/presentation/router/app_router.dart) | Dart | 261 | 7 | 10 | 278 |
+| [lib/presentation/screens/auth/email\_verification\_screen.dart](/lib/presentation/screens/auth/email_verification_screen.dart) | Dart | 248 | 9 | 35 | 292 |
 | [lib/presentation/screens/auth/forgot\_password\_screen.dart](/lib/presentation/screens/auth/forgot_password_screen.dart) | Dart | 180 | 0 | 14 | 194 |
-| [lib/presentation/screens/auth/login\_screen.dart](/lib/presentation/screens/auth/login_screen.dart) | Dart | 380 | 47 | 43 | 470 |
-| [lib/presentation/screens/auth/register\_screen.dart](/lib/presentation/screens/auth/register_screen.dart) | Dart | 300 | 49 | 40 | 389 |
-| [lib/presentation/screens/home/home\_screen.dart](/lib/presentation/screens/home/home_screen.dart) | Dart | 322 | 26 | 22 | 370 |
-| [lib/presentation/screens/home/statistics\_screen.dart](/lib/presentation/screens/home/statistics_screen.dart) | Dart | 714 | 57 | 60 | 831 |
-| [lib/presentation/screens/product/add\_product\_screen.dart](/lib/presentation/screens/product/add_product_screen.dart) | Dart | 390 | 44 | 39 | 473 |
+| [lib/presentation/screens/auth/login\_screen.dart](/lib/presentation/screens/auth/login_screen.dart) | Dart | 462 | 55 | 48 | 565 |
+| [lib/presentation/screens/auth/register\_screen.dart](/lib/presentation/screens/auth/register_screen.dart) | Dart | 302 | 49 | 41 | 392 |
+| [lib/presentation/screens/home/home\_screen.dart](/lib/presentation/screens/home/home_screen.dart) | Dart | 324 | 31 | 26 | 381 |
+| [lib/presentation/screens/home/statistics\_screen.dart](/lib/presentation/screens/home/statistics_screen.dart) | Dart | 755 | 60 | 64 | 879 |
+| [lib/presentation/screens/onboarding/onboarding\_screen.dart](/lib/presentation/screens/onboarding/onboarding_screen.dart) | Dart | 212 | 8 | 19 | 239 |
+| [lib/presentation/screens/product/add\_product\_screen.dart](/lib/presentation/screens/product/add_product_screen.dart) | Dart | 413 | 46 | 42 | 501 |
 | [lib/presentation/screens/product/category\_management\_screen.dart](/lib/presentation/screens/product/category_management_screen.dart) | Dart | 309 | 1 | 13 | 323 |
-| [lib/presentation/screens/product/edit\_product\_screen.dart](/lib/presentation/screens/product/edit_product_screen.dart) | Dart | 578 | 57 | 55 | 690 |
-| [lib/presentation/screens/product/product\_detail\_screen.dart](/lib/presentation/screens/product/product_detail_screen.dart) | Dart | 685 | 44 | 41 | 770 |
-| [lib/presentation/screens/product/product\_list\_screen.dart](/lib/presentation/screens/product/product_list_screen.dart) | Dart | 613 | 37 | 30 | 680 |
+| [lib/presentation/screens/product/edit\_product\_screen.dart](/lib/presentation/screens/product/edit_product_screen.dart) | Dart | 603 | 59 | 58 | 720 |
+| [lib/presentation/screens/product/product\_detail\_screen.dart](/lib/presentation/screens/product/product_detail_screen.dart) | Dart | 742 | 45 | 47 | 834 |
+| [lib/presentation/screens/product/product\_list\_screen.dart](/lib/presentation/screens/product/product_list_screen.dart) | Dart | 617 | 38 | 32 | 687 |
 | [lib/presentation/screens/settings/change\_password\_screen.dart](/lib/presentation/screens/settings/change_password_screen.dart) | Dart | 207 | 4 | 21 | 232 |
 | [lib/presentation/screens/settings/feedback\_history\_screen.dart](/lib/presentation/screens/settings/feedback_history_screen.dart) | Dart | 313 | 4 | 17 | 334 |
-| [lib/presentation/screens/settings/feedback\_screen.dart](/lib/presentation/screens/settings/feedback_screen.dart) | Dart | 193 | 28 | 21 | 242 |
-| [lib/presentation/screens/settings/kac\_saat\_settings\_screen.dart](/lib/presentation/screens/settings/kac_saat_settings_screen.dart) | Dart | 419 | 12 | 38 | 469 |
-| [lib/presentation/screens/settings/settings\_screen.dart](/lib/presentation/screens/settings/settings_screen.dart) | Dart | 564 | 7 | 38 | 609 |
+| [lib/presentation/screens/settings/feedback\_screen.dart](/lib/presentation/screens/settings/feedback_screen.dart) | Dart | 194 | 28 | 22 | 244 |
+| [lib/presentation/screens/settings/kac\_saat\_settings\_screen.dart](/lib/presentation/screens/settings/kac_saat_settings_screen.dart) | Dart | 470 | 18 | 44 | 532 |
+| [lib/presentation/screens/settings/settings\_screen.dart](/lib/presentation/screens/settings/settings_screen.dart) | Dart | 580 | 12 | 38 | 630 |
+| [lib/presentation/screens/settings/settings\_screen\_old.dart](/lib/presentation/screens/settings/settings_screen_old.dart) | Dart | 381 | 6 | 21 | 408 |
 | [lib/presentation/screens/settings/theme\_settings\_screen.dart](/lib/presentation/screens/settings/theme_settings_screen.dart) | Dart | 243 | 7 | 10 | 260 |
-| [lib/presentation/screens/trousseau/create\_trousseau\_screen.dart](/lib/presentation/screens/trousseau/create_trousseau_screen.dart) | Dart | 177 | 31 | 26 | 234 |
-| [lib/presentation/screens/trousseau/edit\_trousseau\_screen.dart](/lib/presentation/screens/trousseau/edit_trousseau_screen.dart) | Dart | 331 | 30 | 40 | 401 |
+| [lib/presentation/screens/trousseau/create\_trousseau\_screen.dart](/lib/presentation/screens/trousseau/create_trousseau_screen.dart) | Dart | 178 | 31 | 27 | 236 |
+| [lib/presentation/screens/trousseau/edit\_trousseau\_screen.dart](/lib/presentation/screens/trousseau/edit_trousseau_screen.dart) | Dart | 340 | 31 | 40 | 411 |
 | [lib/presentation/screens/trousseau/share\_trousseau\_screen.dart](/lib/presentation/screens/trousseau/share_trousseau_screen.dart) | Dart | 240 | 0 | 19 | 259 |
-| [lib/presentation/screens/trousseau/shared\_trousseau\_list\_screen.dart](/lib/presentation/screens/trousseau/shared_trousseau_list_screen.dart) | Dart | 134 | 24 | 11 | 169 |
-| [lib/presentation/screens/trousseau/trousseau\_detail\_screen.dart](/lib/presentation/screens/trousseau/trousseau_detail_screen.dart) | Dart | 740 | 40 | 43 | 823 |
-| [lib/presentation/widgets/common/app\_button.dart](/lib/presentation/widgets/common/app_button.dart) | Dart | 409 | 47 | 41 | 497 |
-| [lib/presentation/widgets/common/app\_card.dart](/lib/presentation/widgets/common/app_card.dart) | Dart | 549 | 61 | 48 | 658 |
-| [lib/presentation/widgets/common/app\_input.dart](/lib/presentation/widgets/common/app_input.dart) | Dart | 342 | 28 | 35 | 405 |
+| [lib/presentation/screens/trousseau/shared\_trousseau\_list\_screen.dart](/lib/presentation/screens/trousseau/shared_trousseau_list_screen.dart) | Dart | 135 | 24 | 12 | 171 |
+| [lib/presentation/screens/trousseau/trousseau\_detail\_screen.dart](/lib/presentation/screens/trousseau/trousseau_detail_screen.dart) | Dart | 718 | 45 | 42 | 805 |
+| [lib/presentation/widgets/common/app\_button.dart](/lib/presentation/widgets/common/app_button.dart) | Dart | 410 | 47 | 42 | 499 |
+| [lib/presentation/widgets/common/app\_card.dart](/lib/presentation/widgets/common/app_card.dart) | Dart | 593 | 65 | 51 | 709 |
+| [lib/presentation/widgets/common/app\_input.dart](/lib/presentation/widgets/common/app_input.dart) | Dart | 343 | 28 | 36 | 407 |
 | [lib/presentation/widgets/common/category\_chip.dart](/lib/presentation/widgets/common/category_chip.dart) | Dart | 97 | 0 | 4 | 101 |
 | [lib/presentation/widgets/common/custom\_app\_bar.dart](/lib/presentation/widgets/common/custom_app_bar.dart) | Dart | 66 | 0 | 5 | 71 |
 | [lib/presentation/widgets/common/custom\_dialog.dart](/lib/presentation/widgets/common/custom_dialog.dart) | Dart | 86 | 0 | 5 | 91 |
 | [lib/presentation/widgets/common/draggable\_fab.dart](/lib/presentation/widgets/common/draggable_fab.dart) | Dart | 97 | 3 | 9 | 109 |
 | [lib/presentation/widgets/common/empty\_state\_widget.dart](/lib/presentation/widgets/common/empty_state_widget.dart) | Dart | 60 | 0 | 4 | 64 |
 | [lib/presentation/widgets/common/filter\_pill.dart](/lib/presentation/widgets/common/filter_pill.dart) | Dart | 102 | 5 | 7 | 114 |
+| [lib/presentation/widgets/common/fullscreen\_image\_viewer.dart](/lib/presentation/widgets/common/fullscreen_image_viewer.dart) | Dart | 163 | 12 | 15 | 190 |
 | [lib/presentation/widgets/common/icon\_color\_picker.dart](/lib/presentation/widgets/common/icon_color_picker.dart) | Dart | 135 | 1 | 10 | 146 |
 | [lib/presentation/widgets/common/image\_picker\_widget.dart](/lib/presentation/widgets/common/image_picker_widget.dart) | Dart | 181 | 0 | 10 | 191 |
 | [lib/presentation/widgets/common/loading\_overlay.dart](/lib/presentation/widgets/common/loading_overlay.dart) | Dart | 47 | 0 | 4 | 51 |
 | [lib/presentation/widgets/common/responsive\_app\_bar.dart](/lib/presentation/widgets/common/responsive_app_bar.dart) | Dart | 0 | 0 | 1 | 1 |
 | [lib/presentation/widgets/common/responsive\_container.dart](/lib/presentation/widgets/common/responsive_container.dart) | Dart | 33 | 6 | 5 | 44 |
 | [lib/presentation/widgets/common/web\_frame.dart](/lib/presentation/widgets/common/web_frame.dart) | Dart | 26 | 7 | 4 | 37 |
+| [lib/presentation/widgets/dialogs/update\_available\_dialog.dart](/lib/presentation/widgets/dialogs/update_available_dialog.dart) | Dart | 148 | 6 | 8 | 162 |
 | [linux/CMakeLists.txt](/linux/CMakeLists.txt) | CMake | 104 | 0 | 25 | 129 |
 | [linux/flutter/CMakeLists.txt](/linux/flutter/CMakeLists.txt) | CMake | 79 | 0 | 10 | 89 |
 | [linux/flutter/generated\_plugin\_registrant.cc](/linux/flutter/generated_plugin_registrant.cc) | C++ | 11 | 4 | 5 | 20 |
@@ -152,10 +152,11 @@ Total : 161 files,  22445 codes, 1856 comments, 2932 blanks, all 27233 lines
 | [macos/Runner/Base.lproj/MainMenu.xib](/macos/Runner/Base.lproj/MainMenu.xib) | XML | 343 | 0 | 1 | 344 |
 | [macos/Runner/MainFlutterWindow.swift](/macos/Runner/MainFlutterWindow.swift) | Swift | 12 | 0 | 4 | 16 |
 | [public/index.html](/public/index.html) | HTML | 79 | 6 | 5 | 90 |
-| [pubspec.yaml](/pubspec.yaml) | YAML | 48 | 6 | 11 | 65 |
-| [storage.cors.json](/storage.cors.json) | JSON | 0 | 0 | 1 | 1 |
+| [pubspec.yaml](/pubspec.yaml) | YAML | 49 | 6 | 11 | 66 |
+| [scripts/setup\_version\_config.bat](/scripts/setup_version_config.bat) | Batch | 61 | 5 | 12 | 78 |
+| [scripts/setup\_version\_config.sh](/scripts/setup_version_config.sh) | Shell Script | 80 | 11 | 21 | 112 |
 | [test/widget\_test.dart](/test/widget_test.dart) | Dart | 14 | 6 | 3 | 23 |
-| [web/index.html](/web/index.html) | HTML | 20 | 16 | 5 | 41 |
+| [web/index.html](/web/index.html) | HTML | 23 | 17 | 6 | 46 |
 | [web/manifest.json](/web/manifest.json) | JSON | 35 | 0 | 1 | 36 |
 | [web/manifest.webmanifest](/web/manifest.webmanifest) | JSON | 36 | 0 | 1 | 37 |
 | [windows/CMakeLists.txt](/windows/CMakeLists.txt) | CMake | 89 | 0 | 20 | 109 |

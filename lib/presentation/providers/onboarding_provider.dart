@@ -17,7 +17,6 @@ class OnboardingProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       _onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
     } catch (e) {
-      debugPrint('Error loading onboarding status: $e');
       _onboardingCompleted = false;
     }
     _isLoading = false;
@@ -31,7 +30,7 @@ class OnboardingProvider extends ChangeNotifier {
       _onboardingCompleted = true;
       notifyListeners();
     } catch (e) {
-      debugPrint('Error saving onboarding status: $e');
+      // Error saving onboarding status
     }
   }
 }

@@ -68,11 +68,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     try {
       final prefs = await SharedPreferences.getInstance();
       final rememberMe = prefs.getBool('remember_me') ?? false;
-  debugPrint('🔐 Loading Remember Me: $rememberMe');
       if (rememberMe) {
         final email = prefs.getString('saved_email') ?? '';
         final password = prefs.getString('saved_password') ?? '';
-  debugPrint('✅ Loaded email: $email');
         setState(() {
           _rememberMe = rememberMe;
           _emailController.text = email;
@@ -80,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         });
       }
     } catch (e) {
-  debugPrint('❌ Error loading Remember Me: $e');
+      // Error loading credentials
     }
   }
 
@@ -123,29 +121,20 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-  debugPrint('🔑 Login attempt - Remember Me: $_rememberMe');
-
     // Save Remember Me BEFORE login to avoid mounted issues
     try {
-  debugPrint('💾 Saving Remember Me BEFORE login - Value: $_rememberMe');
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('remember_me', _rememberMe);
 
       if (_rememberMe) {
         await prefs.setString('saved_email', _emailController.text.trim());
         await prefs.setString('saved_password', _passwordController.text);
-  debugPrint('💾 Remember Me credentials saved: ${_emailController.text.trim()}');
       } else {
         await prefs.remove('saved_email');
         await prefs.remove('saved_password');
-  debugPrint('🗑️ Remember Me credentials cleared');
       }
-
-      // Verify save
-      final saved = prefs.getBool('remember_me');
-  debugPrint('✅ Remember Me saved and verified: $saved');
     } catch (e) {
-  debugPrint('❌ Error saving Remember Me: $e');
+      // Error saving credentials
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -157,14 +146,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
     if (!mounted) return;
 
-    debugPrint('🔑 Login result: $success');
-
     if (success) {
       if (!mounted) return;
       context.go('/');
     } else {
       // Check if error is email not verified
       if (authProvider.errorMessage == 'email-not-verified') {
+        if (!mounted) return;
         showDialog(
           context: context,
           builder: (dialogContext) => AlertDialog(
@@ -186,8 +174,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 onPressed: () {
                   Navigator.of(dialogContext).pop();
                   final encodedEmail = Uri.encodeComponent(_emailController.text.trim());
-                  if (!mounted) return;
-                  context.go('/verify-email/$encodedEmail');
+                  // mounted check için state widget kullan
+                  if (context.mounted) {
+                    context.go('/verify-email/$encodedEmail');
+                  }
                 },
               ),
             ],
@@ -449,7 +439,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 onChanged: (value) {
                                   setState(() {
                                     _rememberMe = value ?? false;
-                                    debugPrint('✔️ Remember Me checkbox changed to: $_rememberMe');
                                   });
                                 },
                                 title: const Text('Beni Hatırla'),
