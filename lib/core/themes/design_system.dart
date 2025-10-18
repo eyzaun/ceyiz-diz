@@ -304,17 +304,17 @@ class DesignSystem {
       outline: Color(0xFFE2E8F0),        // Soft gray border
     ),
     
-    // Monochrome Dark Theme - Minimalist black and white
-    // Inspired by GitHub dark mode
+    // Monochrome Dark Theme - Pure black, white and gray tones
+    // True monochrome: only grayscale colors, no color hues
     AppThemeType.modern: const DesignPalette(
       name: 'Monokrom',
       isDark: true,
-      primary: Color(0xFFE5E7EB),        // Light gray accent
-      secondary: Color(0xFF9CA3AF),      // Medium gray
-      tertiary: Color(0xFFD1D5DB),       // Soft gray
-      background: Color(0xFF0D1117),     // Near black (GitHub-style)
-      surface: Color(0xFF161B22),        // Dark gray surface
-      outline: Color(0xFF30363D),        // Subtle border
+      primary: Color(0xFFFFFFFF),        // Pure white (primary text/accent)
+      secondary: Color(0xFFB3B3B3),      // Light gray (secondary actions)
+      tertiary: Color(0xFFCCCCCC),       // Lighter gray (tertiary elements)
+      background: Color(0xFF000000),     // Pure black background
+      surface: Color(0xFF1A1A1A),        // Dark gray surface (cards, etc.)
+      outline: Color(0xFF333333),        // Medium gray border
     ),
 
     // Purple Dark Theme - Dark gray with purple accents
@@ -360,12 +360,12 @@ class DesignSystem {
     AppThemeType.rose: const DesignPalette(
       name: 'Monokrom (Eski)',
       isDark: true,
-      primary: Color(0xFFE5E7EB),
-      secondary: Color(0xFF9CA3AF),
-      tertiary: Color(0xFFD1D5DB),
-      background: Color(0xFF0D1117),
-      surface: Color(0xFF161B22),
-      outline: Color(0xFF30363D),
+      primary: Color(0xFFFFFFFF),        // Pure white
+      secondary: Color(0xFFB3B3B3),      // Light gray
+      tertiary: Color(0xFFCCCCCC),       // Lighter gray
+      background: Color(0xFF000000),     // Pure black
+      surface: Color(0xFF1A1A1A),        // Dark gray surface
+      outline: Color(0xFF333333),        // Medium gray border
     ),
     AppThemeType.night: const DesignPalette(
       name: 'Mor Okyanus (Eski)',

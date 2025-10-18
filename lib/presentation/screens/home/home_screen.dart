@@ -10,6 +10,7 @@ library;
 /// ✅ Gestalt: İlgili menü öğeleri gruplanmış
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -31,6 +32,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   bool _hasShownUpdateDialog = false;
+  DateTime? _lastBackPressTime;
 
   @override
   void initState() {
@@ -39,6 +41,42 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForUpdateOnce();
     });
+  }
+
+  Future<bool> _onWillPop() async {
+    // Eğer çeyiz sekmesinde değilse, ilk sekmeye dön
+    if (_selectedIndex != 0) {
+      setState(() {
+        _selectedIndex = 0;
+      });
+      return false; // Uygulamadan çıkma
+    }
+
+    // Çeyiz sekmesindeyse, çift tıklama kontrolü
+    final now = DateTime.now();
+    if (_lastBackPressTime == null || 
+        now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+      // İlk geri tuşu - uyarı göster
+      _lastBackPressTime = now;
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Çıkmak için tekrar basın'),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusMD,
+            ),
+            margin: const EdgeInsets.all(AppSpacing.md),
+          ),
+        );
+      }
+      return false; // Uygulamadan çıkma
+    }
+    
+    // İkinci geri tuşu (2 saniye içinde) - çık
+    return true;
   }
 
   @override
@@ -53,69 +91,81 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          _buildTrousseauTab(context),
-          const StatisticsScreen(),
-          const SettingsScreen(),
-        ],
-      ),
-      // ═════════════════════════════════════════════════════════════════════
-      // BOTTOM NAVIGATION
-      // JAKOB YASASI: Standart 3 tab layout (yaygın pattern)
-      // HICK YASASI: Max 3 sekme (kolay seçim)
-      // FITTS YASASI: 72dp height, 28dp icons (kolay dokunma)
-      // ═════════════════════════════════════════════════════════════════════
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        selectedFontSize: AppTypography.sizeSM,
-        unselectedFontSize: AppTypography.sizeXS,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-  unselectedItemColor: Theme.of(context).colorScheme.onSurface,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.inventory_2_outlined,
-              size: AppDimensions.bottomNavIconSize,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        
+        final shouldPop = await _onWillPop();
+        if (shouldPop) {
+          // GoRouter ile çalışırken SystemNavigator.pop() kullan
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: [
+            _buildTrousseauTab(context),
+            const StatisticsScreen(),
+            const SettingsScreen(),
+          ],
+        ),
+        // ═════════════════════════════════════════════════════════════════════
+        // BOTTOM NAVIGATION
+        // JAKOB YASASI: Standart 3 tab layout (yaygın pattern)
+        // HICK YASASI: Max 3 sekme (kolay seçim)
+        // FITTS YASASI: 72dp height, 28dp icons (kolay dokunma)
+        // ═════════════════════════════════════════════════════════════════════
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          selectedFontSize: AppTypography.sizeSM,
+          unselectedFontSize: AppTypography.sizeXS,
+          selectedItemColor: Theme.of(context).colorScheme.primary,
+    unselectedItemColor: Theme.of(context).colorScheme.onSurface,
+          type: BottomNavigationBarType.fixed,
+          elevation: 0,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.inventory_2_outlined,
+                size: AppDimensions.bottomNavIconSize,
+              ),
+              activeIcon: Icon(
+                Icons.inventory_2,
+                size: AppDimensions.bottomNavIconSize,
+              ),
+              label: 'Çeyiz',
             ),
-            activeIcon: Icon(
-              Icons.inventory_2,
-              size: AppDimensions.bottomNavIconSize,
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.analytics_outlined,
+                size: AppDimensions.bottomNavIconSize,
+              ),
+              activeIcon: Icon(
+                Icons.analytics,
+                size: AppDimensions.bottomNavIconSize,
+              ),
+              label: 'İstatistikler',
             ),
-            label: 'Çeyiz',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.analytics_outlined,
-              size: AppDimensions.bottomNavIconSize,
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.settings_outlined,
+                size: AppDimensions.bottomNavIconSize,
+              ),
+              activeIcon: Icon(
+                Icons.settings,
+                size: AppDimensions.bottomNavIconSize,
+              ),
+              label: 'Ayarlar',
             ),
-            activeIcon: Icon(
-              Icons.analytics,
-              size: AppDimensions.bottomNavIconSize,
-            ),
-            label: 'İstatistikler',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.settings_outlined,
-              size: AppDimensions.bottomNavIconSize,
-            ),
-            activeIcon: Icon(
-              Icons.settings,
-              size: AppDimensions.bottomNavIconSize,
-            ),
-            label: 'Ayarlar',
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
