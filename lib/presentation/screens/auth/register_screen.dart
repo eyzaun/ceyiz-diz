@@ -71,43 +71,59 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
   String? _validateName(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Ad Soyad gereklidir';
+      return '❌ Ad Soyad boş bırakılamaz';
     }
-    if (value.length < 3) {
-      return 'En az 3 karakter olmalı';
+    if (value.trim().length < 3) {
+      return '❌ En az 3 karakter olmalı';
+    }
+    if (!value.contains(' ')) {
+      return '💡 Ad ve soyadınızı girin (örn: Ahmet Yılmaz)';
     }
     return null;
   }
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Email adresi gereklidir';
+      return '❌ E-posta adresi boş bırakılamaz';
     }
     if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
-      return 'Geçerli bir email adresi girin';
+      return '❌ Geçerli bir e-posta adresi girin (örn: ornek@email.com)';
     }
     return null;
   }
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Şifre gereklidir';
+      return '❌ Şifre boş bırakılamaz';
     }
     if (value.length < 6) {
-      return 'En az 6 karakter olmalı';
+      return '❌ En az 6 karakter olmalı';
     }
-    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$').hasMatch(value)) {
-      return 'En az 1 büyük harf, 1 küçük harf ve 1 rakam içermeli';
+    
+    // Check individual requirements
+    bool hasUpperCase = value.contains(RegExp(r'[A-Z]'));
+    bool hasLowerCase = value.contains(RegExp(r'[a-z]'));
+    bool hasDigit = value.contains(RegExp(r'\d'));
+    
+    if (!hasUpperCase) {
+      return '❌ En az 1 büyük harf içermeli (A-Z)';
     }
+    if (!hasLowerCase) {
+      return '❌ En az 1 küçük harf içermeli (a-z)';
+    }
+    if (!hasDigit) {
+      return '❌ En az 1 rakam içermeli (0-9)';
+    }
+    
     return null;
   }
 
   String? _validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Şifre tekrarı gereklidir';
+      return '❌ Şifre tekrarı boş bırakılamaz';
     }
     if (value != _passwordController.text) {
-      return 'Şifreler eşleşmiyor';
+      return '❌ Şifreler eşleşmiyor. Lütfen aynı şifreyi girin';
     }
     return null;
   }
@@ -120,16 +136,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     if (!_formKey.currentState!.validate()) return;
 
     if (!_acceptTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Kullanım koşullarını kabul etmelisiniz'),
-          backgroundColor: Theme.of(context).colorScheme.secondary,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.radiusMD,
-          ),
-        ),
-      );
+      _showWarningSnackBar('⚠️ Kullanım koşullarını kabul etmelisiniz\n💡 Devam etmek için onay kutusunu işaretleyin');
       return;
     }
 
@@ -147,17 +154,126 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       final encodedEmail = Uri.encodeComponent(_emailController.text.trim());
       context.go('/verify-email/$encodedEmail');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.radiusMD,
-          ),
-        ),
-      );
+      _showErrorSnackBar(authProvider.errorMessage);
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GOOGLE SIGN-IN HANDLER
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Future<void> _handleGoogleSignIn() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    final success = await authProvider.signInWithGoogle();
+
+    if (!mounted) return;
+
+    if (success) {
+      if (!mounted) return;
+      context.go('/');
+    } else {
+      if (!mounted) return;
+      _showErrorSnackBar(authProvider.errorMessage);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SNACKBAR HELPERS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  void _showErrorSnackBar(String message) {
+    final theme = Theme.of(context);
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: Colors.white,
+              size: AppDimensions.iconSizeMedium,
+            ),
+            AppSpacing.sm.horizontalSpace,
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: AppTypography.sizeSM,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: theme.colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadius.radiusMD,
+        ),
+        duration: const Duration(seconds: 5),
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).size.height - 150,
+          left: AppSpacing.md,
+          right: AppSpacing.md,
+        ),
+        action: SnackBarAction(
+          label: 'Tamam',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showWarningSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.white,
+              size: AppDimensions.iconSizeMedium,
+            ),
+            AppSpacing.sm.horizontalSpace,
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: AppTypography.sizeSM,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.orange.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadius.radiusMD,
+        ),
+        duration: const Duration(seconds: 4),
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).size.height - 150,
+          left: AppSpacing.md,
+          right: AppSpacing.md,
+        ),
+        action: SnackBarAction(
+          label: 'Tamam',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -295,6 +411,41 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                           icon: Icons.person_add,
                           isFullWidth: true,
                           onPressed: _handleRegister,
+                          isLoading: authProvider.status == AuthStatus.loading,
+                        ),
+
+                        AppSpacing.lg.verticalSpace,
+
+                        // ─────────────────────────────────────────────────────
+                        // DIVIDER - "veya" text
+                        // ─────────────────────────────────────────────────────
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                              child: Text(
+                                'veya',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+
+                        AppSpacing.lg.verticalSpace,
+
+                        // ─────────────────────────────────────────────────────
+                        // GOOGLE SIGN-IN BUTTON
+                        // Material 3 uyumlu, outlined style
+                        // ─────────────────────────────────────────────────────
+                        AppSecondaryButton(
+                          label: 'Google ile Kayıt Ol',
+                          icon: Icons.g_mobiledata_rounded,
+                          isFullWidth: true,
+                          onPressed: _handleGoogleSignIn,
                           isLoading: authProvider.status == AuthStatus.loading,
                         ),
 

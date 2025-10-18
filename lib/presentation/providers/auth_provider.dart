@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../data/models/user_model.dart';
+import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/category_repository.dart';
 import '../../core/services/kac_saat_calculator.dart';
 
@@ -195,14 +196,19 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = '';
       notifyListeners();
       
+      debugPrint('🔐 [AUTH] Giriş denemesi başladı: $email');
+      
       UserCredential result = await _auth.signInWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
 
       if (result.user != null) {
+        debugPrint('✅ [AUTH] Firebase girişi başarılı: ${result.user!.uid}');
+        
         // Check if email is verified
         if (!result.user!.emailVerified) {
+          debugPrint('⚠️ [AUTH] E-posta doğrulanmamış');
           _errorMessage = 'email-not-verified';
           await _auth.signOut();
           _status = AuthStatus.unauthenticated;
@@ -213,44 +219,51 @@ class AuthProvider extends ChangeNotifier {
         _firebaseUser = result.user;
         await _loadUserData(result.user!.uid);
         _status = AuthStatus.authenticated;
+        debugPrint('✅ [AUTH] Kullanıcı verisi yüklendi, giriş tamamlandı');
         notifyListeners();
         return true;
       }
       
+      debugPrint('❌ [AUTH] Kullanıcı bilgisi alınamadı');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
     } on FirebaseAuthException catch (e) {
       _status = AuthStatus.unauthenticated;
+      debugPrint('❌ [AUTH] Firebase hata kodu: ${e.code}, mesaj: ${e.message}');
       
       switch (e.code) {
         case 'user-not-found':
-          _errorMessage = 'Bu e-posta adresiyle kayıtlı kullanıcı bulunamadı.';
+          _errorMessage = '❌ Bu e-posta adresiyle kayıtlı kullanıcı bulunamadı.\n💡 Kayıt olmayı deneyin.';
           break;
         case 'wrong-password':
-          _errorMessage = 'Hatalı şifre girdiniz.';
+          _errorMessage = '❌ Hatalı şifre girdiniz.\n💡 Şifrenizi kontrol edin veya "Şifremi Unuttum" kullanın.';
           break;
         case 'invalid-email':
-          _errorMessage = 'Geçersiz e-posta adresi.';
+          _errorMessage = '❌ Geçersiz e-posta adresi formatı.\n💡 Örnek: ornek@email.com';
+          break;
+        case 'invalid-credential':
+          _errorMessage = '❌ E-posta veya şifre hatalı.\n💡 Bilgilerinizi kontrol edin.';
           break;
         case 'user-disabled':
-          _errorMessage = 'Bu kullanıcı hesabı devre dışı bırakılmış.';
+          _errorMessage = '❌ Bu hesap devre dışı bırakılmış.\n💡 Destek ekibi ile iletişime geçin.';
           break;
         case 'too-many-requests':
-          _errorMessage = 'Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin.';
+          _errorMessage = '⏳ Çok fazla başarısız deneme.\n💡 Birkaç dakika bekleyip tekrar deneyin.';
           break;
         case 'network-request-failed':
-          _errorMessage = 'İnternet bağlantınızı kontrol edin.';
+          _errorMessage = '📡 İnternet bağlantı hatası.\n💡 Bağlantınızı kontrol edin ve tekrar deneyin.';
           break;
         default:
-          _errorMessage = 'Giriş yapılamadı. Lütfen tekrar deneyin.';
+          _errorMessage = '❌ Giriş yapılamadı.\n💡 Hata: ${e.code}\nLütfen tekrar deneyin.';
       }
       
       notifyListeners();
       return false;
     } catch (e) {
       _status = AuthStatus.unauthenticated;
-      _errorMessage = 'Beklenmeyen bir hata oluştu: ${e.toString()}';
+      debugPrint('❌ [AUTH] Beklenmeyen hata: $e');
+      _errorMessage = '❌ Beklenmeyen bir hata oluştu.\n💡 Lütfen daha sonra tekrar deneyin.';
       notifyListeners();
       return false;
     }
@@ -266,16 +279,22 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = '';
       notifyListeners();
       
+      debugPrint('📝 [AUTH] Kayıt denemesi başladı: $email');
+      
       UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
       
       if (result.user != null) {
+        debugPrint('✅ [AUTH] Firebase hesabı oluşturuldu: ${result.user!.uid}');
+        
         await result.user!.updateDisplayName(displayName);
+        debugPrint('✅ [AUTH] Kullanıcı adı güncellendi: $displayName');
 
         // Send email verification
         await result.user!.sendEmailVerification();
+        debugPrint('📧 [AUTH] Doğrulama e-postası gönderildi');
 
         _firebaseUser = result.user;
 
@@ -295,46 +314,52 @@ class AuthProvider extends ChangeNotifier {
             .collection('users')
             .doc(result.user!.uid)
             .set(userModel.toFirestore());
+        
+        debugPrint('✅ [AUTH] Firestore kullanıcı belgesi oluşturuldu');
 
         _currentUser = userModel;
 
         // Keep user logged in but mark as unauthenticated for navigation
         _status = AuthStatus.unauthenticated;
+        debugPrint('✅ [AUTH] Kayıt başarıyla tamamlandı');
         notifyListeners();
         return true;
       }
       
+      debugPrint('❌ [AUTH] Kullanıcı bilgisi alınamadı');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
     } on FirebaseAuthException catch (e) {
       _status = AuthStatus.unauthenticated;
+      debugPrint('❌ [AUTH] Firebase hata kodu: ${e.code}, mesaj: ${e.message}');
       
       switch (e.code) {
         case 'weak-password':
-          _errorMessage = 'Şifre çok zayıf. En az 6 karakter olmalıdır.';
+          _errorMessage = '❌ Şifre çok zayıf.\n💡 En az 6 karakter, 1 büyük harf, 1 küçük harf ve 1 rakam kullanın.';
           break;
         case 'email-already-in-use':
-          _errorMessage = 'Bu e-posta adresi zaten kullanımda.';
+          _errorMessage = '❌ Bu e-posta adresi zaten kullanımda.\n💡 Giriş yapmayı deneyin veya farklı bir e-posta kullanın.';
           break;
         case 'invalid-email':
-          _errorMessage = 'Geçersiz e-posta adresi.';
+          _errorMessage = '❌ Geçersiz e-posta adresi formatı.\n💡 Örnek: ornek@email.com';
           break;
         case 'operation-not-allowed':
-          _errorMessage = 'E-posta/şifre girişi etkin değil.';
+          _errorMessage = '❌ E-posta/şifre girişi etkin değil.\n💡 Lütfen sistem yöneticisi ile iletişime geçin.';
           break;
         case 'network-request-failed':
-          _errorMessage = 'İnternet bağlantınızı kontrol edin.';
+          _errorMessage = '📡 İnternet bağlantı hatası.\n💡 Bağlantınızı kontrol edin ve tekrar deneyin.';
           break;
         default:
-          _errorMessage = 'Kayıt oluşturulamadı. Lütfen tekrar deneyin.';
+          _errorMessage = '❌ Kayıt oluşturulamadı.\n💡 Hata: ${e.code}\nLütfen tekrar deneyin.';
       }
       
       notifyListeners();
       return false;
     } catch (e) {
       _status = AuthStatus.unauthenticated;
-      _errorMessage = 'Beklenmeyen bir hata oluştu: ${e.toString()}';
+      debugPrint('❌ [AUTH] Beklenmeyen hata: $e');
+      _errorMessage = '❌ Beklenmeyen bir hata oluştu.\n💡 Lütfen daha sonra tekrar deneyin.';
       notifyListeners();
       return false;
     }
@@ -351,6 +376,91 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       _errorMessage = 'Çıkış yapılamadı: ${e.toString()}';
       notifyListeners();
+    }
+  }
+
+  /// Google Sign-In
+  /// 
+  /// Kullanıcıyı Google hesabı ile giriş yapar
+  /// Returns true on success, false on failure
+  Future<bool> signInWithGoogle() async {
+    try {
+      _status = AuthStatus.loading;
+      _errorMessage = '';
+      notifyListeners();
+
+      debugPrint('🔐 [GOOGLE] Google Sign-In başlatıldı');
+
+      final authRepo = AuthRepository();
+      final (user, userModel) = await authRepo.signInWithGoogle();
+
+      debugPrint('✅ [GOOGLE] Google girişi başarılı: ${user.uid}');
+      debugPrint('👤 [GOOGLE] Kullanıcı: ${userModel.displayName} (${userModel.email})');
+
+      _firebaseUser = user;
+      _currentUser = userModel;
+      _status = AuthStatus.authenticated;
+
+      // Ensure a single trousseau exists for this user
+      await _ensureSingleTrousseau(_currentUser!);
+      await _updateLastLogin();
+      await _checkForUpdates();
+
+      debugPrint('✅ [GOOGLE] Kullanıcı verisi yüklendi, giriş tamamlandı');
+      notifyListeners();
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _status = AuthStatus.unauthenticated;
+      debugPrint('❌ [GOOGLE] Firebase hata kodu: ${e.code}, mesaj: ${e.message}');
+
+      switch (e.code) {
+        case 'account-exists-with-different-credential':
+          _errorMessage = '❌ Bu e-posta farklı bir yöntemle kayıtlı.\n💡 Email/şifre ile giriş yapmayı deneyin.';
+          break;
+        case 'invalid-credential':
+          _errorMessage = '❌ Geçersiz kimlik bilgileri.\n💡 Lütfen tekrar deneyin.';
+          break;
+        case 'operation-not-allowed':
+          _errorMessage = '❌ Google girişi etkin değil.\n💡 Lütfen sistem yöneticisi ile iletişime geçin.';
+          break;
+        case 'user-disabled':
+          _errorMessage = '❌ Bu hesap devre dışı bırakılmış.\n💡 Destek ekibi ile iletişime geçin.';
+          break;
+        case 'user-not-found':
+          _errorMessage = '❌ Kullanıcı bulunamadı.\n💡 Kayıt olmayı deneyin.';
+          break;
+        case 'network-request-failed':
+          _errorMessage = '📡 İnternet bağlantı hatası.\n💡 Bağlantınızı kontrol edin ve tekrar deneyin.';
+          break;
+        case 'ERROR_ABORTED_BY_USER':
+        case 'popup_closed_by_user':
+        case 'cancelled':
+          _errorMessage = 'ℹ️ Google girişi iptal edildi.\n💡 Tekrar denemek için butona tıklayın.';
+          break;
+        case 'sign_in_failed':
+          _errorMessage = '❌ Google girişi başarısız.\n💡 SHA-1 ayarlarını kontrol edin veya tekrar deneyin.';
+          break;
+        default:
+          _errorMessage = '❌ Google ile giriş yapılamadı.\n💡 Hata: ${e.code}\nLütfen tekrar deneyin.';
+      }
+
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _status = AuthStatus.unauthenticated;
+      debugPrint('❌ [GOOGLE] Beklenmeyen hata: $e');
+      
+      // Check if user cancelled
+      if (e.toString().contains('cancel') || 
+          e.toString().contains('ABORTED') ||
+          e.toString().contains('popup_closed')) {
+        _errorMessage = 'ℹ️ Google girişi iptal edildi.\n💡 Tekrar denemek için butona tıklayın.';
+      } else {
+        _errorMessage = '❌ Beklenmeyen bir hata oluştu.\n💡 Lütfen daha sonra tekrar deneyin.\n\nHata detayı: ${e.toString().substring(0, 100)}';
+      }
+      
+      notifyListeners();
+      return false;
     }
   }
   

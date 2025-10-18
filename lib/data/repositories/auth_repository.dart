@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../models/user_model.dart';
@@ -7,10 +8,15 @@ import '../models/user_model.dart';
 class AuthRepository {
 	final FirebaseAuth _auth;
 	final FirebaseFirestore _firestore;
+	final GoogleSignIn _googleSignIn;
 
-	AuthRepository({FirebaseAuth? auth, FirebaseFirestore? firestore})
-			: _auth = auth ?? FirebaseAuth.instance,
-				_firestore = firestore ?? FirebaseFirestore.instance;
+	AuthRepository({
+		FirebaseAuth? auth,
+		FirebaseFirestore? firestore,
+		GoogleSignIn? googleSignIn,
+	})	: _auth = auth ?? FirebaseAuth.instance,
+				_firestore = firestore ?? FirebaseFirestore.instance,
+				_googleSignIn = googleSignIn ?? GoogleSignIn();
 
 	Stream<User?> authStateChanges() => _auth.authStateChanges();
 
@@ -35,11 +41,65 @@ class AuthRepository {
 
 	Future<void> sendPasswordResetEmail(String email) => _auth.sendPasswordResetEmail(email: email);
 
-	Future<UserModel> _createUserDoc(User user, {String? displayName}) async {
+	/// Google Sign-In
+	/// 
+	/// Returns (User, UserModel) tuple on success
+	/// Throws FirebaseAuthException on failure
+	Future<(User, UserModel)> signInWithGoogle() async {
+		// Trigger Google Sign-In flow
+		final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+		
+		if (googleUser == null) {
+			// User canceled the sign-in
+			throw FirebaseAuthException(
+				code: 'ERROR_ABORTED_BY_USER',
+				message: 'Sign in aborted by user',
+			);
+		}
+
+		// Obtain auth details from request
+		final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+		// Create a new credential
+		final credential = GoogleAuthProvider.credential(
+			accessToken: googleAuth.accessToken,
+			idToken: googleAuth.idToken,
+		);
+
+		// Sign in to Firebase with Google credential
+		final UserCredential userCredential = await _auth.signInWithCredential(credential);
+		final user = userCredential.user!;
+
+		// Check if user document exists, if not create it
+		final userDoc = await _firestore.collection(AppConstants.usersCollection).doc(user.uid).get();
+		
+		final model = userDoc.exists
+				? UserModel.fromFirestore(userDoc)
+				: await _createUserDoc(
+						user,
+						displayName: user.displayName ?? googleUser.displayName ?? googleUser.email.split('@').first,
+						photoURL: user.photoURL ?? googleUser.photoUrl,
+					);
+
+		return (user, model);
+	}
+
+	/// Google Sign-Out
+	/// 
+	/// Signs out from both Firebase and Google
+	Future<void> signOutGoogle() async {
+		await Future.wait([
+			_auth.signOut(),
+			_googleSignIn.signOut(),
+		]);
+	}
+
+	Future<UserModel> _createUserDoc(User user, {String? displayName, String? photoURL}) async {
 		final model = UserModel(
 			uid: user.uid,
 			email: user.email ?? '',
 			displayName: displayName ?? user.displayName ?? user.email?.split('@').first ?? 'Kullanıcı',
+			photoURL: photoURL ?? user.photoURL,
 			createdAt: DateTime.now(),
 			lastLoginAt: DateTime.now(),
 			trousseauIds: const [],

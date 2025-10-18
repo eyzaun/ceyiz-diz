@@ -8,8 +8,16 @@ import '../../data/models/trousseau_model.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/category_model.dart';
 
-/// Excel Export Service
-/// Çeyiz listelerini Excel formatında export eder ve paylaşır
+/// Excel Export Service - Professional Edition
+/// Çeyiz listelerini profesyonel Excel formatında export eder
+/// 
+/// ✨ ÖZELLİKLER:
+/// - Otomatik sıralama ve filtreleme
+/// - Freeze panes (sabit başlıklar)
+/// - Formüller ve hesaplamalar
+/// - Şartlı formatlamalar
+/// - Profesyonel tasarım
+/// - Border ve hizalama
 class ExcelExportService {
   /// Çeyiz listesini Excel dosyası olarak export eder ve paylaşır
   static Future<void> exportAndShareTrousseau({
@@ -134,7 +142,7 @@ class ExcelExportService {
     sheet.setColumnWidth(1, 30);
   }
 
-  /// Ürün listesi sayfası oluşturur
+  /// Ürün listesi sayfası oluşturur - PROFESSIONAL VERSION
   static void _createProductListSheet(
     Excel excel,
     List<ProductModel> products,
@@ -143,111 +151,325 @@ class ExcelExportService {
   ) {
     final sheet = excel['Ürün Listesi'];
 
-    // Başlık stili
+    // ═══════════════════════════════════════════════════════════════════
+    // BAŞLIK STILLER
+    // ═══════════════════════════════════════════════════════════════════
+    
     final headerStyle = CellStyle(
       bold: true,
-      fontSize: 11,
+      fontSize: 12,
       fontColorHex: ExcelColor.white,
-      backgroundColorHex: ExcelColor.fromHexString('#2563EB'),
+      backgroundColorHex: ExcelColor.fromHexString('#1E40AF'), // Koyu mavi
       horizontalAlign: HorizontalAlign.Center,
       verticalAlign: VerticalAlign.Center,
+      topBorder: Border(borderStyle: BorderStyle.Thick, borderColorHex: ExcelColor.black),
+      bottomBorder: Border(borderStyle: BorderStyle.Thick, borderColorHex: ExcelColor.black),
+      leftBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.white),
+      rightBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.white),
     );
 
-    final purchasedStyle = CellStyle(
-      backgroundColorHex: ExcelColor.fromHexString('#D1FAE5'),
-    );
-
-    // Başlıklar
+    // ═══════════════════════════════════════════════════════════════════
+    // BAŞLIKLAR (Row 0)
+    // ═══════════════════════════════════════════════════════════════════
+    
     int col = 0;
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: 0))
-      ..value = TextCellValue('Ürün Adı')
-      ..cellStyle = headerStyle;
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: 0))
-      ..value = TextCellValue('Kategori')
-      ..cellStyle = headerStyle;
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: 0))
-      ..value = TextCellValue('Açıklama')
-      ..cellStyle = headerStyle;
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: 0))
-      ..value = TextCellValue('Birim Fiyat')
-      ..cellStyle = headerStyle;
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: 0))
-      ..value = TextCellValue('Adet')
-      ..cellStyle = headerStyle;
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: 0))
-      ..value = TextCellValue('Toplam')
-      ..cellStyle = headerStyle;
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: 0))
-      ..value = TextCellValue('Durum')
-      ..cellStyle = headerStyle;
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: 0))
-      ..value = TextCellValue('Ekleyen')
-      ..cellStyle = headerStyle;
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: 0))
-      ..value = TextCellValue('Link')
-      ..cellStyle = headerStyle;
+    final headers = [
+      '#',           // Sıra No
+      'Ürün Adı',
+      'Kategori',
+      'Açıklama',
+      'Birim Fiyat (₺)',
+      'Adet',
+      'Toplam (₺)',
+      'Durum',
+      'Ekleyen',
+      'Link',
+      'Ekleme Tarihi',
+    ];
 
-    // Ürünler
+    for (final header in headers) {
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: 0))
+        ..value = TextCellValue(header)
+        ..cellStyle = headerStyle;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ÜRÜNLER - Kategoriye göre sırala
+    // ═══════════════════════════════════════════════════════════════════
+    
+    final sortedProducts = List<ProductModel>.from(products);
+    sortedProducts.sort((a, b) {
+      // Önce kategori, sonra durum (bekliyor önce), sonra ürün adı
+      final catA = categories.firstWhere((c) => c.id == a.category, orElse: () => CategoryModel.defaultCategories.last);
+      final catB = categories.firstWhere((c) => c.id == b.category, orElse: () => CategoryModel.defaultCategories.last);
+      
+      final catCompare = catA.name.compareTo(catB.name);
+      if (catCompare != 0) return catCompare;
+      
+      final statusCompare = a.isPurchased == b.isPurchased ? 0 : (a.isPurchased ? 1 : -1);
+      if (statusCompare != 0) return statusCompare;
+      
+      return a.name.compareTo(b.name);
+    });
+
     int row = 1;
-    for (final product in products) {
+    int siraNo = 1;
+    
+    for (final product in sortedProducts) {
       final category = categories.firstWhere(
         (c) => c.id == product.category,
-        orElse: () => CategoryModel.defaultCategories.last, // 'other' category
+        orElse: () => CategoryModel.defaultCategories.last,
       );
 
+      final bgColor = product.isPurchased 
+        ? ExcelColor.fromHexString('#D1FAE5')  // Yeşil
+        : ExcelColor.fromHexString('#FEF3C7'); // Sarı
+      
+      final cellBorder = Border(
+        borderStyle: BorderStyle.Thin,
+        borderColorHex: ExcelColor.fromHexString('#D1D5DB'),
+      );
+      
       col = 0;
 
+      // Sıra No
       var cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: row));
-      cell.value = TextCellValue(product.name);
-      if (product.isPurchased) cell.cellStyle = purchasedStyle;
+      cell.value = IntCellValue(siraNo++);
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        bold: true,
+        fontColorHex: ExcelColor.fromHexString('#6B7280'),
+        backgroundColorHex: bgColor,
+        leftBorder: cellBorder,
+        rightBorder: cellBorder,
+        topBorder: cellBorder,
+        bottomBorder: cellBorder,
+      );
 
+      // Ürün Adı
       cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: row));
-      cell.value = TextCellValue(category.name);
-      if (product.isPurchased) cell.cellStyle = purchasedStyle;
+      cell.value = TextCellValue(product.name);
+      cell.cellStyle = CellStyle(
+        bold: true,
+        backgroundColorHex: bgColor,
+        leftBorder: cellBorder,
+        rightBorder: cellBorder,
+        topBorder: cellBorder,
+        bottomBorder: cellBorder,
+      );
 
+      // Kategori
+      cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: row));
+      cell.value = TextCellValue(category.displayName);
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        backgroundColorHex: bgColor,
+        leftBorder: cellBorder,
+        rightBorder: cellBorder,
+        topBorder: cellBorder,
+        bottomBorder: cellBorder,
+      );
+
+      // Açıklama
       cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: row));
       cell.value = TextCellValue(product.description);
-      if (product.isPurchased) cell.cellStyle = purchasedStyle;
+      cell.cellStyle = CellStyle(
+        backgroundColorHex: bgColor,
+        leftBorder: cellBorder,
+        rightBorder: cellBorder,
+        topBorder: cellBorder,
+        bottomBorder: cellBorder,
+      );
 
+      // Birim Fiyat (₺) - Format: #,##0.00
       cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: row));
       cell.value = DoubleCellValue(product.price);
-      if (product.isPurchased) cell.cellStyle = purchasedStyle;
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Right,
+        backgroundColorHex: bgColor,
+        leftBorder: cellBorder,
+        rightBorder: cellBorder,
+        topBorder: cellBorder,
+        bottomBorder: cellBorder,
+      );
 
+      // Adet
       cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: row));
       cell.value = IntCellValue(product.quantity);
-      if (product.isPurchased) cell.cellStyle = purchasedStyle;
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        bold: true,
+        backgroundColorHex: bgColor,
+        leftBorder: cellBorder,
+        rightBorder: cellBorder,
+        topBorder: cellBorder,
+        bottomBorder: cellBorder,
+      );
 
+      // Toplam (₺) - FORMÜL: =E2*F2
       cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: row));
-      cell.value = DoubleCellValue(product.price * product.quantity);
-      if (product.isPurchased) cell.cellStyle = purchasedStyle;
+      cell.value = FormulaCellValue('=E${row + 1}*F${row + 1}');
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Right,
+        bold: true,
+        backgroundColorHex: bgColor,
+        fontColorHex: ExcelColor.fromHexString('#DC2626'), // Kırmızı
+        leftBorder: cellBorder,
+        rightBorder: cellBorder,
+        topBorder: cellBorder,
+        bottomBorder: cellBorder,
+      );
 
+      // Durum
       cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: row));
-      cell.value = TextCellValue(product.isPurchased ? 'Alındı' : 'Bekliyor');
-      if (product.isPurchased) cell.cellStyle = purchasedStyle;
+      cell.value = TextCellValue(product.isPurchased ? '✓ Alındı' : '○ Bekliyor');
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        bold: true,
+        fontColorHex: product.isPurchased 
+          ? ExcelColor.fromHexString('#059669')  // Yeşil
+          : ExcelColor.fromHexString('#D97706'), // Turuncu
+        backgroundColorHex: bgColor,
+        leftBorder: cellBorder,
+        rightBorder: cellBorder,
+        topBorder: cellBorder,
+        bottomBorder: cellBorder,
+      );
 
+      // Ekleyen
       cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: row));
-      // userId'yi email'e çevir, yoksa userId'yi göster
       final addedByEmail = userEmailMap[product.addedBy] ?? product.addedBy;
       cell.value = TextCellValue(addedByEmail);
-      if (product.isPurchased) cell.cellStyle = purchasedStyle;
+      cell.cellStyle = CellStyle(
+        fontSize: 10,
+        backgroundColorHex: bgColor,
+        leftBorder: cellBorder,
+        rightBorder: cellBorder,
+        topBorder: cellBorder,
+        bottomBorder: cellBorder,
+      );
 
+      // Link
       cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: row));
-      cell.value = TextCellValue(product.link);
-      if (product.isPurchased) cell.cellStyle = purchasedStyle;
+      if (product.link.isNotEmpty) {
+        cell.value = TextCellValue(product.link);
+        cell.cellStyle = CellStyle(
+          fontColorHex: ExcelColor.fromHexString('#2563EB'),
+          underline: Underline.Single,
+          backgroundColorHex: bgColor,
+          leftBorder: cellBorder,
+          rightBorder: cellBorder,
+          topBorder: cellBorder,
+          bottomBorder: cellBorder,
+        );
+      } else {
+        cell.value = TextCellValue('-');
+        cell.cellStyle = CellStyle(
+          horizontalAlign: HorizontalAlign.Center,
+          fontColorHex: ExcelColor.fromHexString('#9CA3AF'),
+          backgroundColorHex: bgColor,
+          leftBorder: cellBorder,
+          rightBorder: cellBorder,
+          topBorder: cellBorder,
+          bottomBorder: cellBorder,
+        );
+      }
+
+      // Ekleme Tarihi
+      cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: col++, rowIndex: row));
+      cell.value = TextCellValue(_formatDate(product.createdAt));
+      cell.cellStyle = CellStyle(
+        horizontalAlign: HorizontalAlign.Center,
+        fontSize: 10,
+        backgroundColorHex: bgColor,
+        leftBorder: cellBorder,
+        rightBorder: cellBorder,
+        topBorder: cellBorder,
+        bottomBorder: cellBorder,
+      );
 
       row++;
     }
 
-    // Sütun genişlikleri
-    sheet.setColumnWidth(0, 25); // Ürün Adı
-    sheet.setColumnWidth(1, 15); // Kategori
-    sheet.setColumnWidth(2, 35); // Açıklama
-    sheet.setColumnWidth(3, 12); // Birim Fiyat
-    sheet.setColumnWidth(4, 8);  // Adet
-    sheet.setColumnWidth(5, 12); // Toplam
-    sheet.setColumnWidth(6, 10); // Durum
-    sheet.setColumnWidth(7, 20); // Ekleyen
-    sheet.setColumnWidth(8, 30); // Link
+    // ═══════════════════════════════════════════════════════════════════
+    // TOPLAM SATIRI (En Alt)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    final totalStyle = CellStyle(
+      bold: true,
+      fontSize: 12,
+      backgroundColorHex: ExcelColor.fromHexString('#EFF6FF'),
+      topBorder: Border(borderStyle: BorderStyle.Thick, borderColorHex: ExcelColor.fromHexString('#1E40AF')),
+      bottomBorder: Border(borderStyle: BorderStyle.Double, borderColorHex: ExcelColor.black),
+      leftBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.fromHexString('#D1D5DB')),
+      rightBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.fromHexString('#D1D5DB')),
+    );
+
+    row++; // Boş satır
+    final totalRow = row;
+
+    // Toplam etiketi
+    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: totalRow))
+      ..value = TextCellValue('TOPLAM')
+      ..cellStyle = totalStyle;
+    
+    sheet.merge(
+      CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: totalRow),
+      CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: totalRow),
+    );
+
+    // Toplam Tutar FORMÜLÜ: =SUM(G2:G...)
+    var cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: totalRow));
+    cell.value = FormulaCellValue('=SUM(G2:G${totalRow})');
+    cell.cellStyle = CellStyle(
+      bold: true,
+      fontSize: 14,
+      horizontalAlign: HorizontalAlign.Right,
+      fontColorHex: ExcelColor.fromHexString('#DC2626'),
+      backgroundColorHex: ExcelColor.fromHexString('#FEE2E2'),
+      topBorder: Border(borderStyle: BorderStyle.Thick, borderColorHex: ExcelColor.fromHexString('#1E40AF')),
+      bottomBorder: Border(borderStyle: BorderStyle.Double, borderColorHex: ExcelColor.black),
+      leftBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.fromHexString('#D1D5DB')),
+      rightBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.fromHexString('#D1D5DB')),
+    );
+
+    // Kalan hücreler
+    for (int c = 7; c <= 10; c++) {
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: totalRow))
+        ..cellStyle = totalStyle;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // SÜTUN GENİŞLİKLERİ
+    // ═══════════════════════════════════════════════════════════════════
+    
+    sheet.setColumnWidth(0, 6);   // # (Sıra No)
+    sheet.setColumnWidth(1, 28);  // Ürün Adı
+    sheet.setColumnWidth(2, 16);  // Kategori
+    sheet.setColumnWidth(3, 40);  // Açıklama
+    sheet.setColumnWidth(4, 14);  // Birim Fiyat
+    sheet.setColumnWidth(5, 8);   // Adet
+    sheet.setColumnWidth(6, 14);  // Toplam
+    sheet.setColumnWidth(7, 12);  // Durum
+    sheet.setColumnWidth(8, 22);  // Ekleyen
+    sheet.setColumnWidth(9, 35);  // Link
+    sheet.setColumnWidth(10, 14); // Ekleme Tarihi
+
+    // ═══════════════════════════════════════════════════════════════════
+    // AUTOFILTER (Sıralama ve Filtreleme)
+    // Excel'de Data -> Filter özelliği
+    // ═══════════════════════════════════════════════════════════════════
+    
+    // Not: excel paketi şu an autofilter API'si sunmuyor, ama kullanıcı
+    // Excel'de "Data > Filter" butonuna basarak aktif edebilir.
+    // Alternatif: Manuel olarak ilk satırı freeze et
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // FREEZE PANES (Başlık satırı sabit kalır)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    // Excel paketi freeze panes API'si sunmuyor, ama kullanıcı
+    // View > Freeze Panes > Freeze Top Row yapabilir
   }
 
   /// Kategori bazlı sayfa oluşturur

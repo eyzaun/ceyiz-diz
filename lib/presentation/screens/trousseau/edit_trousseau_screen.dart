@@ -208,6 +208,8 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
 
     if (confirmed != true) return;
 
+    if (!mounted) return;
+    
     setState(() {
       _isLoading = true;
     });

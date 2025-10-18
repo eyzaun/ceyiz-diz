@@ -183,6 +183,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   icon: Icons.shopping_cart,
                   title: 'Harcanan',
                   value: '₺${totalSpent.toStringAsFixed(0)}',
+                  subtitle: totalBudget > 0 
+                    ? '%${((totalSpent / totalBudget) * 100).toStringAsFixed(0)} kullanıldı'
+                    : null,
                   color: theme.colorScheme.secondary,
                 ),
               ),
@@ -199,6 +202,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   icon: remainingBudget >= 0 ? Icons.savings : Icons.warning,
                   title: 'Kalan Bütçe',
                   value: '₺${remainingBudget.toStringAsFixed(0)}',
+                  subtitle: remainingBudget >= 0 
+                    ? 'Bütçe içinde'
+                    : '₺${(-remainingBudget).toStringAsFixed(0)} fazla',
                   color: remainingBudget >= 0 ? theme.colorScheme.tertiary : theme.colorScheme.error,
                 ),
               ),
@@ -208,10 +214,56 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   icon: Icons.calculate,
                   title: 'Planlanan Toplam',
                   value: '₺${totalPlanned.toStringAsFixed(0)}',
+                  subtitle: totalBudget > 0 
+                    ? '%${((totalPlanned / totalBudget) * 100).toStringAsFixed(0)} bütçeden'
+                    : null,
                   color: theme.colorScheme.tertiary,
                 ),
               ),
             ],
+          ),
+
+          AppSpacing.md.verticalSpace,
+
+          // Row 3: Ortalama Ürün Fiyatı + En Pahalı Ürün
+          Row(
+            children: [
+              Expanded(
+                child: AppStatCard(
+                  icon: Icons.attach_money,
+                  title: 'Ortalama Fiyat',
+                  value: totalProducts > 0 
+                    ? '₺${(totalPlanned / totalProducts).toStringAsFixed(0)}'
+                    : '₺0',
+                  subtitle: 'Ürün başına',
+                  color: Colors.orange,
+                ),
+              ),
+              AppSpacing.md.horizontalSpace,
+              Expanded(
+                child: AppStatCard(
+                  icon: Icons.arrow_upward,
+                  title: 'En Pahalı',
+                  value: _getMostExpensiveProduct(productProvider),
+                  subtitle: _getMostExpensiveProductName(productProvider),
+                  color: Colors.deepPurple,
+                ),
+              ),
+            ],
+          ),
+
+          AppSpacing.xl.verticalSpace,
+
+          // ═══════════════════════════════════════════════════════════════════
+          // BÜTÇE SAĞLIĞI KARTI
+          // ═══════════════════════════════════════════════════════════════════
+          _buildBudgetHealthCard(
+            context,
+            totalBudget,
+            totalSpent,
+            totalPlanned,
+            remainingBudget,
+            theme,
           ),
 
           AppSpacing.xl.verticalSpace,
@@ -293,6 +345,34 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           ),
 
           AppSpacing.xl.verticalSpace,
+
+          // ═══════════════════════════════════════════════════════════════════
+          // TAMAMLANMA TAHMİNİ KARTI
+          // ═══════════════════════════════════════════════════════════════════
+          if (totalProducts > 0 && purchasedProducts > 0) ...[
+            _buildCompletionEstimateCard(
+              context,
+              totalProducts,
+              purchasedProducts,
+              trousseau.createdAt,
+              theme,
+            ),
+            AppSpacing.xl.verticalSpace,
+          ],
+
+          // ═══════════════════════════════════════════════════════════════════
+          // KATEGORİ ANALİZİ - ÖNE ÇIKAN İSTATİSTİKLER
+          // ═══════════════════════════════════════════════════════════════════
+          if (categoryStats.isNotEmpty) ...[
+            _buildCategoryInsightsCard(
+              context,
+              categoryStats,
+              categoryProvider,
+              productProvider,
+              theme,
+            ),
+            AppSpacing.xl.verticalSpace,
+          ],
 
           // ═══════════════════════════════════════════════════════════════════
           // KAÇ SAAT ANALİZİ (eğer aktif ise)
@@ -838,6 +918,695 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // HELPER METHODS - PRODUCT STATS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  String _getMostExpensiveProduct(ProductProvider productProvider) {
+    final products = productProvider.products;
+    if (products.isEmpty) return '₺0';
+
+    final mostExpensive = products.reduce((a, b) => 
+      a.totalPrice > b.totalPrice ? a : b
+    );
+
+    return '₺${mostExpensive.totalPrice.toStringAsFixed(0)}';
+  }
+
+  String? _getMostExpensiveProductName(ProductProvider productProvider) {
+    final products = productProvider.products;
+    if (products.isEmpty) return null;
+
+    final mostExpensive = products.reduce((a, b) => 
+      a.totalPrice > b.totalPrice ? a : b
+    );
+
+    // Truncate long names
+    final name = mostExpensive.name;
+    return name.length > 15 ? '${name.substring(0, 15)}...' : name;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // COMPLETION ESTIMATE CARD
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildCompletionEstimateCard(
+    BuildContext context,
+    int totalProducts,
+    int purchasedProducts,
+    DateTime createdAt,
+    ThemeData theme,
+  ) {
+    final daysSinceCreation = DateTime.now().difference(createdAt).inDays;
+    
+    // Calculate average products per day
+    final avgProductsPerDay = daysSinceCreation > 0 
+      ? purchasedProducts / daysSinceCreation 
+      : 0.0;
+
+    // Estimate days to completion
+    final remainingProducts = totalProducts - purchasedProducts;
+    final estimatedDaysToComplete = avgProductsPerDay > 0 
+      ? (remainingProducts / avgProductsPerDay).ceil() 
+      : 0;
+
+    final completionDate = estimatedDaysToComplete > 0
+      ? DateTime.now().add(Duration(days: estimatedDaysToComplete))
+      : null;
+
+    // Calculate progress rate
+    String progressRating = '';
+    Color progressColor = theme.colorScheme.primary;
+
+    if (avgProductsPerDay >= 1.0) {
+      progressRating = 'Çok Hızlı';
+      progressColor = Colors.green;
+    } else if (avgProductsPerDay >= 0.5) {
+      progressRating = 'İyi';
+      progressColor = Colors.lightGreen;
+    } else if (avgProductsPerDay >= 0.2) {
+      progressRating = 'Orta';
+      progressColor = Colors.orange;
+    } else {
+      progressRating = 'Yavaş';
+      progressColor = Colors.deepOrange;
+    }
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Tamamlanma Tahmini',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: AppTypography.bold,
+                  fontSize: AppTypography.sizeLG,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: progressColor.withValues(alpha: 0.2),
+                  borderRadius: AppRadius.radiusXL,
+                ),
+                child: Text(
+                  progressRating,
+                  style: TextStyle(
+                    fontWeight: AppTypography.bold,
+                    color: progressColor,
+                    fontSize: AppTypography.sizeSM,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          AppSpacing.md.verticalSpace,
+
+          // Stats Row
+          Row(
+            children: [
+              Expanded(
+                child: _infoTile(
+                  context,
+                  Icons.calendar_today,
+                  'Başlangıç',
+                  '${daysSinceCreation} gün önce',
+                  theme,
+                ),
+              ),
+              AppSpacing.md.horizontalSpace,
+              Expanded(
+                child: _infoTile(
+                  context,
+                  Icons.speed,
+                  'Hız',
+                  '${avgProductsPerDay.toStringAsFixed(1)} ürün/gün',
+                  theme,
+                ),
+              ),
+            ],
+          ),
+
+          AppSpacing.md.verticalSpace,
+
+          Row(
+            children: [
+              Expanded(
+                child: _infoTile(
+                  context,
+                  Icons.hourglass_empty,
+                  'Kalan',
+                  '$remainingProducts ürün',
+                  theme,
+                ),
+              ),
+              AppSpacing.md.horizontalSpace,
+              Expanded(
+                child: _infoTile(
+                  context,
+                  Icons.event_available,
+                  'Tahmini Bitiş',
+                  completionDate != null
+                    ? '~${estimatedDaysToComplete} gün'
+                    : 'Hesaplanamadı',
+                  theme,
+                ),
+              ),
+            ],
+          ),
+
+          if (completionDate != null) ...[
+            AppSpacing.md.verticalSpace,
+            Container(
+              padding: AppSpacing.paddingMD,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                borderRadius: AppRadius.radiusMD,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.emoji_events,
+                    color: theme.colorScheme.primary,
+                    size: AppDimensions.iconSizeMedium,
+                  ),
+                  AppSpacing.sm.horizontalSpace,
+                  Expanded(
+                    child: Text(
+                      'Mevcut hızınızla çeyizinizi ~${_formatDate(completionDate)} civarında tamamlayabilirsiniz.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: AppTypography.sizeSM,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  Widget _infoTile(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+    ThemeData theme,
+  ) {
+    return Container(
+      padding: AppSpacing.paddingMD,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: AppRadius.radiusMD,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                size: AppDimensions.iconSizeSmall,
+                color: theme.colorScheme.primary,
+              ),
+              AppSpacing.xs.horizontalSpace,
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  fontSize: AppTypography.sizeXS,
+                ),
+              ),
+            ],
+          ),
+          AppSpacing.xs.verticalSpace,
+          Text(
+            value,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: AppTypography.bold,
+              fontSize: AppTypography.sizeSM,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY INSIGHTS CARD
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildCategoryInsightsCard(
+    BuildContext context,
+    Map<String, int> categoryStats,
+    CategoryProvider categoryProvider,
+    ProductProvider productProvider,
+    ThemeData theme,
+  ) {
+    // Find most/least products category
+    final entries = categoryStats.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    if (entries.isEmpty) return const SizedBox.shrink();
+
+    final mostProductsEntry = entries.first;
+    final leastProductsEntry = entries.last;
+
+    final allCats = categoryProvider.allCategories;
+
+    // Get category models
+    CategoryModel? mostCat;
+    CategoryModel? leastCat;
+
+    try {
+      mostCat = allCats.firstWhere((c) => c.id == mostProductsEntry.key);
+    } catch (_) {
+      mostCat = _deriveCategory(mostProductsEntry.key);
+    }
+
+    try {
+      leastCat = allCats.firstWhere((c) => c.id == leastProductsEntry.key);
+    } catch (_) {
+      leastCat = _deriveCategory(leastProductsEntry.key);
+    }
+
+    // Calculate spending per category
+    final mostCategorySpending = productProvider.products
+        .where((p) => p.category == mostProductsEntry.key && p.isPurchased)
+        .fold<double>(0, (sum, p) => sum + p.totalPrice);
+
+    final leastCategorySpending = productProvider.products
+        .where((p) => p.category == leastProductsEntry.key && p.isPurchased)
+        .fold<double>(0, (sum, p) => sum + p.totalPrice);
+
+    // Calculate average price per category
+    final avgMostCategory = mostProductsEntry.value > 0
+        ? mostCategorySpending / mostProductsEntry.value
+        : 0.0;
+
+    final avgLeastCategory = leastProductsEntry.value > 0
+        ? leastCategorySpending / leastProductsEntry.value
+        : 0.0;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Kategori Analizi',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: AppTypography.bold,
+                  fontSize: AppTypography.sizeLG,
+                ),
+              ),
+              Icon(
+                Icons.analytics,
+                color: theme.colorScheme.primary,
+                size: AppDimensions.iconSizeMedium,
+              ),
+            ],
+          ),
+
+          AppSpacing.md.verticalSpace,
+
+          // Most Products Category
+          Container(
+            padding: AppSpacing.paddingMD,
+            decoration: BoxDecoration(
+              color: mostCat.color.withValues(alpha: 0.1),
+              borderRadius: AppRadius.radiusMD,
+              border: Border.all(
+                color: mostCat.color.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: mostCat.color.withValues(alpha: 0.2),
+                    borderRadius: AppRadius.radiusSM,
+                  ),
+                  child: Icon(
+                    mostCat.icon,
+                    color: mostCat.color,
+                    size: AppDimensions.iconSizeMedium,
+                  ),
+                ),
+                AppSpacing.md.horizontalSpace,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '👑 En Çok Ürün',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          fontSize: AppTypography.sizeXS,
+                        ),
+                      ),
+                      AppSpacing.xs.verticalSpace,
+                      Text(
+                        mostCat.displayName,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: AppTypography.bold,
+                          fontSize: AppTypography.sizeBase,
+                        ),
+                      ),
+                      AppSpacing.xs.verticalSpace,
+                      Text(
+                        '${mostProductsEntry.value} ürün • Ort: ₺${avgMostCategory.toStringAsFixed(0)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: AppTypography.sizeXS,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  '₺${mostCategorySpending.toStringAsFixed(0)}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: AppTypography.bold,
+                    color: mostCat.color,
+                    fontSize: AppTypography.sizeMD,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          if (entries.length > 1) ...[
+            AppSpacing.md.verticalSpace,
+
+            // Least Products Category
+            Container(
+              padding: AppSpacing.paddingMD,
+              decoration: BoxDecoration(
+                color: leastCat.color.withValues(alpha: 0.1),
+                borderRadius: AppRadius.radiusMD,
+                border: Border.all(
+                  color: leastCat.color.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: leastCat.color.withValues(alpha: 0.2),
+                      borderRadius: AppRadius.radiusSM,
+                    ),
+                    child: Icon(
+                      leastCat.icon,
+                      color: leastCat.color,
+                      size: AppDimensions.iconSizeMedium,
+                    ),
+                  ),
+                  AppSpacing.md.horizontalSpace,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '📉 En Az Ürün',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                            fontSize: AppTypography.sizeXS,
+                          ),
+                        ),
+                        AppSpacing.xs.verticalSpace,
+                        Text(
+                          leastCat.displayName,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: AppTypography.bold,
+                            fontSize: AppTypography.sizeBase,
+                          ),
+                        ),
+                        AppSpacing.xs.verticalSpace,
+                        Text(
+                          '${leastProductsEntry.value} ürün • Ort: ₺${avgLeastCategory.toStringAsFixed(0)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface,
+                            fontSize: AppTypography.sizeXS,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    '₺${leastCategorySpending.toStringAsFixed(0)}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: AppTypography.bold,
+                      color: leastCat.color,
+                      fontSize: AppTypography.sizeMD,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          AppSpacing.md.verticalSpace,
+
+          // Summary
+          Container(
+            padding: AppSpacing.paddingMD,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+              borderRadius: AppRadius.radiusMD,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: theme.colorScheme.primary,
+                  size: AppDimensions.iconSizeSmall,
+                ),
+                AppSpacing.sm.horizontalSpace,
+                Expanded(
+                  child: Text(
+                    'Toplam ${entries.length} farklı kategoride ürününüz var.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTypography.sizeSM,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BUDGET HEALTH CARD
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildBudgetHealthCard(
+    BuildContext context,
+    double totalBudget,
+    double totalSpent,
+    double totalPlanned,
+    double remainingBudget,
+    ThemeData theme,
+  ) {
+    // Calculate health score (0-100)
+    int healthScore = 100;
+    String healthStatus = 'Mükemmel';
+    Color healthColor = Colors.green;
+    IconData healthIcon = Icons.sentiment_very_satisfied;
+    String healthMessage = 'Bütçenizi harika yönetiyorsunuz!';
+
+    if (totalBudget > 0) {
+      final spentPercent = (totalSpent / totalBudget) * 100;
+      final plannedPercent = (totalPlanned / totalBudget) * 100;
+
+      if (remainingBudget < 0) {
+        // Budget exceeded
+        healthScore = 0;
+        healthStatus = 'Kritik';
+        healthColor = theme.colorScheme.error;
+        healthIcon = Icons.sentiment_very_dissatisfied;
+        healthMessage = 'Bütçenizi aştınız! Harcamalarınızı gözden geçirin.';
+      } else if (plannedPercent > 100) {
+        // Planned exceeds budget
+        healthScore = 30;
+        healthStatus = 'Riskli';
+        healthColor = Colors.orange;
+        healthIcon = Icons.sentiment_dissatisfied;
+        healthMessage = 'Planlanan harcamalar bütçeyi aşıyor. Plan yapın.';
+      } else if (spentPercent > 80) {
+        // 80%+ spent
+        healthScore = 50;
+        healthStatus = 'Dikkatli Olun';
+        healthColor = Colors.orange.shade700;
+        healthIcon = Icons.sentiment_neutral;
+        healthMessage = 'Bütçenizin çoğunu harcadınız. Kontrollü ilerleyin.';
+      } else if (spentPercent > 60) {
+        // 60-80% spent
+        healthScore = 70;
+        healthStatus = 'İyi';
+        healthColor = Colors.lightGreen;
+        healthIcon = Icons.sentiment_satisfied;
+        healthMessage = 'İyi gidiyorsunuz! Harcamalarınızı kontrol altında tutun.';
+      } else {
+        // <60% spent
+        healthScore = 100;
+        healthStatus = 'Mükemmel';
+        healthColor = Colors.green;
+        healthIcon = Icons.sentiment_very_satisfied;
+        healthMessage = 'Bütçenizi harika yönetiyorsunuz!';
+      }
+    }
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Bütçe Sağlığı',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: AppTypography.bold,
+                  fontSize: AppTypography.sizeLG,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: healthColor.withValues(alpha: 0.2),
+                  borderRadius: AppRadius.radiusXL,
+                  border: Border.all(
+                    color: healthColor.withValues(alpha: 0.5),
+                    width: 2,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      healthIcon,
+                      color: healthColor,
+                      size: AppDimensions.iconSizeMedium,
+                    ),
+                    AppSpacing.xs.horizontalSpace,
+                    Text(
+                      healthStatus,
+                      style: TextStyle(
+                        fontWeight: AppTypography.bold,
+                        color: healthColor,
+                        fontSize: AppTypography.sizeBase,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          AppSpacing.md.verticalSpace,
+          
+          // Health Score Progress
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sağlık Skoru',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: AppTypography.sizeSM,
+                      ),
+                    ),
+                    AppSpacing.xs.verticalSpace,
+                    LinearProgressIndicator(
+                      value: healthScore / 100,
+                      minHeight: 12,
+                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                      color: healthColor,
+                      borderRadius: AppRadius.radiusSM,
+                    ),
+                  ],
+                ),
+              ),
+              AppSpacing.md.horizontalSpace,
+              Text(
+                '$healthScore/100',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: AppTypography.bold,
+                  color: healthColor,
+                  fontSize: AppTypography.sizeXL,
+                ),
+              ),
+            ],
+          ),
+
+          AppSpacing.md.verticalSpace,
+
+          // Health Message
+          Container(
+            padding: AppSpacing.paddingMD,
+            decoration: BoxDecoration(
+              color: healthColor.withValues(alpha: 0.1),
+              borderRadius: AppRadius.radiusMD,
+              border: Border.all(
+                color: healthColor.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  color: healthColor,
+                  size: AppDimensions.iconSizeMedium,
+                ),
+                AppSpacing.sm.horizontalSpace,
+                Expanded(
+                  child: Text(
+                    healthMessage,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: AppTypography.sizeSM,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // INFO DIALOG
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -848,20 +1617,37 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: AppRadius.radiusXL,
         ),
-        title: const Text('İstatistik Açıklaması'),
+        title: const Row(
+          children: [
+            Icon(Icons.info_outline, size: 28),
+            SizedBox(width: 12),
+            Text('İstatistik Rehberi'),
+          ],
+        ),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Toplam Bütçe: Çeyiziniz için belirlediğiniz toplam bütçe.\n\n'
-                'Harcanan: Satın aldığınız ürünlere harcadığınız toplam tutar.\n\n'
-                'Kalan Bütçe: Bütçenizden kalan miktar.\n\n'
-                'Planlanan Toplam: Tüm ürünlerin (alınan ve alınmayan) toplam maliyeti.\n\n'
-                'İlerleme: Satın aldığınız ürünlerin yüzdesi.\n\n'
-                'Kategori Dağılımı: Ürünlerinizin kategorilere göre dağılımı ve harcamaları.',
-                style: TextStyle(height: 1.5),
+                '📊 Genel Bakış\n\n'
+                '• Toplam Bütçe: Belirlediğiniz hedef bütçe\n'
+                '• Harcanan: Satın aldığınız ürünlerin toplamı\n'
+                '• Kalan Bütçe: Harcayabileceğiniz miktar\n'
+                '• Planlanan Toplam: Tüm ürünlerin maliyeti\n'
+                '• Ortalama Fiyat: Ürün başına düşen tutar\n'
+                '• En Pahalı: Listedeki en yüksek fiyatlı ürün\n\n'
+                '💚 Bütçe Sağlığı\n\n'
+                '• Mükemmel (100): %60\'tan az harcadınız\n'
+                '• İyi (70): %60-80 arası harcama\n'
+                '• Dikkatli (50): %80\'den fazla kullanıldı\n'
+                '• Riskli (30): Planlanan bütçeyi aşıyor\n'
+                '• Kritik (0): Bütçe aşıldı!\n\n'
+                '📅 Tamamlanma Tahmini\n\n'
+                'Mevcut alışveriş hızınıza göre çeyizinizi ne zaman tamamlayacağınızı tahmin eder.\n\n'
+                '🏆 Kategori Analizi\n\n'
+                'En çok/az ürüne sahip kategoriler, ortalama harcamalar ve kategori bazlı istatistikler.',
+                style: TextStyle(height: 1.5, fontSize: 14),
               ),
             ],
           ),

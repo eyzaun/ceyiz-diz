@@ -217,6 +217,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
     if (confirmed != true) return;
 
+    if (!mounted) return;
+    
     setState(() {
       _isLoading = true;
     });

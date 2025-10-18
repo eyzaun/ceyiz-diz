@@ -12,7 +12,28 @@
           "package_name": "com.Loncagames.ceyizdiz"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "95358046515-07elsnpdeh83ud6j2ghl01q24ukbmhud.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.Loncagames.ceyizdiz",
+            "certificate_hash": "336708eebb72176378514519d03973506ec75b54"
+          }
+        },
+        {
+          "client_id": "95358046515-ontj00rt00vvgjqlgaldd5vbijtejch8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.Loncagames.ceyizdiz",
+            "certificate_hash": "e15b158cbf9f0857209aa56c2677761d3865032a"
+          }
+        },
+        {
+          "client_id": "95358046515-uav630b45kfo7i9fpd58ruu7oc8tcju2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBaGgsR-55uTXyXcqJRxAUaO9r9zD5v42I"
@@ -20,7 +41,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "95358046515-uav630b45kfo7i9fpd58ruu7oc8tcju2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

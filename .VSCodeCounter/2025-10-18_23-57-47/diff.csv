@@ -1,0 +1,17 @@
+"filename", "language", "Properties", "XML", "Dart", "comment", "blank", "total"
+"e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\debug\AndroidManifest.xml", "XML", 0, -3, 0, -4, -1, -8
+"e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\AndroidManifest.xml", "XML", 0, -34, 0, -11, -1, -46
+"e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\res\drawable-v21\launch_background.xml", "XML", 0, -4, 0, -7, -2, -13
+"e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\res\drawable\launch_background.xml", "XML", 0, -4, 0, -7, -2, -13
+"e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\res\mipmap-anydpi-v26\ic_launcher.xml", "XML", 0, -5, 0, 0, -1, -6
+"e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\res\values-night\styles.xml", "XML", 0, -9, 0, -9, -1, -19
+"e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\res\values\colors.xml", "XML", 0, -4, 0, 0, 0, -4
+"e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\main\res\values\styles.xml", "XML", 0, -9, 0, -9, -1, -19
+"e:\web_project2\ceyiz_diz\android_backup_20251009\app\src\profile\AndroidManifest.xml", "XML", 0, -3, 0, -4, -1, -8
+"e:\web_project2\ceyiz_diz\android_backup_20251009\gradle.properties", "Properties", -3, 0, 0, 0, -1, -4
+"e:\web_project2\ceyiz_diz\android_backup_20251009\gradle\wrapper\gradle-wrapper.properties", "Properties", -5, 0, 0, 0, -1, -6
+"e:\web_project2\ceyiz_diz\lib\core\localization\locale_provider.dart", "Dart", 0, 0, 0, 0, -1, -1
+"e:\web_project2\ceyiz_diz\lib\presentation\providers\locale_provider.dart", "Dart", 0, 0, 0, 0, -1, -1
+"e:\web_project2\ceyiz_diz\lib\presentation\screens\settings\settings_screen_old.dart", "Dart", 0, 0, -381, -6, -21, -408
+"e:\web_project2\ceyiz_diz\lib\presentation\widgets\common\responsive_app_bar.dart", "Dart", 0, 0, 0, 0, -1, -1
+"Total", "-", -8, -75, -381, -57, -36, -557

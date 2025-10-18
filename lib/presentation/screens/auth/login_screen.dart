@@ -96,20 +96,20 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Email adresi gereklidir';
+      return '❌ E-posta adresi boş bırakılamaz';
     }
     if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
-      return 'Geçerli bir email adresi girin';
+      return '❌ Geçerli bir e-posta adresi girin (örn: ornek@email.com)';
     }
     return null;
   }
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Şifre gereklidir';
+      return '❌ Şifre boş bırakılamaz';
     }
     if (value.length < 6) {
-      return 'Şifre en az 6 karakter olmalı';
+      return '❌ Şifre en az 6 karakter olmalı';
     }
     return null;
   }
@@ -137,6 +137,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       // Error saving credentials
     }
 
+    if (!mounted) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     final success = await authProvider.signIn(
@@ -185,18 +186,81 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         );
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.errorMessage),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: AppRadius.radiusMD,
-            ),
-          ),
-        );
+        _showErrorSnackBar(authProvider.errorMessage);
       }
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GOOGLE SIGN-IN HANDLER
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Future<void> _handleGoogleSignIn() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    final success = await authProvider.signInWithGoogle();
+
+    if (!mounted) return;
+
+    if (success) {
+      if (!mounted) return;
+      context.go('/');
+    } else {
+      if (!mounted) return;
+      _showErrorSnackBar(authProvider.errorMessage);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ERROR SNACKBAR HELPER
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  void _showErrorSnackBar(String message) {
+    final theme = Theme.of(context);
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: Colors.white,
+              size: AppDimensions.iconSizeMedium,
+            ),
+            AppSpacing.sm.horizontalSpace,
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: AppTypography.sizeSM,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: theme.colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadius.radiusMD,
+        ),
+        duration: const Duration(seconds: 5),
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).size.height - 150,
+          left: AppSpacing.md,
+          right: AppSpacing.md,
+        ),
+        action: SnackBarAction(
+          label: 'Tamam',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -465,6 +529,41 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           icon: Icons.login,
                           isFullWidth: true,
                           onPressed: _handleLogin,
+                          isLoading: authProvider.status == AuthStatus.loading,
+                        ),
+
+                        AppSpacing.lg.verticalSpace,
+
+                        // ─────────────────────────────────────────────────────
+                        // DIVIDER - "veya" text
+                        // ─────────────────────────────────────────────────────
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                              child: Text(
+                                'veya',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+
+                        AppSpacing.lg.verticalSpace,
+
+                        // ─────────────────────────────────────────────────────
+                        // GOOGLE SIGN-IN BUTTON
+                        // Material 3 uyumlu, outlined style
+                        // ─────────────────────────────────────────────────────
+                        AppSecondaryButton(
+                          label: 'Google ile Giriş Yap',
+                          icon: Icons.g_mobiledata_rounded, // Google "G" icon
+                          isFullWidth: true,
+                          onPressed: _handleGoogleSignIn,
                           isLoading: authProvider.status == AuthStatus.loading,
                         ),
 
