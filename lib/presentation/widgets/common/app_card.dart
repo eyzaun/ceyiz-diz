@@ -15,6 +15,7 @@ import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/category_model.dart';
 import '../../../data/models/product_model.dart';
 import '../../../core/services/kac_saat_calculator.dart';
+import 'fullscreen_image_viewer.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// BASE CARD - Temel Kart Bileşeni
@@ -372,37 +373,53 @@ class AppProductCard extends StatelessWidget {
   }
 
   Widget _buildThumbnail(BuildContext context, List<String> images) {
-    return Container(
-      width: AppDimensions.cardImageSize,
-      height: AppDimensions.cardImageSize,
-      decoration: BoxDecoration(
-        color: category.color.withValues(alpha: 0.1),
-        borderRadius: AppRadius.radiusMD,
-      ),
-      child: images.isNotEmpty
-          ? ClipRRect(
-              borderRadius: AppRadius.radiusMD,
-              child: CachedNetworkImage(
-                imageUrl: images.first,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Center(
-                  child: CircularProgressIndicator(
-                    color: category.color,
-                    strokeWidth: 2,
+    final hasImages = images.isNotEmpty;
+
+    return GestureDetector(
+      onTap: hasImages
+          ? () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => FullscreenImageViewer(
+                    imageUrls: images,
+                    initialIndex: 0,
                   ),
                 ),
-                errorWidget: (context, url, error) => Icon(
-                  category.icon,
-                  color: category.color,
-                  size: AppDimensions.iconSizeLarge,
+              );
+            }
+          : null,
+      child: Container(
+        width: AppDimensions.cardImageSize,
+        height: AppDimensions.cardImageSize,
+        decoration: BoxDecoration(
+          color: category.color.withValues(alpha: 0.1),
+          borderRadius: AppRadius.radiusMD,
+        ),
+        child: hasImages
+            ? ClipRRect(
+                borderRadius: AppRadius.radiusMD,
+                child: CachedNetworkImage(
+                  imageUrl: images.first,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Center(
+                    child: CircularProgressIndicator(
+                      color: category.color,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Icon(
+                    category.icon,
+                    color: category.color,
+                    size: AppDimensions.iconSizeLarge,
+                  ),
                 ),
+              )
+            : Icon(
+                category.icon,
+                color: category.color,
+                size: AppDimensions.iconSizeLarge,
               ),
-            )
-          : Icon(
-              category.icon,
-              color: category.color,
-              size: AppDimensions.iconSizeLarge,
-            ),
+      ),
     );
   }
 

@@ -104,7 +104,7 @@ class AppDimensions {
 
   // CARD PROPERTIES
   static const double cardMinHeight = 64.0; // 80.0 -> 64.0
-  static const double cardImageSize = 56.0; // 64.0 -> 56.0 Product card thumbnails
+  static const double cardImageSize = 80.0; // 56.0 -> 80.0 Product card thumbnails (ürün fotoğrafları)
   static const double cardImageSizeLarge = 100.0; // 120.0 -> 100.0 Detail screens
 
   // FAB (Floating Action Button)

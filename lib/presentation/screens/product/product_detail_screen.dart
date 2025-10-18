@@ -21,6 +21,7 @@ import '../../providers/trousseau_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_card.dart';
+import '../../widgets/common/fullscreen_image_viewer.dart';
 import '../../../core/utils/currency_formatter.dart';
 
 class ProductDetailScreen extends StatelessWidget {
@@ -322,32 +323,47 @@ class ProductDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ─────────────────────────────────────────────────────
-            // BÖLÜM 1: GÖRSEL GALERI
+            // BÖLÜM 1: GÖRSEL GALERI (Tıklanabilir - Tam Ekran)
             // ─────────────────────────────────────────────────────
             if (product.images.isNotEmpty)
-              SizedBox(
-                height: 300,
-                child: PageView.builder(
-                  itemCount: product.images.length,
-                  itemBuilder: (context, index) {
-                    return CachedNetworkImage(
-                      imageUrl: product.images[index],
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Center(
-                        child: CircularProgressIndicator(
-                          color: category.color,
-                        ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => FullscreenImageViewer(
+                        imageUrls: product.images,
+                        initialIndex: 0,
                       ),
-                      errorWidget: (context, url, error) => Container(
-                        color: category.color.withValues(alpha: 0.1),
-                        child: Icon(
-                          category.icon,
-                          size: 64,
-                          color: category.color,
+                    ),
+                  );
+                },
+                child: SizedBox(
+                  height: 300,
+                  child: PageView.builder(
+                    itemCount: product.images.length,
+                    onPageChanged: (index) {
+                      // Sayfa değiştiğinde ilk indexi güncelle
+                    },
+                    itemBuilder: (context, index) {
+                      return CachedNetworkImage(
+                        imageUrl: product.images[index],
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Center(
+                          child: CircularProgressIndicator(
+                            color: category.color,
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                        errorWidget: (context, url, error) => Container(
+                          color: category.color.withValues(alpha: 0.1),
+                          child: Icon(
+                            category.icon,
+                            size: 64,
+                            color: category.color,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               )
             else
