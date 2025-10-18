@@ -1,3 +1,5 @@
+library;
+
 /// App Input - Tutarlı Form Input Bileşenleri
 ///
 /// FITTS YASASI: Minimum 56dp yükseklik (kolay dokunma)

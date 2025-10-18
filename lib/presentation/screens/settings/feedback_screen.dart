@@ -1,3 +1,5 @@
+library;
+
 /// Feedback Screen - Yeni Tasarım Sistemi v2.0
 ///
 /// TASARIM KURALLARI:

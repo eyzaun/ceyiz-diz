@@ -208,6 +208,8 @@ class ProductProvider extends ChangeNotifier {
     required String category,
     List<XFile>? imageFiles,
     String link = '',
+    String link2 = '',
+    String link3 = '',
     int quantity = 1,
   }) async {
     if (_authProvider?.currentUser == null) return false;
@@ -254,6 +256,8 @@ class ProductProvider extends ChangeNotifier {
         category: category,
         images: imageUrls,
         link: link,
+        link2: link2,
+        link3: link3,
         quantity: quantity,
         addedBy: userId,
         createdAt: DateTime.now(),
@@ -293,6 +297,8 @@ class ProductProvider extends ChangeNotifier {
     List<XFile>? newImageFiles,
     List<String>? existingImages,
     String? link,
+    String? link2,
+    String? link3,
     int? quantity,
     bool? isPurchased,
   }) async {
@@ -338,6 +344,8 @@ class ProductProvider extends ChangeNotifier {
       if (price != null) updates['price'] = price;
       if (category != null) updates['category'] = category;
       if (link != null) updates['link'] = link;
+      if (link2 != null) updates['link2'] = link2;
+      if (link3 != null) updates['link3'] = link3;
       if (quantity != null) updates['quantity'] = quantity;
       if (isPurchased != null) {
         updates['isPurchased'] = isPurchased;

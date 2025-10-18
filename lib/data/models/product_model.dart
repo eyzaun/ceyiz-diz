@@ -9,6 +9,8 @@ class ProductModel {
   final String category;
   final List<String> images;
   final String link;
+  final String link2;
+  final String link3;
   final bool isPurchased;
   final DateTime? purchaseDate;
   final String purchasedBy;
@@ -27,6 +29,8 @@ class ProductModel {
     required this.category,
     this.images = const [],
     this.link = '',
+    this.link2 = '',
+    this.link3 = '',
     this.isPurchased = false,
     this.purchaseDate,
     this.purchasedBy = '',
@@ -48,6 +52,8 @@ class ProductModel {
       category: data['category'] ?? 'other',
       images: List<String>.from(data['images'] ?? []),
       link: data['link'] ?? '',
+      link2: data['link2'] ?? '',
+      link3: data['link3'] ?? '',
       isPurchased: data['isPurchased'] ?? false,
       purchaseDate: data['purchaseDate'] != null
           ? (data['purchaseDate'] as Timestamp).toDate()
@@ -70,6 +76,8 @@ class ProductModel {
       'category': category,
       'images': images,
       'link': link,
+      'link2': link2,
+      'link3': link3,
       'isPurchased': isPurchased,
       'purchaseDate': purchaseDate != null
           ? Timestamp.fromDate(purchaseDate!)
@@ -92,6 +100,8 @@ class ProductModel {
     String? category,
     List<String>? images,
     String? link,
+    String? link2,
+    String? link3,
     bool? isPurchased,
     DateTime? purchaseDate,
     String? purchasedBy,
@@ -110,6 +120,8 @@ class ProductModel {
       category: category ?? this.category,
       images: images ?? this.images,
       link: link ?? this.link,
+      link2: link2 ?? this.link2,
+      link3: link3 ?? this.link3,
       isPurchased: isPurchased ?? this.isPurchased,
       purchaseDate: purchaseDate ?? this.purchaseDate,
       purchasedBy: purchasedBy ?? this.purchasedBy,

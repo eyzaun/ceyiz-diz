@@ -9,6 +9,7 @@ import 'firebase_options.dart';
 import 'core/themes/theme_provider.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'presentation/providers/auth_provider.dart';
+import 'presentation/providers/onboarding_provider.dart';
 import 'presentation/providers/trousseau_provider.dart';
 import 'presentation/providers/product_provider.dart';
 import 'presentation/providers/category_provider.dart';
@@ -108,6 +109,9 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (_) => ThemeProvider(prefs),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => OnboardingProvider(),
         ),
         ChangeNotifierProvider(
           create: (_) => AuthProvider(),

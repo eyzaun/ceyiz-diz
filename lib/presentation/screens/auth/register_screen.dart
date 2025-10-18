@@ -1,3 +1,5 @@
+library;
+
 /// Register Screen - Yeni Tasarım Sistemi v2.0
 ///
 /// TASARIM KURALLARI:
@@ -142,7 +144,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     if (!mounted) return;
 
     if (success) {
-      context.go('/');
+      final encodedEmail = Uri.encodeComponent(_emailController.text.trim());
+      context.go('/verify-email/$encodedEmail');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

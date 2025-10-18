@@ -1,3 +1,5 @@
+library;
+
 /// Edit Product Screen - Yeni Tasarım Sistemi v2.0
 ///
 /// TASARIM KURALLARI:
@@ -42,6 +44,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
   late TextEditingController _descriptionController;
   late TextEditingController _priceController;
   late TextEditingController _linkController;
+  late TextEditingController _link2Controller;
+  late TextEditingController _link3Controller;
   late TextEditingController _quantityController;
 
   String _selectedCategory = 'other';
@@ -61,6 +65,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
       _descriptionController = TextEditingController(text: product.description);
       _priceController = TextEditingController(text: CurrencyFormatter.format(product.price));
       _linkController = TextEditingController(text: product.link);
+      _link2Controller = TextEditingController(text: product.link2);
+      _link3Controller = TextEditingController(text: product.link3);
       _quantityController = TextEditingController(text: product.quantity.toString());
       _selectedCategory = product.category;
       _existingImages = product.images;
@@ -70,6 +76,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
       _descriptionController = TextEditingController();
       _priceController = TextEditingController();
       _linkController = TextEditingController();
+      _link2Controller = TextEditingController();
+      _link3Controller = TextEditingController();
       _quantityController = TextEditingController();
     }
   }
@@ -80,6 +88,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
     _descriptionController.dispose();
     _priceController.dispose();
     _linkController.dispose();
+    _link2Controller.dispose();
+    _link3Controller.dispose();
     _quantityController.dispose();
     super.dispose();
   }
@@ -137,7 +147,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
       category: _selectedCategory,
       newImageFiles: _selectedImages,
       existingImages: _existingImages,
-      link: _linkController.text,
+      link: _linkController.text.trim(),
+      link2: _link2Controller.text.trim(),
+      link3: _link3Controller.text.trim(),
       quantity: int.parse(_quantityController.text),
       isPurchased: _isPurchased,
     );
@@ -615,8 +627,26 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
                         // Product Link
                         AppTextInput(
-                          label: 'Ürün Linki',
+                          label: 'Ürün Linki 1',
                           controller: _linkController,
+                          keyboardType: TextInputType.url,
+                          textInputAction: TextInputAction.next,
+                          prefixIcon: const Icon(Icons.link),
+                        ),
+
+                        // Product Link 2
+                        AppTextInput(
+                          label: 'Ürün Linki 2',
+                          controller: _link2Controller,
+                          keyboardType: TextInputType.url,
+                          textInputAction: TextInputAction.next,
+                          prefixIcon: const Icon(Icons.link),
+                        ),
+
+                        // Product Link 3
+                        AppTextInput(
+                          label: 'Ürün Linki 3',
+                          controller: _link3Controller,
                           keyboardType: TextInputType.url,
                           textInputAction: TextInputAction.done,
                           prefixIcon: const Icon(Icons.link),

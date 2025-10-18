@@ -1,3 +1,5 @@
+library;
+
 /// Create Trousseau Screen - Yeni Tasarım Sistemi v2.0
 ///
 /// TASARIM KURALLARI:

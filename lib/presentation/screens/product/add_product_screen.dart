@@ -1,3 +1,5 @@
+library;
+
 /// Add Product Screen - Yeni Tasarım Sistemi v2.0
 ///
 /// TASARIM KURALLARI:
@@ -40,6 +42,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _linkController = TextEditingController();
+  final _link2Controller = TextEditingController();
+  final _link3Controller = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
 
   String _selectedCategory = 'other';
@@ -52,6 +56,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
     _descriptionController.dispose();
     _priceController.dispose();
     _linkController.dispose();
+    _link2Controller.dispose();
+    _link3Controller.dispose();
     _quantityController.dispose();
     super.dispose();
   }
@@ -106,7 +112,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
       price: CurrencyFormatter.parse(_priceController.text.trim()) ?? 0.0,
       category: _selectedCategory,
       imageFiles: _selectedImages,
-      link: _linkController.text,
+      link: _linkController.text.trim(),
+      link2: _link2Controller.text.trim(),
+      link3: _link3Controller.text.trim(),
       quantity: int.parse(_quantityController.text),
     );
 
@@ -429,9 +437,29 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
                         // Product Link
                         AppTextInput(
-                          label: 'Ürün Linki',
+                          label: 'Ürün Linki 1',
                           hint: 'https://...',
                           controller: _linkController,
+                          keyboardType: TextInputType.url,
+                          textInputAction: TextInputAction.next,
+                          prefixIcon: const Icon(Icons.link),
+                        ),
+
+                        // Product Link 2
+                        AppTextInput(
+                          label: 'Ürün Linki 2',
+                          hint: 'https://...',
+                          controller: _link2Controller,
+                          keyboardType: TextInputType.url,
+                          textInputAction: TextInputAction.next,
+                          prefixIcon: const Icon(Icons.link),
+                        ),
+
+                        // Product Link 3
+                        AppTextInput(
+                          label: 'Ürün Linki 3',
+                          hint: 'https://...',
+                          controller: _link3Controller,
                           keyboardType: TextInputType.url,
                           textInputAction: TextInputAction.done,
                           prefixIcon: const Icon(Icons.link),

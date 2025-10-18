@@ -1,3 +1,5 @@
+library;
+
 /// Product Detail Screen - Yeni Tasarım Sistemi v2.0
 ///
 /// TASARIM KURALLARI:
@@ -12,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/trousseau_provider.dart';
@@ -35,6 +38,41 @@ class ProductDetailScreen extends StatelessWidget {
     if (trimmed.isEmpty) return trimmed;
     final hasScheme = RegExp(r'^[a-zA-Z][a-zA-Z0-9+.-]*://').hasMatch(trimmed);
     return hasScheme ? trimmed : 'https://$trimmed';
+  }
+
+  Future<void> _openLink(BuildContext context, String link) async {
+    try {
+      final normalized = _normalizeUrl(link);
+      if (normalized.isEmpty) return;
+      final uri = Uri.parse(normalized);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Link açılamadı'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusMD,
+            ),
+          ),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Geçersiz link'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusMD,
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Future<String?> _selectTargetTrousseau(
@@ -149,45 +187,34 @@ class ProductDetailScreen extends StatelessWidget {
                 ),
               ),
 
-              // Open Link Option
+              // Open Link Options
               if (product.link.isNotEmpty)
                 ListTile(
                   leading: const Icon(Icons.open_in_new),
-                  title: const Text('Ürün Linkini Aç'),
+                  title: const Text('Ürün Linki 1\'i Aç'),
                   onTap: () async {
                     Navigator.pop(ctx);
-                    try {
-                      final normalized = _normalizeUrl(product.link);
-                      if (normalized.isEmpty) return;
-                      final uri = Uri.parse(normalized);
-                      final launched = await launchUrl(
-                        uri,
-                        mode: LaunchMode.externalApplication,
-                      );
-                      if (!launched && context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Link açılamadı'),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppRadius.radiusMD,
-                            ),
-                          ),
-                        );
-                      }
-                    } catch (_) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Geçersiz link'),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppRadius.radiusMD,
-                            ),
-                          ),
-                        );
-                      }
-                    }
+                    await _openLink(context, product.link);
+                  },
+                ),
+
+              if (product.link2.isNotEmpty)
+                ListTile(
+                  leading: const Icon(Icons.open_in_new),
+                  title: const Text('Ürün Linki 2\'yi Aç'),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await _openLink(context, product.link2);
+                  },
+                ),
+
+              if (product.link3.isNotEmpty)
+                ListTile(
+                  leading: const Icon(Icons.open_in_new),
+                  title: const Text('Ürün Linki 3\'ü Aç'),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await _openLink(context, product.link3);
                   },
                 ),
 
@@ -426,22 +453,43 @@ class ProductDetailScreen extends StatelessWidget {
                   // Ekleyen Bilgisi (Added By)
                   if (product.addedBy.isNotEmpty) ...[
                     AppSpacing.sm.verticalSpace,
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.person_outline,
-                          size: 14,
-                          color: theme.colorScheme.outline,
-                        ),
-                        AppSpacing.xs.horizontalSpace,
-                        Text(
-                          'Ekleyen: ${product.addedBy}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.outline,
-                            fontSize: AppTypography.sizeXS,
-                          ),
-                        ),
-                      ],
+                    StreamBuilder<DocumentSnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(product.addedBy)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        String displayText = 'Ekleyen: Yükleniyor...';
+
+                        if (snapshot.hasData && snapshot.data?.exists == true) {
+                          final userData = snapshot.data!.data() as Map<String, dynamic>?;
+                          final email = userData?['email'] ?? product.addedBy;
+                          displayText = 'Ekleyen: $email';
+                        } else if (snapshot.hasError) {
+                          displayText = 'Ekleyen: ${product.addedBy}';
+                        }
+
+                        return Row(
+                          children: [
+                            Icon(
+                              Icons.person_outline,
+                              size: 14,
+                              color: theme.colorScheme.outline,
+                            ),
+                            AppSpacing.xs.horizontalSpace,
+                            Expanded(
+                              child: Text(
+                                displayText,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.outline,
+                                  fontSize: AppTypography.sizeXS,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
 

@@ -1,3 +1,5 @@
+library;
+
 /// Product List Screen - Yeni Tasarım Sistemi v2.0
 ///
 /// TASARIM KURALLARI:
@@ -12,6 +14,7 @@ import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../providers/category_provider.dart';
@@ -274,6 +277,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
     final trousseau = trousseauProvider.getTrousseauById(widget.trousseauId);
     final categoryProvider = Provider.of<CategoryProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
+
+    // Kaç Saat ayarını kontrol et
+    final showKacSaat = authProvider.currentUser?.kacSaatSettings?.enabled ?? false;
+    final kacSaatSettings = authProvider.currentUser?.kacSaatSettings;
 
     if (trousseau == null) {
       return Scaffold(
@@ -549,6 +557,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                         product: product,
                                         category: category,
                                         canEdit: canEdit,
+                                        showKacSaat: showKacSaat,
+                                        kacSaatSettings: kacSaatSettings,
                                         onTap: () => context.push(
                                           '/trousseau/${widget.trousseauId}/products/${product.id}',
                                         ),
@@ -561,6 +571,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                       product: product,
                                       category: category,
                                       canEdit: false,
+                                      showKacSaat: showKacSaat,
+                                      kacSaatSettings: kacSaatSettings,
                                       onTap: () => context.push(
                                         '/trousseau/${widget.trousseauId}/products/${product.id}',
                                       ),

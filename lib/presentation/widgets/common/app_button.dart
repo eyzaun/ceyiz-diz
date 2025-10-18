@@ -1,3 +1,5 @@
+library;
+
 /// App Button - Tasarım Kurallarına Uyumlu Buton Sistemi
 ///
 /// FITTS YASASI: Her buton minimum 48dp touch area

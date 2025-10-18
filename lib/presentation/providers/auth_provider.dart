@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/category_repository.dart';
+import '../../core/services/kac_saat_calculator.dart';
 
 enum AuthStatus {
   uninitialized,
@@ -94,6 +95,7 @@ class AuthProvider extends ChangeNotifier {
         uid: _firebaseUser!.uid,
         email: _firebaseUser!.email ?? '',
         displayName: _firebaseUser!.displayName ?? _firebaseUser!.email?.split('@')[0] ?? 'Kullanıcı',
+        photoURL: _firebaseUser!.photoURL,
         createdAt: DateTime.now(),
         lastLoginAt: DateTime.now(),
         trousseauIds: [],
@@ -197,8 +199,17 @@ class AuthProvider extends ChangeNotifier {
         email: email.trim(),
         password: password,
       );
-      
+
       if (result.user != null) {
+        // Check if email is verified
+        if (!result.user!.emailVerified) {
+          _errorMessage = 'email-not-verified';
+          await _auth.signOut();
+          _status = AuthStatus.unauthenticated;
+          notifyListeners();
+          return false;
+        }
+
         _firebaseUser = result.user;
         await _loadUserData(result.user!.uid);
         _status = AuthStatus.authenticated;
@@ -262,26 +273,33 @@ class AuthProvider extends ChangeNotifier {
       
       if (result.user != null) {
         await result.user!.updateDisplayName(displayName);
+
+        // Send email verification
+        await result.user!.sendEmailVerification();
+
         _firebaseUser = result.user;
-        
+
         final userModel = UserModel(
           uid: result.user!.uid,
           email: email.trim(),
           displayName: displayName,
+          photoURL: result.user!.photoURL,
           createdAt: DateTime.now(),
           lastLoginAt: DateTime.now(),
           trousseauIds: [],
           sharedTrousseauIds: [],
           pinnedSharedTrousseauIds: [],
         );
-        
+
         await _firestore
             .collection('users')
             .doc(result.user!.uid)
-        .set(userModel.toFirestore());
-        
+            .set(userModel.toFirestore());
+
         _currentUser = userModel;
-        _status = AuthStatus.authenticated;
+
+        // Keep user logged in but mark as unauthenticated for navigation
+        _status = AuthStatus.unauthenticated;
         notifyListeners();
         return true;
       }
@@ -392,6 +410,7 @@ class AuthProvider extends ChangeNotifier {
         
         _currentUser = _currentUser!.copyWith(
           displayName: displayName ?? _currentUser!.displayName,
+          photoURL: photoURL ?? _currentUser!.photoURL,
         );
         
         notifyListeners();
@@ -533,4 +552,93 @@ class AuthProvider extends ChangeNotifier {
     _currentUser = updatedUser;
     notifyListeners();
   }
+
+  Future<bool> updateKacSaatSettings(KacSaatSettings settings) async {
+    if (_currentUser == null) return false;
+
+    try {
+      _errorMessage = '';
+
+      await _firestore
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .update({
+        'kacSaatSettings': settings.toJson(),
+      });
+
+      _currentUser = _currentUser!.copyWith(
+        kacSaatSettings: settings,
+      );
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Kaç Saat ayarları güncellenemedi: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Email verification methods
+  Future<bool> sendEmailVerification() async {
+    try {
+      _errorMessage = '';
+
+      if (_firebaseUser == null) {
+        _errorMessage = 'Kullanıcı oturumu bulunamadı.';
+        notifyListeners();
+        return false;
+      }
+
+      if (_firebaseUser!.emailVerified) {
+        _errorMessage = 'E-posta adresi zaten doğrulanmış.';
+        notifyListeners();
+        return false;
+      }
+
+      debugPrint('Sending verification email to: ${_firebaseUser!.email}');
+      await _firebaseUser!.sendEmailVerification();
+      debugPrint('Verification email sent successfully');
+      return true;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Firebase Auth Error: ${e.code} - ${e.message}');
+
+      switch (e.code) {
+        case 'too-many-requests':
+          _errorMessage = 'Çok fazla istek gönderildi. Lütfen birkaç dakika bekleyin.';
+          break;
+        case 'user-disabled':
+          _errorMessage = 'Bu kullanıcı hesabı devre dışı bırakılmış.';
+          break;
+        case 'network-request-failed':
+          _errorMessage = 'İnternet bağlantınızı kontrol edin.';
+          break;
+        default:
+          _errorMessage = 'Doğrulama e-postası gönderilemedi: ${e.message}';
+      }
+      notifyListeners();
+      return false;
+    } catch (e) {
+      debugPrint('Unknown error sending verification email: $e');
+      _errorMessage = 'Doğrulama e-postası gönderilemedi: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> checkEmailVerified() async {
+    try {
+      if (_firebaseUser == null) return false;
+
+      await _firebaseUser!.reload();
+      _firebaseUser = _auth.currentUser;
+
+      return _firebaseUser?.emailVerified ?? false;
+    } catch (e) {
+      debugPrint('Email verification check failed: $e');
+      return false;
+    }
+  }
+
+  bool get isEmailVerified => _firebaseUser?.emailVerified ?? false;
 }

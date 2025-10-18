@@ -1,3 +1,5 @@
+library;
+
 import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
@@ -17,78 +19,46 @@ class ExcelExportService {
     Map<String, String> userEmailMap = const {}, // userId -> email mapping
   }) async {
     try {
-      print('🔷 Excel export başlıyor...');
-      print('📊 Trousseau: ${trousseau.name}');
-      print('📦 Ürün sayısı: ${products.length}');
-      print('🏷️ Kategori sayısı: ${categories.length}');
-
       // Excel dosyası oluştur
-      print('📝 Excel oluşturuluyor...');
       final excel = Excel.createExcel();
 
       // ÖNEMLI: Ürün Listesi'ni ilk sayfa olarak oluştur (böylece Sheet1 otomatik silinir)
       // Ürün Listesi Sayfası - 1. SAYFA
-      print('📄 Ürün listesi sayfası oluşturuluyor...');
       _createProductListSheet(excel, products, categories, userEmailMap);
-      print('✅ Ürün listesi sayfası oluşturuldu');
 
       // Varsayılan Sheet1'i sil
       if (excel.sheets.keys.contains('Sheet1')) {
         excel.delete('Sheet1');
-        print('✅ Varsayılan sheet silindi');
       }
 
       // Çeyiz Özet Sayfası - 2. SAYFA
-      print('📄 Özet sayfası oluşturuluyor...');
       _createSummarySheet(excel, trousseau, products);
-      print('✅ Özet sayfası oluşturuldu');
 
       // Kategori Bazlı Sayfa - 3. SAYFA
-      print('📄 Kategori sayfası oluşturuluyor...');
       _createCategorySheet(excel, products, categories);
-      print('✅ Kategori sayfası oluşturuldu');
 
       // İstatistik Sayfası - 4. SAYFA
-      print('📄 İstatistik sayfası oluşturuluyor...');
       _createStatisticsSheet(excel, products, categories);
-      print('✅ İstatistik sayfası oluşturuldu');
 
       // Dosyayı kaydet
-      print('💾 Dosya kaydediliyor...');
       final directory = await getTemporaryDirectory();
-      print('📂 Temp dizini: ${directory.path}');
       final filePath = '${directory.path}/${_sanitizeFileName(trousseau.name)}_ceyiz_listesi.xlsx';
-      print('📁 Dosya yolu: $filePath');
       final file = File(filePath);
 
       // Excel'i byte array'e çevir ve kaydet
-      print('🔄 Excel encode ediliyor...');
       final bytes = excel.encode();
-      print('📦 Byte sayısı: ${bytes?.length ?? 0}');
 
       if (bytes != null) {
-        print('💾 Dosyaya yazılıyor...');
         await file.writeAsBytes(bytes);
-        print('✅ Dosya yazıldı');
-
-        final fileExists = await file.exists();
-        final fileSize = await file.length();
-        print('📊 Dosya var mı: $fileExists, Boyut: $fileSize bytes');
 
         // Dosyayı paylaş
-        print('📤 Share dialog açılıyor...');
-        final result = await Share.shareXFiles(
+        await Share.shareXFiles(
           [XFile(filePath)],
           text: '${trousseau.name} - Çeyiz Listesi',
           subject: 'Çeyiz Listesi - ${trousseau.name}',
         );
-        print('✅ Share tamamlandı: ${result.status}');
-      } else {
-        print('❌ Excel encode başarısız, bytes null');
       }
-    } catch (e, stackTrace) {
-      print('❌ HATA: $e');
-      print('📍 Stack trace: $stackTrace');
+    } catch (e) {
       rethrow;
     }
   }

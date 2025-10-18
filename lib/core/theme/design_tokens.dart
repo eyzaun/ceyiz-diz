@@ -1,3 +1,5 @@
+library;
+
 /// Design Tokens - Universal Design System
 ///
 /// Bu dosya, uygulamanın tüm tasarım kurallarını içerir.

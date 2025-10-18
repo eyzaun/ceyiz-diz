@@ -1,3 +1,5 @@
+library;
+
 /// Home Screen - Yeni Tasarım Sistemi v2.0
 ///
 /// TASARIM KURALLARI:
@@ -17,6 +19,7 @@ import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/app_button.dart';
 import 'statistics_screen.dart';
 import '../trousseau/trousseau_detail_screen.dart';
+import '../settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -56,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _buildTrousseauTab(context),
           const StatisticsScreen(),
-          _buildProfile(context),
+          const SettingsScreen(),
         ],
       ),
       // ═════════════════════════════════════════════════════════════════════
@@ -65,65 +68,54 @@ class _HomeScreenState extends State<HomeScreen> {
       // HICK YASASI: Max 3 sekme (kolay seçim)
       // FITTS YASASI: 72dp height, 28dp icons (kolay dokunma)
       // ═════════════════════════════════════════════════════════════════════
-      bottomNavigationBar: Container(
-        height: AppDimensions.bottomNavHeight,
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-              width: 1,
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        selectedFontSize: AppTypography.sizeSM,
+        unselectedFontSize: AppTypography.sizeXS,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.inventory_2_outlined,
+              size: AppDimensions.bottomNavIconSize,
             ),
+            activeIcon: Icon(
+              Icons.inventory_2,
+              size: AppDimensions.bottomNavIconSize,
+            ),
+            label: 'Çeyiz',
           ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-          selectedFontSize: AppTypography.sizeSM,
-          unselectedFontSize: AppTypography.sizeXS,
-          selectedItemColor: Theme.of(context).colorScheme.primary,
-          unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
-          type: BottomNavigationBarType.fixed,
-          elevation: 0,
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.inventory_2_outlined,
-                size: AppDimensions.bottomNavIconSize,
-              ),
-              activeIcon: Icon(
-                Icons.inventory_2,
-                size: AppDimensions.bottomNavIconSize,
-              ),
-              label: 'Çeyiz',
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.analytics_outlined,
+              size: AppDimensions.bottomNavIconSize,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.analytics_outlined,
-                size: AppDimensions.bottomNavIconSize,
-              ),
-              activeIcon: Icon(
-                Icons.analytics,
-                size: AppDimensions.bottomNavIconSize,
-              ),
-              label: 'İstatistikler',
+            activeIcon: Icon(
+              Icons.analytics,
+              size: AppDimensions.bottomNavIconSize,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.person_outline,
-                size: AppDimensions.bottomNavIconSize,
-              ),
-              activeIcon: Icon(
-                Icons.person,
-                size: AppDimensions.bottomNavIconSize,
-              ),
-              label: 'Profil',
+            label: 'İstatistikler',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.settings_outlined,
+              size: AppDimensions.bottomNavIconSize,
             ),
-          ],
-        ),
+            activeIcon: Icon(
+              Icons.settings,
+              size: AppDimensions.bottomNavIconSize,
+            ),
+            label: 'Ayarlar',
+          ),
+        ],
       ),
     );
   }
@@ -192,231 +184,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return TrousseauDetailScreen(trousseauId: id, key: ValueKey(id));
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PROFILE TAB
-  // MILLER YASASI: Liste 3 gruba bölünmüş (Çeyiz, Hesap, Sistem)
-  // GESTALT: İlgili öğeler gruplanmış (Divider ile ayrılmış)
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _buildProfile(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profil'),
-        actions: [
-          // FITTS YASASI: Settings icon button 48x48 touch area
-          AppIconButton(
-            icon: Icons.settings,
-            tooltip: 'Ayarlar',
-            onPressed: () => context.push('/settings'),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: AppSpacing.screenPadding,
-        children: [
-          // ───────────────────────────────────────────────────────────────────
-          // PROFILE HEADER
-          // Gestalt: Yakınlık - Avatar + Name + Email gruplanmış
-          // ───────────────────────────────────────────────────────────────────
-          Center(
-            child: Column(
-              children: [
-                // Avatar
-                CircleAvatar(
-                  radius: 50,
-                  backgroundColor: theme.colorScheme.primaryContainer,
-                  child: Text(
-                    (authProvider.currentUser?.displayName ?? 'K')
-                        .substring(0, 1)
-                        .toUpperCase(),
-                    style: TextStyle(
-                      fontSize: AppTypography.size4XL,
-                      fontWeight: AppTypography.bold,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ),
-
-                AppSpacing.md.verticalSpace,
-
-                // Name
-                Text(
-                  authProvider.currentUser?.displayName ?? 'Kullanıcı',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: AppTypography.bold,
-                    fontSize: AppTypography.sizeXL,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                AppSpacing.xs.verticalSpace,
-
-                // Email
-                Text(
-                  authProvider.currentUser?.email ?? '',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: AppTypography.sizeBase,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-
-          AppSpacing.xl.verticalSpace,
-
-          // ───────────────────────────────────────────────────────────────────
-          // GROUP 1: ÇEYIZ İŞLEMLERİ
-          // Miller Yasası: 2 öğe per grup
-          // ───────────────────────────────────────────────────────────────────
-          _buildMenuTile(
-            context,
-            icon: Icons.group_outlined,
-            title: 'Benimle Paylaşılan Çeyizler',
-            onTap: () => context.push('/shared-trousseaus'),
-          ),
-          _buildMenuTile(
-            context,
-            icon: Icons.feedback_outlined,
-            title: 'Geri Bildirim Gönder',
-            subtitle: 'Görüş ve önerilerinizi bizimle paylaşın',
-            onTap: () => context.push('/settings/feedback'),
-          ),
-
-          Divider(height: AppSpacing.xl, thickness: 1),
-
-          // ───────────────────────────────────────────────────────────────────
-          // GROUP 2: HESAP AYARLARI
-          // Miller Yasası: 3 öğe per grup
-          // ───────────────────────────────────────────────────────────────────
-          _buildMenuTile(
-            context,
-            icon: Icons.person_outline,
-            title: 'Profili Düzenle',
-            onTap: () => context.push('/settings/profile'),
-          ),
-          _buildMenuTile(
-            context,
-            icon: Icons.palette_outlined,
-            title: 'Tema Ayarları',
-            onTap: () => context.push('/settings/theme'),
-          ),
-          _buildMenuTile(
-            context,
-            icon: Icons.lock_outline,
-            title: 'Şifre Değiştir',
-            onTap: () => context.push('/settings/change-password'),
-          ),
-
-          Divider(height: AppSpacing.xl, thickness: 1),
-
-          // ───────────────────────────────────────────────────────────────────
-          // GROUP 3: SİSTEM
-          // Danger action (kırmızı)
-          // ───────────────────────────────────────────────────────────────────
-          _buildMenuTile(
-            context,
-            icon: Icons.logout,
-            title: 'Çıkış Yap',
-            isDanger: true,
-            onTap: () => _handleLogout(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // MENU TILE WIDGET
-  // FITTS YASASI: Minimum 56dp height, full width touch area
-  // GESTALT: Tutarlı layout (icon + text + chevron)
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _buildMenuTile(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    String? subtitle,
-    bool isDanger = false,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    final color = isDanger ? theme.colorScheme.error : theme.colorScheme.onSurface;
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      // FITTS YASASI: Minimum height
-      minVerticalPadding: AppSpacing.sm,
-      leading: Icon(
-        icon,
-        color: color,
-        size: AppDimensions.iconSizeMedium,
-      ),
-      title: Text(
-        title,
-        style: theme.textTheme.titleMedium?.copyWith(
-          color: color,
-          fontSize: AppTypography.sizeBase,
-          fontWeight: AppTypography.medium,
-        ),
-      ),
-      subtitle: subtitle != null
-          ? Text(
-              subtitle,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: AppTypography.sizeSM,
-              ),
-            )
-          : null,
-      trailing: Icon(
-        Icons.chevron_right,
-        color: color.withValues(alpha: 0.5),
-        size: AppDimensions.iconSizeMedium,
-      ),
-      onTap: onTap,
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // LOGOUT HANDLER
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  Future<void> _handleLogout(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.radiusXL,
-        ),
-        title: const Text('Çıkış Yap'),
-        content: const Text('Çıkış yapmak istediğinizden emin misiniz?'),
-        actions: [
-          AppTextButton(
-            label: 'İptal',
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-          ),
-          AppDangerButton(
-            label: 'Çıkış Yap',
-            isOutlined: false,
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.signOut();
-    }
-  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // UPDATE DIALOG

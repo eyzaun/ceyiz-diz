@@ -1,3 +1,5 @@
+library;
+
 /// Login Screen - Yeni Tasarım Sistemi v2.0
 ///
 /// TASARIM KURALLARI:
@@ -11,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_button.dart';
@@ -29,6 +32,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  bool _rememberMe = false;
   bool _hasShownUpdateDialog = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -51,10 +55,33 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     ));
     _animationController.forward();
 
+    // Load saved credentials if Remember Me was enabled
+    _loadSavedCredentials();
+
     // Check for app update
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForUpdateOnce();
     });
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rememberMe = prefs.getBool('remember_me') ?? false;
+      print('🔐 Loading Remember Me: $rememberMe');
+      if (rememberMe) {
+        final email = prefs.getString('saved_email') ?? '';
+        final password = prefs.getString('saved_password') ?? '';
+        print('✅ Loaded email: $email');
+        setState(() {
+          _rememberMe = rememberMe;
+          _emailController.text = email;
+          _passwordController.text = password;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading Remember Me: $e');
+    }
   }
 
   @override
@@ -96,6 +123,31 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
+    print('🔑 Login attempt - Remember Me: $_rememberMe');
+
+    // Save Remember Me BEFORE login to avoid mounted issues
+    try {
+      print('💾 Saving Remember Me BEFORE login - Value: $_rememberMe');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('remember_me', _rememberMe);
+
+      if (_rememberMe) {
+        await prefs.setString('saved_email', _emailController.text.trim());
+        await prefs.setString('saved_password', _passwordController.text);
+        print('💾 Remember Me credentials saved: ${_emailController.text.trim()}');
+      } else {
+        await prefs.remove('saved_email');
+        await prefs.remove('saved_password');
+        print('🗑️ Remember Me credentials cleared');
+      }
+
+      // Verify save
+      final saved = prefs.getBool('remember_me');
+      print('✅ Remember Me saved and verified: $saved');
+    } catch (e) {
+      print('❌ Error saving Remember Me: $e');
+    }
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     final success = await authProvider.signIn(
@@ -105,19 +157,53 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
     if (!mounted) return;
 
+    print('🔑 Login result: $success');
+
     if (success) {
+      if (!mounted) return;
       context.go('/');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.radiusMD,
+      // Check if error is email not verified
+      if (authProvider.errorMessage == 'email-not-verified') {
+        showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusXL,
+            ),
+            title: const Text('E-posta Doğrulanmadı'),
+            content: const Text(
+              'Hesabınıza giriş yapmak için e-posta adresinizi doğrulamanız gerekmektedir. '
+              'E-posta adresinize gönderilen bağlantıya tıklayın.',
+            ),
+            actions: [
+              AppTextButton(
+                label: 'İptal',
+                onPressed: () => Navigator.of(dialogContext).pop(),
+              ),
+              AppPrimaryButton(
+                label: 'Doğrulama Sayfasına Git',
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  final encodedEmail = Uri.encodeComponent(_emailController.text.trim());
+                  context.go('/verify-email/$encodedEmail');
+                },
+              ),
+            ],
           ),
-        ),
-      );
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.errorMessage),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusMD,
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -350,13 +436,31 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           validator: _validatePassword,
                         ),
 
-                        // Şifremi Unuttum (Secondary action)
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: AppTextButton(
-                            label: 'Şifremi Unuttum',
-                            onPressed: () => context.push('/forgot-password'),
-                          ),
+                        // Remember Me & Forgot Password Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Remember Me Checkbox
+                            Expanded(
+                              child: CheckboxListTile(
+                                value: _rememberMe,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _rememberMe = value ?? false;
+                                    print('✔️ Remember Me checkbox changed to: $_rememberMe');
+                                  });
+                                },
+                                title: const Text('Beni Hatırla'),
+                                contentPadding: EdgeInsets.zero,
+                                controlAffinity: ListTileControlAffinity.leading,
+                              ),
+                            ),
+                            // Şifremi Unuttum (Secondary action)
+                            AppTextButton(
+                              label: 'Şifremi Unuttum',
+                              onPressed: () => context.push('/forgot-password'),
+                            ),
+                          ],
                         ),
 
                         AppSpacing.xl.verticalSpace,

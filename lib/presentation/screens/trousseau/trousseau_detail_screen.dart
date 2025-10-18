@@ -1,3 +1,5 @@
+library;
+
 /// Trousseau Detail Screen - Yeni Tasarım Sistemi v2.0
 ///
 /// TASARIM KURALLARI:
@@ -14,6 +16,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/services/excel_export_service.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/category_provider.dart';
@@ -83,17 +86,10 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
   }
 
   Future<void> _exportToExcel(BuildContext context, TrousseauModel trousseau) async {
-    print('🚀 _exportToExcel başladı');
-    print('📋 Trousseau: ${trousseau.name} (ID: ${trousseau.id})');
-
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
     final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
 
-    print('📦 Ürün sayısı: ${productProvider.products.length}');
-    print('🏷️ Kategori sayısı: ${categoryProvider.allCategories.length}');
-
     // Loading göster
-    print('⏳ Loading dialog gösteriliyor...');
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -104,7 +100,6 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
 
     try {
       // Kullanıcı email map'i oluştur (userId -> email)
-      print('👥 Kullanıcı bilgileri toplanıyor...');
       final userIds = productProvider.products
           .map((p) => p.addedBy)
           .where((id) => id.isNotEmpty)
@@ -121,13 +116,10 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
             userEmailMap[userId] = userDoc.data()?['email'] ?? userId;
           }
         } catch (e) {
-          print('⚠️ User bilgisi alınamadı: $userId');
           userEmailMap[userId] = userId; // Fallback to userId
         }
       }
-      print('✅ ${userEmailMap.length} kullanıcı bilgisi alındı');
 
-      print('📊 ExcelExportService.exportAndShareTrousseau çağrılıyor...');
       await ExcelExportService.exportAndShareTrousseau(
         trousseau: trousseau,
         products: productProvider.products,
@@ -135,12 +127,9 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
         userEmailMap: userEmailMap,
       );
 
-      print('✅ Excel export başarılı');
       if (context.mounted) {
-        print('🔙 Loading dialog kapatılıyor...');
         Navigator.of(context).pop(); // Loading'i kapat
 
-        print('✅ Başarı mesajı gösteriliyor...');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Excel dosyası başarıyla oluşturuldu'),
@@ -151,15 +140,10 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
           ),
         );
       }
-    } catch (e, stackTrace) {
-      print('❌ Excel export hatası: $e');
-      print('📍 Stack trace: $stackTrace');
-
+    } catch (e) {
       if (context.mounted) {
-        print('🔙 Loading dialog kapatılıyor (hata durumu)...');
         Navigator.of(context).pop(); // Loading'i kapat
 
-        print('⚠️ Hata mesajı gösteriliyor...');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Hata: $e'),
@@ -179,6 +163,11 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
     final theme = Theme.of(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context);
+
+    // Kaç Saat ayarını kontrol et
+    final showKacSaat = authProvider.currentUser?.kacSaatSettings?.enabled ?? false;
+    final kacSaatSettings = authProvider.currentUser?.kacSaatSettings;
 
     return StreamBuilder<TrousseauModel?>(
       key: ValueKey(_currentTrousseauId),
@@ -562,6 +551,8 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                                             product: product,
                                             category: category,
                                             canEdit: canEdit,
+                                            showKacSaat: showKacSaat,
+                                            kacSaatSettings: kacSaatSettings,
                                             onTap: () => context.push(
                                               '/trousseau/$_currentTrousseauId/products/${product.id}',
                                             ),
@@ -574,6 +565,8 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                                           product: product,
                                           category: category,
                                           canEdit: false,
+                                          showKacSaat: showKacSaat,
+                                          kacSaatSettings: kacSaatSettings,
                                           onTap: () => context.push(
                                             '/trousseau/$_currentTrousseauId/products/${product.id}',
                                           ),

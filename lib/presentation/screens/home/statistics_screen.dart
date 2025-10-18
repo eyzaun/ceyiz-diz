@@ -1,3 +1,5 @@
+library;
+
 /// Statistics Screen - Yeni Tasarım Sistemi v2.0
 ///
 /// TASARIM KURALLARI:
@@ -12,11 +14,12 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../data/models/category_model.dart';
+import '../../../core/services/kac_saat_calculator.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../widgets/common/app_button.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../widgets/common/app_card.dart';
 
 class StatisticsScreen extends StatefulWidget {
@@ -73,11 +76,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authProvider = Provider.of<AuthProvider>(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
     final productProvider = Provider.of<ProductProvider>(context);
     final categoryProvider = Provider.of<CategoryProvider>(context);
 
     final pinnedTrousseaus = trousseauProvider.pinnedTrousseaus;
+    final kacSaatSettings = authProvider.currentUser?.kacSaatSettings;
 
     // Empty state
     if (pinnedTrousseaus.isEmpty) {
@@ -290,6 +295,45 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           AppSpacing.xl.verticalSpace,
 
           // ═══════════════════════════════════════════════════════════════════
+          // KAÇ SAAT ANALİZİ (eğer aktif ise)
+          // ═══════════════════════════════════════════════════════════════════
+          if (kacSaatSettings?.enabled == true) ...[
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Kaç Saat Analizi',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: AppTypography.bold,
+                          fontSize: AppTypography.sizeLG,
+                        ),
+                      ),
+                      AppIconButton(
+                        icon: Icons.settings,
+                        tooltip: 'Ayarlar',
+                        onPressed: () => context.push('/settings/kac-saat'),
+                      ),
+                    ],
+                  ),
+                  AppSpacing.md.verticalSpace,
+                  _buildKacSaatAnalysis(
+                    context,
+                    kacSaatSettings!,
+                    totalPlanned,
+                    totalSpent,
+                    theme,
+                  ),
+                ],
+              ),
+            ),
+            AppSpacing.xl.verticalSpace,
+          ],
+
+          // ═══════════════════════════════════════════════════════════════════
           // SECTION 3: BÜTÇE ANALİZİ (eğer bütçe varsa)
           // ═══════════════════════════════════════════════════════════════════
           if (totalBudget > 0) ...[
@@ -425,6 +469,148 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           );
         },
       ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // KAÇ SAAT ANALYSIS WIDGET
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildKacSaatAnalysis(
+    BuildContext context,
+    KacSaatSettings settings,
+    double totalPlanned,
+    double totalSpent,
+    ThemeData theme,
+  ) {
+    final calculator = settings.toCalculator();
+
+    if (!calculator.isValid) {
+      return AppInfoCard(
+        type: InfoCardType.warning,
+        title: 'Ayarlar Eksik',
+        message: 'Kaç Saat hesaplaması için ayarlarınızı tamamlayın.',
+      );
+    }
+
+    final plannedHours = calculator.calculateHoursForPrice(totalPlanned);
+    final spentHours = calculator.calculateHoursForPrice(totalSpent);
+    final plannedDays = calculator.calculateWorkingDaysForPrice(totalPlanned);
+    final spentDays = calculator.calculateWorkingDaysForPrice(totalSpent);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Planlanan Toplam
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Planlanan Toplam',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: AppTypography.sizeSM,
+                    ),
+                  ),
+                  AppSpacing.xs.verticalSpace,
+                  Text(
+                    calculator.formatHours(plannedHours),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: AppTypography.bold,
+                      color: theme.colorScheme.primary,
+                      fontSize: AppTypography.sizeBase,
+                    ),
+                  ),
+                  Text(
+                    '≈ ${plannedDays.toStringAsFixed(1)} iş günü',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: AppTypography.sizeXS,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        AppSpacing.md.verticalSpace,
+        Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+        AppSpacing.md.verticalSpace,
+
+        // Harcanan Toplam
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Harcanan Toplam',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: AppTypography.sizeSM,
+                    ),
+                  ),
+                  AppSpacing.xs.verticalSpace,
+                  Text(
+                    calculator.formatHours(spentHours),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: AppTypography.bold,
+                      color: theme.colorScheme.secondary,
+                      fontSize: AppTypography.sizeBase,
+                    ),
+                  ),
+                  Text(
+                    '≈ ${spentDays.toStringAsFixed(1)} iş günü',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: AppTypography.sizeXS,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        AppSpacing.md.verticalSpace,
+        Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+        AppSpacing.md.verticalSpace,
+
+        // Hesaplama Özeti
+        Container(
+          padding: AppSpacing.paddingMD,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+            borderRadius: AppRadius.radiusMD,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.access_time,
+                size: AppDimensions.iconSizeMedium,
+                color: theme.colorScheme.primary,
+              ),
+              AppSpacing.sm.horizontalSpace,
+              Expanded(
+                child: Text(
+                  'Saatlik kazancınız: ₺${calculator.hourlyRate.toStringAsFixed(2)}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: AppTypography.sizeSM,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

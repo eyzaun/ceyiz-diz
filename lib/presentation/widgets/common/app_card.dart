@@ -1,3 +1,5 @@
+library;
+
 /// App Card - Tutarlı Kart Tasarımları
 ///
 /// GESTALT PRENSİPLERİ:
@@ -12,6 +14,7 @@ import '../../../core/theme/design_tokens.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/category_model.dart';
 import '../../../data/models/product_model.dart';
+import '../../../core/services/kac_saat_calculator.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// BASE CARD - Temel Kart Bileşeni
@@ -98,6 +101,8 @@ class AppProductCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   final bool canEdit;
+  final bool showKacSaat;
+  final KacSaatSettings? kacSaatSettings;
 
   const AppProductCard({
     super.key,
@@ -114,6 +119,8 @@ class AppProductCard extends StatelessWidget {
     this.onEdit,
     this.onDelete,
     this.canEdit = false,
+    this.showKacSaat = true,
+    this.kacSaatSettings,
   });
 
   String _normalizeUrl(String url) {
@@ -170,6 +177,15 @@ class AppProductCard extends StatelessWidget {
     final bool displayIsPurchased = product?.isPurchased ?? isPurchased ?? false;
     final List<String> displayImages = product?.images ?? images ?? [];
     final String displayLink = product?.link ?? '';
+    final String displayLink2 = product?.link2 ?? '';
+    final String displayLink3 = product?.link3 ?? '';
+
+    // Tüm linkleri listeye al
+    final List<String> allLinks = [
+      if (displayLink.isNotEmpty) displayLink,
+      if (displayLink2.isNotEmpty) displayLink2,
+      if (displayLink3.isNotEmpty) displayLink3,
+    ];
 
     return AppCard(
       onTap: onTap,
@@ -245,27 +261,55 @@ class AppProductCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                    // Link İkonu (eğer link varsa)
-                    if (displayLink.isNotEmpty) ...[
-                      AppSpacing.sm.horizontalSpace,
-                      GestureDetector(
-                        onTap: () => _openLink(context, displayLink),
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Icon(
-                            Icons.link,
-                            size: 14,
-                            color: theme.colorScheme.primary,
+                    // Link İkonları (tüm linkler için)
+                    ...allLinks.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final link = entry.value;
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          left: index == 0 && displayQuantity <= 1 ? 0 : AppSpacing.sm,
+                        ),
+                        child: GestureDetector(
+                          onTap: () => _openLink(context, link),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.link,
+                                  size: 14,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                if (allLinks.length > 1) ...[
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    '${index + 1}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: AppTypography.bold,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      );
+                    }),
                   ],
                 ),
+
+                // Kaç Saat Bilgisi (sadece enabled ise göster)
+                if (product != null && showKacSaat) ...[
+                  AppSpacing.xs.verticalSpace,
+                  _buildKacSaatBadge(context, theme),
+                ],
               ],
             ),
           ),
@@ -393,6 +437,68 @@ class AppProductCard extends StatelessWidget {
             style: TextStyle(
               fontSize: AppTypography.sizeXS,
               color: category.color,
+              fontWeight: AppTypography.medium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKacSaatBadge(BuildContext context, ThemeData theme) {
+    if (product == null) return const SizedBox.shrink();
+
+    // Kullanıcı ayarlarını kullan, yoksa varsayılan değerler
+    final settings = kacSaatSettings ?? const KacSaatSettings();
+
+    // Calculator oluştur
+    final calculator = settings.toCalculator();
+
+    // Hesaplama geçerliyse kullan, değilse varsayılan (125 TL/saat)
+    final double hours;
+    if (calculator.isValid) {
+      hours = calculator.calculateHoursForPrice(product!.price);
+    } else {
+      // Varsayılan: Asgari ücret 20,002.5 TL, 5 gün x 8 saat = 160 saat/ay
+      const defaultHourlyRate = 125.0;
+      hours = product!.price / defaultHourlyRate;
+    }
+
+    final roundedHours = hours.round();
+
+    // Renk kategorileri: < 8 saat = yeşil, 8-40 = sarı, > 40 = kırmızı
+    final Color color;
+    if (hours < 8) {
+      color = const Color(0xFF10B981); // Yeşil
+    } else if (hours <= 40) {
+      color = const Color(0xFFF59E0B); // Sarı
+    } else {
+      color = theme.colorScheme.error; // Kırmızı
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: AppRadius.radiusSM,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.access_time,
+            size: 10,
+            color: color,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            '$roundedHours saat',
+            style: TextStyle(
+              fontSize: AppTypography.sizeXS,
+              color: color,
               fontWeight: AppTypography.medium,
             ),
           ),
