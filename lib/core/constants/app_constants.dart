@@ -12,7 +12,7 @@ class AppConstants {
 
 	// Storage paths
 	static const String productImagesPath = 'products';
-	static const String userAvatarsPath = 'avatars';
+	static const String userAvatarsPath = 'profile_photos';
 
 	// SharedPreferences keys
 	static const String prefThemeIndex = 'theme_index';

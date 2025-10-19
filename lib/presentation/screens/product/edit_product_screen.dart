@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/category_provider.dart';
@@ -125,6 +126,60 @@ class _EditProductScreenState extends State<EditProductScreen> {
       return 'Geçersiz';
     }
     return null;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IMAGE OPTIMIZATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// 🚀 Firebase Storage Resize Extension thumbnail URL'ini döndürür
+  String _getOptimizedImageUrl(String originalUrl, String size) {
+    if (originalUrl.isEmpty) return originalUrl;
+    
+    try {
+      final uri = Uri.parse(originalUrl);
+      
+      // Firebase Storage URL değilse direkt döndür
+      if (!uri.host.contains('firebasestorage.googleapis.com')) {
+        return originalUrl;
+      }
+      
+      // Path'i decode et
+      final pathSegments = uri.pathSegments;
+      if (pathSegments.length < 4) return originalUrl;
+      
+      final encodedPath = pathSegments[3];
+      final decodedPath = Uri.decodeComponent(encodedPath);
+      
+      // Dosya adı ve uzantısını ayır
+      final lastSlash = decodedPath.lastIndexOf('/');
+      final fileName = lastSlash >= 0 ? decodedPath.substring(lastSlash + 1) : decodedPath;
+      final lastDot = fileName.lastIndexOf('.');
+      
+      if (lastDot < 0) return originalUrl;
+      
+      final nameWithoutExt = fileName.substring(0, lastDot);
+      final extension = fileName.substring(lastDot);
+      
+      // Thumbnail dosya adı oluştur (Firebase Extension pattern)
+      final thumbnailFileName = '${nameWithoutExt}_thumb@$size$extension';
+      
+      // Path'i yeniden oluştur
+      final directory = lastSlash >= 0 ? decodedPath.substring(0, lastSlash + 1) : '';
+      final thumbnailPath = '$directory$thumbnailFileName';
+      
+      // Encode ve URL'i yeniden oluştur
+      final encodedThumbnailPath = Uri.encodeComponent(thumbnailPath);
+      
+      // Token'ı koru
+      final token = uri.queryParameters['token'];
+      final queryParams = token != null ? '?alt=media&token=$token' : '?alt=media';
+      
+      return 'https://firebasestorage.googleapis.com/v0/b/${pathSegments[1]}/o/$encodedThumbnailPath$queryParams';
+    } catch (e) {
+      // Hata durumunda original URL döndür
+      return originalUrl;
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -450,25 +505,18 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: AppRadius.radiusMD,
-                                  child: Image.network(
-                                    imageUrl,
+                                  // 🚀 OPTIMIZATION: CachedNetworkImage ile 200x200 thumbnail
+                                  child: CachedNetworkImage(
+                                    imageUrl: _getOptimizedImageUrl(imageUrl, '200x200'),
                                     fit: BoxFit.cover,
-                                    loadingBuilder: (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return Center(
-                                        child: CircularProgressIndicator(
-                                          value: loadingProgress.expectedTotalBytes != null
-                                              ? loadingProgress.cumulativeBytesLoaded /
-                                                  loadingProgress.expectedTotalBytes!
-                                              : null,
-                                        ),
-                                      );
-                                    },
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const Center(
-                                        child: Icon(Icons.error_outline, color: Colors.red),
-                                      );
-                                    },
+                                    memCacheWidth: 200,
+                                    memCacheHeight: 200,
+                                    placeholder: (context, url) => const Center(
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                    errorWidget: (context, url, error) => const Center(
+                                      child: Icon(Icons.error_outline, color: Colors.red),
+                                    ),
                                   ),
                                 ),
                               ),

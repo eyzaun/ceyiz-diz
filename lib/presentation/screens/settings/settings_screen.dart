@@ -26,11 +26,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     try {
       final ImagePicker picker = ImagePicker();
+      // 🚀 OPTIMIZATION: Profil fotoğrafı için daha agresif sıkıştırma
+      // 256x256 yeterli, %80 kalite (daha küçük dosya boyutu)
       final XFile? image = await picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 85,
+        maxWidth: 256,
+        maxHeight: 256,
+        imageQuality: 80,
       );
 
       if (image == null) {

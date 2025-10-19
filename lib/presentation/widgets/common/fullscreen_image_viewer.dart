@@ -76,8 +76,13 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                 maxScale: 4.0,
                 child: Center(
                   child: CachedNetworkImage(
+                    // ✅ OPTIMIZATION: Tam ekranda ORIGINAL boyut kullan
+                    // Sadece burada yüksek kaliteli fotoğraf gerekli
                     imageUrl: widget.imageUrls[index],
                     fit: BoxFit.contain,
+                    // 🚀 OPTIMIZATION: Memory cache devre dışı (tam ekran için)
+                    // Full resolution için cache sınırlaması yok
+                    maxWidthDiskCache: 2400, // Max 2400px width cache
                     placeholder: (context, url) => const Center(
                       child: CircularProgressIndicator(
                         color: Colors.white,

@@ -28,7 +28,14 @@ class ImagePickerWidget extends StatelessWidget {
     }
 
     final picker = ImagePicker();
-  final pickedFile = await picker.pickImage(source: source, imageQuality: 85);
+    // 🚀 OPTIMIZATION: Max boyut 1920x1920, %85 kalite
+    // Firebase Extension 200x200 ve 400x400 thumbnail'leri otomatik oluşturacak
+    final pickedFile = await picker.pickImage(
+      source: source,
+      maxWidth: 1920,
+      maxHeight: 1920,
+      imageQuality: 85,
+    );
 
     if (pickedFile != null) {
       final newImages = [...selectedImages, pickedFile];

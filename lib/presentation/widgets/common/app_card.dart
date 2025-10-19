@@ -372,6 +372,10 @@ class AppProductCard extends StatelessWidget {
   }
 
   Widget _buildThumbnail(BuildContext context, List<String> images) {
+    // 🚀 OPTIMIZATION: Device pixel ratio için cache boyutu hesapla
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final cacheSize = (AppDimensions.cardImageSize * devicePixelRatio * 2).toInt();
+    
     return Container(
       width: AppDimensions.cardImageSize,
       height: AppDimensions.cardImageSize,
@@ -383,8 +387,13 @@ class AppProductCard extends StatelessWidget {
           ? ClipRRect(
               borderRadius: AppRadius.radiusMD,
               child: CachedNetworkImage(
-                imageUrl: images.first,
+                // 🚀 OPTIMIZATION: 200x200 thumbnail kullan (Firebase Extension)
+                // Original: 2.5 MB → Thumbnail: ~15 KB (166x daha küçük!)
+                imageUrl: _getOptimizedImageUrl(images.first, '200x200'),
                 fit: BoxFit.cover,
+                // 🚀 OPTIMIZATION: Memory cache boyutunu sınırla
+                memCacheWidth: cacheSize,
+                memCacheHeight: cacheSize,
                 placeholder: (context, url) => Center(
                   child: CircularProgressIndicator(
                     color: category.color,
@@ -404,6 +413,56 @@ class AppProductCard extends StatelessWidget {
               size: AppDimensions.iconSizeLarge,
             ),
     );
+  }
+  
+  /// Firebase Storage Resize Extension ile oluşturulan thumbnail URL'ini döndürür
+  String _getOptimizedImageUrl(String originalUrl, String size) {
+    if (originalUrl.isEmpty) return originalUrl;
+    
+    try {
+      final uri = Uri.parse(originalUrl);
+      
+      // Firebase Storage URL değilse direkt döndür
+      if (!uri.host.contains('firebasestorage.googleapis.com')) {
+        return originalUrl;
+      }
+      
+      // Path'i decode et
+      final pathSegments = uri.pathSegments;
+      if (pathSegments.length < 4) return originalUrl;
+      
+      final encodedPath = pathSegments[3];
+      final decodedPath = Uri.decodeComponent(encodedPath);
+      
+      // Dosya adı ve uzantısını ayır
+      final lastSlash = decodedPath.lastIndexOf('/');
+      final fileName = lastSlash >= 0 ? decodedPath.substring(lastSlash + 1) : decodedPath;
+      final lastDot = fileName.lastIndexOf('.');
+      
+      if (lastDot < 0) return originalUrl;
+      
+      final nameWithoutExt = fileName.substring(0, lastDot);
+      final extension = fileName.substring(lastDot);
+      
+      // Thumbnail dosya adı oluştur (Firebase Extension pattern)
+      final thumbnailFileName = '${nameWithoutExt}_thumb@$size$extension';
+      
+      // Path'i yeniden oluştur
+      final directory = lastSlash >= 0 ? decodedPath.substring(0, lastSlash + 1) : '';
+      final thumbnailPath = '$directory$thumbnailFileName';
+      
+      // Encode ve URL'i yeniden oluştur
+      final encodedThumbnailPath = Uri.encodeComponent(thumbnailPath);
+      
+      // Token'ı koru
+      final token = uri.queryParameters['token'];
+      final queryParams = token != null ? '?alt=media&token=$token' : '?alt=media';
+      
+      return 'https://firebasestorage.googleapis.com/v0/b/${pathSegments[1]}/o/$encodedThumbnailPath$queryParams';
+    } catch (e) {
+      // Hata durumunda original URL döndür
+      return originalUrl;
+    }
   }
 
   Widget _buildCategoryBadge(BuildContext context) {

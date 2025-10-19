@@ -36,7 +36,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _nextPage() {
-    if (_currentPage < 3) {
+    if (_currentPage < 5) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -89,36 +89,94 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   });
                 },
                 children: [
-                  _buildPage(
-                    icon: Icons.inventory_2_outlined,
+                  _buildDetailedPage(
+                    icon: Icons.waving_hand_outlined,
                     iconColor: const Color(0xFF6C63FF),
-                    title: 'Çeyizini Dijitalleştir',
+                    title: 'Hoş Geldiniz!',
+                    subtitle: 'Çeyiz hazırlığını kolaylaştıran uygulama',
                     description:
-                        'Tüm çeyiz ürünlerini tek bir yerde topla, kategorilere ayır ve kolayca yönet. Artık hangi ürünü aldığını unutma!',
+                        'Çeyiz Diz ile çeyiz alışverişinizi dijital ortamda takip edin, bütçenizi yönetin ve hangi ürünü aldığınızı asla unutmayın!',
+                    features: [
+                      '📦 Ürünleri kategorilere ayırın',
+                      '💰 Harcamalarınızı takip edin',
+                      '⏱️ Çalışma saatine çevirin',
+                      '🔗 Link\'lerle kolay alışveriş',
+                    ],
                     theme: theme,
                   ),
-                  _buildPage(
-                    icon: Icons.attach_money_outlined,
+                  _buildDetailedPage(
+                    icon: Icons.add_circle_outline,
                     iconColor: const Color(0xFF00BFA5),
-                    title: 'Bütçeni Kontrol Et',
+                    title: 'Ürün Ekleyin',
+                    subtitle: 'Adım 1: Çeyiz listesi oluşturun',
                     description:
-                        'Hedef bütçeni belirle, harcamalarını takip et ve tasarruf fırsatlarını yakala. Çeyiz alışverişi artık daha ekonomik!',
+                        'Ana ekranda "+" butonuna dokunarak yeni ürün ekleyin. Fotoğraf, fiyat, kategori ve notlar ekleyebilirsiniz.',
+                    features: [
+                      '1️⃣ Ana ekranda + butonuna tıklayın',
+                      '2️⃣ Ürün fotoğrafı ve bilgilerini ekleyin',
+                      '3️⃣ Kategori seçin (Ev Tekstili, Mutfak, vb.)',
+                      '4️⃣ Link ekleyerek daha sonra satın alın',
+                    ],
                     theme: theme,
                   ),
-                  _buildPage(
-                    icon: Icons.access_time_outlined,
+                  _buildDetailedPage(
+                    icon: Icons.category_outlined,
                     iconColor: const Color(0xFFFF6B6B),
-                    title: 'Kaç Saat Çalışmalısın?',
+                    title: 'Kategorilere Ayırın',
+                    subtitle: 'Adım 2: Düzenli bir liste',
                     description:
-                        'Ürünlerin fiyatını çalışma saatine çevir. Maaşını gir, her ürünün kaç saatlik emeğe denk geldiğini gör!',
+                        'Ürünlerinizi kategorilere ayırarak kolayca bulun. Ev Tekstili, Mutfak, Züccaciye, Elektronik ve daha fazlası!',
+                    features: [
+                      '🏠 Ev Tekstili: Havlu, çarşaf, yorgan',
+                      '🍳 Mutfak: Tencere, tabak, bardak',
+                      '💎 Züccaciye: Vazo, çerçeve, aksesuar',
+                      '📱 Elektronik: Beyaz eşya, küçük ev aletleri',
+                    ],
                     theme: theme,
                   ),
-                  _buildPage(
-                    icon: Icons.share_outlined,
+                  _buildDetailedPage(
+                    icon: Icons.account_balance_wallet_outlined,
                     iconColor: const Color(0xFFFFB74D),
-                    title: 'Paylaş ve İşbirliği Yap',
+                    title: 'Bütçe Takibi',
+                    subtitle: 'Adım 3: Harcamalarınızı kontrol edin',
                     description:
-                        'Çeyiz listeni ailen ve arkadaşlarınla paylaş. Birlikte planlayın, öneriler alın ve alışveriş listesini günceleyin!',
+                        'Ana ekranda bütçe kartını göreceksiniz. Hedef bütçe belirleyin, ne kadar harcadığınızı ve ne kadar kaldığını takip edin.',
+                    features: [
+                      '💵 Toplam harcama: Tüm ürünlerin toplamı',
+                      '🎯 Hedef bütçe: İstediğiniz tutarı belirleyin',
+                      '📊 Kalan bütçe: Ne kadar daha harcayabilirsiniz',
+                      '📈 İlerleme çubuğu: Görsel takip',
+                    ],
+                    theme: theme,
+                  ),
+                  _buildDetailedPage(
+                    icon: Icons.timer_outlined,
+                    iconColor: const Color(0xFF9C27B0),
+                    title: 'Çalışma Saati Hesabı',
+                    subtitle: 'Ürünlerin gerçek maliyetini görün',
+                    description:
+                        'Ayarlar\'dan maaşınızı girin. Her ürünün kaç saatlik çalışmanıza denk geldiğini görün ve daha bilinçli alışveriş yapın!',
+                    features: [
+                      '⚙️ Ayarlar > Maaş Bilgisi\'ne gidin',
+                      '💰 Aylık maaşınızı girin',
+                      '⏱️ Her üründe çalışma saati göreceksiniz',
+                      '🧮 Otomatik hesaplama: Fiyat ÷ Saatlik ücret',
+                    ],
+                    theme: theme,
+                  ),
+                  _buildDetailedPage(
+                    icon: Icons.check_circle_outline,
+                    iconColor: const Color(0xFF4CAF50),
+                    title: 'Hazırsınız!',
+                    subtitle: 'Çeyiz alışverişi artık çok kolay',
+                    description:
+                        'Tüm özellikleri keşfetmek için uygulamayı kullanmaya başlayın. Ürün ekleyin, kategorilere ayırın ve bütçenizi yönetin!',
+                    features: [
+                      '✨ İpucu: Ürün linklerini kaydedin',
+                      '📸 İpucu: Mağazada gördüğünüz ürünlerin fotoğrafını çekin',
+                      '🔔 İpucu: Satın aldığınız ürünleri işaretleyin',
+                      '💡 İpucu: Notlar ekleyerek detayları unutmayın',
+                    ],
                     theme: theme,
                   ),
                 ],
@@ -130,7 +188,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
               child: SmoothPageIndicator(
                 controller: _pageController,
-                count: 4,
+                count: 6,
                 effect: WormEffect(
                   dotHeight: 8,
                   dotWidth: 8,
@@ -157,7 +215,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   child: Text(
-                    _currentPage == 3 ? 'Başlayalım' : 'Devam',
+                    _currentPage == 5 ? 'Başlayalım' : 'Devam',
                     style: TextStyle(
                       fontSize: AppTypography.sizeBase,
                       fontWeight: FontWeight.w600,
@@ -174,42 +232,53 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildPage({
+  Widget _buildDetailedPage({
     required IconData icon,
     required Color iconColor,
     required String title,
+    required String subtitle,
     required String description,
+    required List<String> features,
     required ThemeData theme,
   }) {
     final colorScheme = theme.colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icon
+          const SizedBox(height: AppSpacing.xl),
+
+          // Icon with gradient background
           Container(
-            width: 120,
-            height: 120,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
+              gradient: LinearGradient(
+                colors: [
+                  iconColor.withValues(alpha: 0.2),
+                  iconColor.withValues(alpha: 0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
-              size: 64,
+              size: 56,
               color: iconColor,
             ),
           ),
 
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.lg),
 
           // Title
           Text(
             title,
             style: TextStyle(
-              fontSize: AppTypography.sizeXL,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: colorScheme.onSurface,
               fontFamily: AppTypography.fontFamily,
@@ -217,7 +286,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             textAlign: TextAlign.center,
           ),
 
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.xs),
+
+          // Subtitle
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: AppTypography.sizeSM,
+              fontWeight: FontWeight.w500,
+              color: iconColor,
+              fontFamily: AppTypography.fontFamily,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
 
           // Description
           Text(
@@ -225,12 +308,55 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: TextStyle(
               fontSize: AppTypography.sizeMD,
               fontWeight: FontWeight.w400,
-              color: colorScheme.onSurface,
-              height: 1.5,
+              color: colorScheme.onSurfaceVariant,
+              height: 1.6,
               fontFamily: AppTypography.fontFamily,
             ),
             textAlign: TextAlign.center,
           ),
+
+          const SizedBox(height: AppSpacing.xl),
+
+          // Features list
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              border: Border.all(
+                color: iconColor.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: features.map((feature) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: Text(
+                          feature,
+                          style: TextStyle(
+                            fontSize: AppTypography.sizeSM,
+                            fontWeight: FontWeight.w500,
+                            color: colorScheme.onSurface,
+                            height: 1.5,
+                            fontFamily: AppTypography.fontFamily,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.xl),
         ],
       ),
     );
