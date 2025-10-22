@@ -1,302 +1,601 @@
-# 🎁 Çeyiz Diz# 🎁 Çeyiz Diz
+# 🎁 Çeyiz Diz# 🎁 Çeyiz Diz# 🎁 Çeyiz Diz
 
 
 
-Çeyiz listelerinizi dijital ortamda yönetin, bütçenizi takip edin ve arkadaşlarınızla paylaşın.**Çeyiz Diz**, çeyiz listelerinizi dijital ortamda kolayca yönetebileceğiniz, modern ve kullanıcı dostu bir mobil uygulamadır.
+**Çeyiz Diz**, çeyiz listelerinizi dijital ortamda kolayca yönetebileceğiniz, modern ve kullanıcı dostu bir mobil uygulamadır.
 
 
+
+![Flutter](https://img.shields.io/badge/Flutter-3.35.5-02569B?logo=flutter)Çeyiz listelerinizi dijital ortamda yönetin, bütçenizi takip edin ve arkadaşlarınızla paylaşın.**Çeyiz Diz**, çeyiz listelerinizi dijital ortamda kolayca yönetebileceğiniz, modern ve kullanıcı dostu bir mobil uygulamadır.
+
+![Dart](https://img.shields.io/badge/Dart-3.9.2-0175C2?logo=dart)
+
+![Firebase](https://img.shields.io/badge/Firebase-Latest-FFCA28?logo=firebase)
+
+![Material 3](https://img.shields.io/badge/Material-3-6200EE)
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.35.5-02569B?logo=flutter)![Flutter](https://img.shields.io/badge/Flutter-3.35.5-02569B?logo=flutter)
 
+## 🌐 Demo
+
 ![Dart](https://img.shields.io/badge/Dart-3.9.2-0175C2?logo=dart)![Dart](https://img.shields.io/badge/Dart-3.9.2-0175C2?logo=dart)
+
+**Web:** [https://ceyiz-diz.web.app](https://ceyiz-diz.web.app)
 
 ![Firebase](https://img.shields.io/badge/Firebase-Latest-FFCA28?logo=firebase)![Firebase](https://img.shields.io/badge/Firebase-Latest-FFCA28?logo=firebase)
 
+## ✨ Özellikler
+
 ![License](https://img.shields.io/badge/License-Private-red)![Material 3](https://img.shields.io/badge/Material-3-6200EE)
 
+- 🔐 **Kimlik Doğrulama** - Email/Şifre & Google ile giriş
+
+- 📦 **Ürün Yönetimi** - Fotoğraf, fiyat, kategori takibi (max 5 fotoğraf/ürün)
+
+- 💰 **Bütçe Takibi** - Hedef bütçe belirleme, harcama analizi, gerçek zamanlı istatistikler
+
+- ⏱️ **Çalışma Saati Hesabı** - Ürünlerin kaç saatlik maaşa denk geldiğini görün## 🌐 Demo## 🌐 Demo
+
+- 👥 **Paylaşım** - Email ile paylaşım, 3 yetki seviyesi (view/edit/full)
+
+- 📊 **Raporlama** - Excel dışa aktarım, kategori grafikleri
+
+- 📱 **Optimize Edilmiş Görseller** - Otomatik thumbnail oluşturma (40x daha küçük, 10-20x daha hızlı)
+
+- 🎨 **5 Farklı Tema** - Varsayılan, Monochrome, Mor Okyanus, Orman Yeşili, Gün Batımı**Web:** [ceyiz-diz.web.app](https://ceyiz-diz.web.app)**Web:** [ceyiz-diz.web.app](https://ceyiz-diz.web.app)
+
+- 🌍 **Çoklu Dil** - Türkçe/İngilizce desteği
 
 
-## 🌐 Demo## 🌐 Demo
 
-
-
-**Web:** [ceyiz-diz.web.app](https://ceyiz-diz.web.app)**Web:** [ceyiz-diz.web.app](https://ceyiz-diz.web.app)
-
-
+---
 
 ## ✨ Özellikler## ✨ Özellikler
 
+## 🚀 Kurulum
 
+
+
+### Gereksinimler
 
 - 🔐 **Email/Şifre & Google ile Giriş**- 🔐 **Email/Şifre & Google ile Giriş**
 
-- 📦 **Ürün Yönetimi** - Fotoğraf, fiyat, kategori takibi- 📦 **Ürün Yönetimi** - Fotoğraf, fiyat, kategori takibi
-
-- 💰 **Bütçe Takibi** - Hedef bütçe belirleme, harcama analizi- � **Bütçe Takibi** - Hedef bütçe belirleme, harcama analizi
-
-- ⏱️ **Çalışma Saati Hesabı** - Ürünlerin kaç saatlik maaşa denk geldiğini görün- ⏱️ **Çalışma Saati Hesabı** - Ürünlerin kaç saatlik maaşa denk geldiğini görün
-
-- 👥 **Paylaşım** - Listelerinizi aile ve arkadaşlarınızla paylaşın- 👥 **Paylaşım** - Listelerinizi aile ve arkadaşlarınızla paylaşın
-
-- 📊 **Raporlama** - Excel dışa aktarım, istatistikler- 📊 **Raporlama** - Excel dışa aktarım, istatistikler
-
-- 🖼️ **Optimize Edilmiş Görseller** - Otomatik thumbnail oluşturma (40x daha küçük!)- 📱 **Optimize Edilmiş Görseller** - Otomatik thumbnail oluşturma (200x200, 400x400)
-
-- 🎨 **Modern Tasarım** - Material 3, Karanlık/Açık tema- 🎨 **Modern Tasarım** - Material 3, Karanlık/Açık tema
-
-- 🌍 **Çoklu Dil** - Türkçe/İngilizce- 🌍 **Çoklu Dil** - Türkçe/İngilizce
-
-
-
-## 🚀 Kurulum---
-
-
-
-```bash## 🚀 Kurulum
-
-# Repo'yu klonlayın
-
-git clone https://github.com/eyzaun/ceyiz-diz.git### Gereksinimler
-
-cd ceyiz-diz
-
 - Flutter SDK 3.35.5+
 
-# Bağımlılıkları yükleyin- Dart SDK 3.9.2+
+- Dart SDK 3.9.2+- 📦 **Ürün Yönetimi** - Fotoğraf, fiyat, kategori takibi- 📦 **Ürün Yönetimi** - Fotoğraf, fiyat, kategori takibi
 
-flutter pub get- Android Studio / Xcode (mobil geliştirme için)
+- Firebase hesabı ve yapılandırması
 
-- Firebase hesabı
-
-# Firebase ayarlarını yapın
-
-# google-services.json (Android) ve GoogleService-Info.plist (iOS) ekleyin### Adımlar
+- Android Studio / Xcode (mobil geliştirme için)- 💰 **Bütçe Takibi** - Hedef bütçe belirleme, harcama analizi- � **Bütçe Takibi** - Hedef bütçe belirleme, harcama analizi
 
 
 
-# Çalıştırın1. **Repo'yu klonlayın:**
+### Adımlar- ⏱️ **Çalışma Saati Hesabı** - Ürünlerin kaç saatlik maaşa denk geldiğini görün- ⏱️ **Çalışma Saati Hesabı** - Ürünlerin kaç saatlik maaşa denk geldiğini görün
 
-flutter run   ```bash
 
-```   git clone https://github.com/eyzaun/ceyiz-diz.git
+
+1. **Repo'yu klonlayın:**- 👥 **Paylaşım** - Listelerinizi aile ve arkadaşlarınızla paylaşın- 👥 **Paylaşım** - Listelerinizi aile ve arkadaşlarınızla paylaşın
+
+   ```bash
+
+   git clone https://github.com/eyzaun/ceyiz-diz.git- 📊 **Raporlama** - Excel dışa aktarım, istatistikler- 📊 **Raporlama** - Excel dışa aktarım, istatistikler
 
    cd ceyiz-diz
 
-Detaylı Firebase ve Google Sign-In kurulumu için: [GOOGLE_SIGNIN_SETUP.md](GOOGLE_SIGNIN_SETUP.md)   ```
+   ```- 🖼️ **Optimize Edilmiş Görseller** - Otomatik thumbnail oluşturma (40x daha küçük!)- 📱 **Optimize Edilmiş Görseller** - Otomatik thumbnail oluşturma (200x200, 400x400)
 
 
 
-## 📱 Platformlar2. **Bağımlılıkları yükleyin:**
+2. **Bağımlılıkları yükleyin:**- 🎨 **Modern Tasarım** - Material 3, Karanlık/Açık tema- 🎨 **Modern Tasarım** - Material 3, Karanlık/Açık tema
 
    ```bash
 
-- ✅ **Android** (API 21+)   flutter pub get
+   flutter pub get- 🌍 **Çoklu Dil** - Türkçe/İngilizce- 🌍 **Çoklu Dil** - Türkçe/İngilizce
 
-- ✅ **Web** (Firebase Hosting)   ```
+   ```
 
-- 🔄 **iOS** (Planlanan)
+
 
 3. **Firebase ayarlarını yapın:**
 
-## 🏗️ Teknolojiler   - Firebase Console'dan yeni bir proje oluşturun
+   - Firebase Console'dan proje oluşturun## 🚀 Kurulum---
 
-   - Android/iOS uygulamalarını ekleyin
+   - `google-services.json` (Android) ve `GoogleService-Info.plist` (iOS) dosyalarını indirip ekleyin
 
-- **Frontend:** Flutter 3.35.5, Material Design 3   - `google-services.json` (Android) ve `GoogleService-Info.plist` (iOS) dosyalarını indirin
+   - Firebase Authentication, Firestore, Storage ve App Check'i aktifleştirin
 
-- **Backend:** Firebase (Auth, Firestore, Storage, App Check)   - İlgili klasörlere kopyalayın
+   - Firebase Storage Resize Extension'ı kurun (200x200 ve 400x400 thumbnail'ler için)
 
-- **State Management:** Provider
+```bash## 🚀 Kurulum
 
-- **Routing:** go_router4. **Google Sign-In yapılandırması (Opsiyonel ama önerilen):**
+4. **Çalıştırın:**
 
-- **Image Optimization:** Firebase Storage Resize Extension   - [GOOGLE_SIGNIN_SETUP.md](GOOGLE_SIGNIN_SETUP.md) dosyasındaki adımları takip edin
+   ```bash# Repo'yu klonlayın
+
+   flutter run
+
+   ```git clone https://github.com/eyzaun/ceyiz-diz.git### Gereksinimler
 
 
 
-## 📦 Ana Paketler5. **Uygulamayı çalıştırın:**
+---cd ceyiz-diz
 
-   ```bash
 
-```yaml   flutter run
 
-dependencies:   ```
+## 📱 Desteklenen Platformlar- Flutter SDK 3.35.5+
 
-  # Firebase
 
-  firebase_core: ^3.8.0---
 
-  firebase_auth: ^5.3.3
+- ✅ **Android** (API 21+) - Tam destek# Bağımlılıkları yükleyin- Dart SDK 3.9.2+
 
-  cloud_firestore: ^5.5.0## 📦 Kullanılan Paketler
+- ✅ **Web** (Firebase Hosting) - Tam destek
 
-  firebase_storage: ^12.3.7
+- 🔄 **iOS** - Planlananflutter pub get- Android Studio / Xcode (mobil geliştirme için)
 
-  google_sign_in: ^6.3.0### Firebase & Backend
 
-  - `firebase_core: ^3.8.0` - Firebase temel yapı
 
-  # State & Navigation- `firebase_auth: ^5.3.3` - Kimlik doğrulama
+---- Firebase hesabı
 
-  provider: ^6.1.2- `cloud_firestore: ^5.5.0` - Veritabanı
 
-  go_router: ^14.6.2- `firebase_storage: ^12.3.7` - Dosya depolama
 
-  - `firebase_app_check: ^0.3.2+10` - Güvenlik
+## 🏗️ Teknoloji Stack# Firebase ayarlarını yapın
 
-  # UI- `google_sign_in: ^6.3.0` - Google OAuth 🆕
 
-  cached_network_image: ^3.4.1
 
-  shimmer: ^3.0.0### State Management
+### Framework# google-services.json (Android) ve GoogleService-Info.plist (iOS) ekleyin### Adımlar
 
-  - `provider: ^6.1.2` - Durum yönetimi
+- **Flutter** 3.35.5
 
-  # Utils
+- **Dart** 3.9.2
 
-  image_picker: ^1.1.2### UI & Navigation
+- **Material Design** 3
 
-  excel: ^4.0.6- `go_router: ^14.6.2` - Routing
+# Çalıştırın1. **Repo'yu klonlayın:**
 
-  share_plus: ^10.1.3- `flutter_svg: ^2.0.10` - SVG desteği
+### Backend
+
+- **Firebase Auth** - Kimlik doğrulamaflutter run   ```bash
+
+- **Cloud Firestore** - NoSQL database
+
+- **Firebase Storage** - Fotoğraf depolama```   git clone https://github.com/eyzaun/ceyiz-diz.git
+
+- **Firebase Hosting** - Web deployment
+
+- **Firebase App Check** - Bot koruması   cd ceyiz-diz
+
+
+
+### State ManagementDetaylı Firebase ve Google Sign-In kurulumu için: [GOOGLE_SIGNIN_SETUP.md](GOOGLE_SIGNIN_SETUP.md)   ```
+
+- **Provider** 6.1.2 - Reaktif state yönetimi
+
+
+
+### Key Packages
+
+- `go_router` - Declarative routing## 📱 Platformlar2. **Bağımlılıkları yükleyin:**
+
+- `cached_network_image` - Image caching & optimization
+
+- `image_picker` - Fotoğraf seçme   ```bash
+
+- `excel` - Excel export
+
+- `share_plus` - Paylaşım- ✅ **Android** (API 21+)   flutter pub get
+
+- `google_sign_in` - Google OAuth
+
+- ✅ **Web** (Firebase Hosting)   ```
+
+---
+
+- 🔄 **iOS** (Planlanan)
+
+## 📂 Proje Yapısı
+
+3. **Firebase ayarlarını yapın:**
+
+```
+
+lib/## 🏗️ Teknolojiler   - Firebase Console'dan yeni bir proje oluşturun
+
+├── main.dart                    # Uygulama giriş noktası
+
+├── core/                        # Çekirdek katman   - Android/iOS uygulamalarını ekleyin
+
+│   ├── constants/               # Sabitler
+
+│   ├── themes/                  # 5 tema tanımı- **Frontend:** Flutter 3.35.5, Material Design 3   - `google-services.json` (Android) ve `GoogleService-Info.plist` (iOS) dosyalarını indirin
+
+│   ├── services/                # Version, Excel servisleri
+
+│   └── utils/                   # Formatters, validators- **Backend:** Firebase (Auth, Firestore, Storage, App Check)   - İlgili klasörlere kopyalayın
+
+├── data/                        # Veri katmanı
+
+│   ├── models/                  # User, Trousseau, Product, Category, Feedback- **State Management:** Provider
+
+│   └── repositories/            # Firebase CRUD işlemleri
+
+├── presentation/                # Sunum katmanı- **Routing:** go_router4. **Google Sign-In yapılandırması (Opsiyonel ama önerilen):**
+
+│   ├── providers/               # 5 Provider (Auth, Trousseau, Product, Category, Theme)
+
+│   ├── router/                  # GoRouter yapılandırması (21 route)- **Image Optimization:** Firebase Storage Resize Extension   - [GOOGLE_SIGNIN_SETUP.md](GOOGLE_SIGNIN_SETUP.md) dosyasındaki adımları takip edin
+
+│   ├── screens/                 # 21 ekran (Auth, Home, Trousseau, Product, Settings)
+
+│   └── widgets/                 # Yeniden kullanılabilir bileşenler
+
+└── l10n/                        # Lokalizasyon dosyaları
+
+```## 📦 Ana Paketler5. **Uygulamayı çalıştırın:**
+
+
+
+---   ```bash
+
+
+
+## 🎯 Ana Ekranlar```yaml   flutter run
+
+
+
+### 🔐 Auth (4 Ekran)dependencies:   ```
+
+- **Login** - Email/password, Google Sign-In, "Beni hatırla"
+
+- **Register** - Yeni kullanıcı kaydı  # Firebase
+
+- **Forgot Password** - Şifre sıfırlama
+
+- **Email Verification** - Email doğrulama  firebase_core: ^3.8.0---
+
+
+
+### 🏠 Home (2 Ekran)  firebase_auth: ^5.3.3
+
+- **Home** - 4 tab: Çeyizler, Ürünler, İstatistikler, Ayarlar
+
+- **Statistics** - Kategori grafikleri, bütçe analizi  cloud_firestore: ^5.5.0## 📦 Kullanılan Paketler
+
+
+
+### 👗 Trousseau (5 Ekran)  firebase_storage: ^12.3.7
+
+- **Create/Edit Trousseau** - Çeyiz oluştur/düzenle
+
+- **Trousseau Detail** - Ürün listesi, ilerleme göstergesi  google_sign_in: ^6.3.0### Firebase & Backend
+
+- **Share Trousseau** - Email ile paylaşım (3 yetki seviyesi)
+
+- **Shared List** - Benimle paylaşılan çeyizler  - `firebase_core: ^3.8.0` - Firebase temel yapı
+
+
+
+### 📦 Product (5 Ekran)  # State & Navigation- `firebase_auth: ^5.3.3` - Kimlik doğrulama
+
+- **Add/Edit Product** - 5 fotoğraf, kategori, fiyat, linkler
+
+- **Product Detail** - Tam ekran fotoğraf görüntüleyici (swipe, zoom)  provider: ^6.1.2- `cloud_firestore: ^5.5.0` - Veritabanı
+
+- **Product List** - Filtreleme, sıralama
+
+- **Category Management** - Özel kategori oluştur/düzenle  go_router: ^14.6.2- `firebase_storage: ^12.3.7` - Dosya depolama
+
+
+
+### ⚙️ Settings (6 Ekran)  - `firebase_app_check: ^0.3.2+10` - Güvenlik
+
+- **Settings** - Profil, tema, dil, hakkında
+
+- **Theme Settings** - 5 tema önizleme  # UI- `google_sign_in: ^6.3.0` - Google OAuth 🆕
+
+- **Change Password** - Şifre değiştir
+
+- **Feedback** - Geri bildirim gönder  cached_network_image: ^3.4.1
+
+- **Feedback History** - Gönderilen geri bildirimler
+
+- **Kaç Saat Settings** - Çalışma saati hesaplama ayarları  shimmer: ^3.0.0### State Management
+
+
+
+---  - `provider: ^6.1.2` - Durum yönetimi
+
+
+
+## 🚀 Performans Optimizasyonları  # Utils
+
+
+
+### Image Optimization (v1.0.18+25)  image_picker: ^1.1.2### UI & Navigation
+
+- **Firebase Storage Resize Extension** ile otomatik thumbnail oluşturma
+
+- **200x200** - Liste görünümleri (4-15 KB)  excel: ^4.0.6- `go_router: ^14.6.2` - Routing
+
+- **400x400** - Detay görünümleri (15-50 KB)
+
+- **Original** - Tam ekran (korunuyor)  share_plus: ^10.1.3- `flutter_svg: ^2.0.10` - SVG desteği
+
+- **Sonuç:** 40x daha küçük boyut, 10-20x daha hızlı yükleme
 
 ```- `cached_network_image: ^3.4.1` - Görsel önbellekleme
 
-- `shimmer: ^3.0.0` - Yükleme animasyonları
+### Memory Optimization
 
-## 📁 Proje Yapısı- `smooth_page_indicator: ^1.2.0` - Sayfa göstergesi
+- `CachedNetworkImage` ile aggressive caching- `shimmer: ^3.0.0` - Yükleme animasyonları
+
+- `memCacheWidth` ve `memCacheHeight` optimize edildi
+
+- 10 ürün için memory kullanımı: 180 MB → 65 MB (-64%)## 📁 Proje Yapısı- `smooth_page_indicator: ^1.2.0` - Sayfa göstergesi
 
 
 
-```### Utilities
+### Network Optimization
 
-lib/- `image_picker: ^1.1.2` - Görsel seçimi
+- Thumbnail kullanımı ile veri tasarrufu: 25 MB → 150 KB (166x)
 
-├── core/           # Sabitler, tema, yardımcılar- `shared_preferences: ^2.3.3` - Yerel veri saklama
+- Firebase bandwidth maliyeti: %94 azalma```### Utilities
 
-├── data/           # Modeller, repository'ler, servisler- `intl: ^0.20.2` - Çoklu dil desteği
 
-├── l10n/           # Çoklu dil (tr, en)- `excel: ^4.0.6` - Excel dışa aktarım
+
+---lib/- `image_picker: ^1.1.2` - Görsel seçimi
+
+
+
+## 📊 Firebase Koleksiyonları├── core/           # Sabitler, tema, yardımcılar- `shared_preferences: ^2.3.3` - Yerel veri saklama
+
+
+
+### `users/`├── data/           # Modeller, repository'ler, servisler- `intl: ^0.20.2` - Çoklu dil desteği
+
+- Kullanıcı profil bilgileri
+
+- Sahip olunan ve paylaşılan çeyiz ID'leri├── l10n/           # Çoklu dil (tr, en)- `excel: ^4.0.6` - Excel dışa aktarım
+
+- Kaç saat ayarları
 
 └── presentation/   # Providers, screens, widgets- `share_plus: ^10.1.3` - Paylaşım
 
-```- `url_launcher: ^6.3.1` - URL açma
+### `trousseaus/`
+
+- Çeyiz bilgileri (ad, bütçe, sahip, paylaşımlar)```- `url_launcher: ^6.3.1` - URL açma
+
+- Kategori istatistikleri (totalProducts, purchasedProducts, spentAmount)
 
 - `package_info_plus: ^8.0.2` - Uygulama bilgisi
 
-## 🔥 Firebase Koleksiyonları
+### `products/`
+
+- Ürün bilgileri (ad, fiyat, kategori, fotoğraflar, linkler)## 🔥 Firebase Koleksiyonları
+
+- Satın alma durumu ve tarihi
 
 ---
 
-### `users`
+### `feedbacks/`
+
+- Kullanıcı geri bildirimleri### `users`
+
+- Admin yanıtları
 
 ```dart## 🏗️ Proje Yapısı
 
+---
+
 {
+
+## 🔒 Güvenlik
 
   uid, email, displayName, photoURL,```
 
-  trousseauIds: [], sharedTrousseauIds: []lib/
+- Firebase App Check aktif (bot koruması)
 
-}├── core/
+- Firestore Security Rules (kullanıcı bazlı erişim kontrolü)  trousseauIds: [], sharedTrousseauIds: []lib/
+
+- Storage Security Rules (dosya bazlı yetkilendirme)
+
+- Google Sign-In SHA-1 fingerprint doğrulama}├── core/
+
+- Sensitive dosyalar `.gitignore`'da (keys, secrets)
 
 ```│   ├── constants/       # Sabitler (app_constants.dart)
 
+---
+
 │   ├── errors/          # Hata yönetimi
+
+## 🎨 Tema Sistemi
 
 ### `trousseaus`│   ├── localization/    # Çoklu dil
 
-```dart│   ├── services/        # Servisler (calculator, etc.)
+### 5 Hazır Tema
 
-{│   ├── theme/           # Tasarım sistemi (Material 3)
+1. **Varsayılan** - Profesyonel mavi (#2563EB)```dart│   ├── services/        # Servisler (calculator, etc.)
 
-  id, name, ownerId,│   └── utils/           # Yardımcı fonksiyonlar
+2. **Monochrome** - Siyah-beyaz, yüksek kontrast
 
-  sharedWith: [],  // Görüntüleyiciler├── data/
+3. **Mor Okyanus** - Koyu mor (#A78BFA){│   ├── theme/           # Tasarım sistemi (Material 3)
 
-  editors: []      // Editörler│   ├── models/          # Veri modelleri (User, Trousseau, Product)
+4. **Orman Yeşili** - Koyu yeşil (#34D399)
 
-}│   ├── repositories/    # Veri erişim katmanı
+5. **Gün Batımı** - Sıcak turuncu-pembe-mor gradyanı  id, name, ownerId,│   └── utils/           # Yardımcı fonksiyonlar
 
-```│   └── services/        # Firebase servisleri
 
-├── l10n/                # Çeviri dosyaları (tr, en)
 
-### `products`└── presentation/
+### Material 3 Design Tokens  sharedWith: [],  // Görüntüleyiciler├── data/
 
-```dart    ├── providers/       # State management (Provider)
+- Spacing: 4px, 8px, 16px, 24px, 32px
 
-{    ├── router/          # Routing yapılandırması
+- Radius: 8px, 12px, 16px, 24px  editors: []      // Editörler│   ├── models/          # Veri modelleri (User, Trousseau, Product)
 
-  id, trousseauId, name, category,    ├── screens/         # Ekranlar (Auth, Home, Product, etc.)
+- Elevation: 0, 1, 3, 6
 
-  quantity, price, images: []    └── widgets/         # Özel widget'lar
+- Typography: Inter font family}│   ├── repositories/    # Veri erişim katmanı
 
-}```
+
+
+---```│   └── services/        # Firebase servisleri
+
+
+
+## 📱 Release Builds├── l10n/                # Çeviri dosyaları (tr, en)
+
+
+
+### Android APK### `products`└── presentation/
+
+```bash
+
+flutter build apk --release```dart    ├── providers/       # State management (Provider)
 
 ```
 
----
+**Çıktı:** `build/app/outputs/flutter-apk/app-release.apk` (~60.8 MB){    ├── router/          # Routing yapılandırması
 
-## 📸 Görsel Optimizasyonu
+
+
+### Android App Bundle (Google Play)  id, trousseauId, name, category,    ├── screens/         # Ekranlar (Auth, Home, Product, etc.)
+
+```bash
+
+flutter build appbundle --release  quantity, price, images: []    └── widgets/         # Özel widget'lar
+
+```
+
+**Çıktı:** `build/app/outputs/bundle/release/app-release.aab` (~51.1 MB)}```
+
+
+
+### Web Build```
+
+```bash
+
+flutter build web --release---
+
+firebase deploy --only hosting
+
+```## 📸 Görsel Optimizasyonu
+
+**URL:** https://ceyiz-diz.web.app
 
 ## 🔥 Firebase Yapılandırması
 
+---
+
 Firebase Storage Resize Extension ile otomatik thumbnail oluşturma:
+
+## 🧪 Test
 
 - **200x200** → Liste görünümü (~5 KB)### Authentication
 
+Proje şu an için birim testler içermiyor. Test ekleme planlanıyor:
+
 - **400x400** → Detay önizleme (~15 KB)- Email/Password Provider: ✅ Enabled
 
-- **Orijinal** → Tam ekran görünüm- Google Provider: ✅ Enabled
+```bash
 
-- Email Verification: ✅ Required
+# Gelecekte- **Orijinal** → Tam ekran görünüm- Google Provider: ✅ Enabled
+
+flutter test
+
+flutter test --coverage- Email Verification: ✅ Required
+
+```
 
 **Sonuç:** %97 daha az veri kullanımı, 10-20x daha hızlı yüklenme 🚀
 
+---
+
 ### Firestore Collections
+
+## 📝 Lisans
 
 ## 📄 Lisans
 
+Bu proje özel bir lisans altındadır. İzinsiz kullanım, kopyalama veya dağıtım yasaktır.
+
 #### `users`
+
+---
 
 Bu proje özel bir projedir. Ticari kullanım için izin gereklidir.```dart
 
+## 👨‍💻 Geliştirici
+
 {
 
-## 👨‍💻 Geliştirici  uid: String,
+**Developer:** eyzaun  
+
+**Repository:** [github.com/eyzaun/ceyiz-diz](https://github.com/eyzaun/ceyiz-diz)  ## 👨‍💻 Geliştirici  uid: String,
+
+**Web Demo:** [ceyiz-diz.web.app](https://ceyiz-diz.web.app)
 
   email: String,
 
+---
+
 **Eyyup Zafer Ünal**    displayName: String,
+
+## 🔮 Gelecek Özellikler
 
 GitHub: [@eyzaun](https://github.com/eyzaun)  photoURL: String?, // Google'dan gelen profil fotoğrafı
 
-  createdAt: Timestamp,
+### Yakın Gelecek (v1.0.19-1.1.0)
 
----  lastLoginAt: Timestamp,
+- [ ] WebP format desteği  createdAt: Timestamp,
 
-  trousseauIds: List<String>,
+- [ ] Progressive image loading (blur placeholder)
+
+- [ ] iOS optimize (SafeArea, haptics)---  lastLoginAt: Timestamp,
+
+- [ ] Offline mode (local cache)
+
+- [ ] Product grid view  trousseauIds: List<String>,
+
+- [ ] Bulk operations (multi-select)
 
 ⭐ Projeyi beğendiyseniz yıldız vermeyi unutmayın!  sharedTrousseauIds: List<String>,
 
-}
-```
+### Orta Vadeli (v1.2.0)
 
-#### `trousseaus`
-```dart
+- [ ] QR code sharing}
+
+- [ ] PDF export (Trousseau report)```
+
+- [ ] Push notifications
+
+- [ ] In-app messaging#### `trousseaus`
+
+- [ ] CDN entegrasyonu```dart
+
 {
-  id: String,
-  name: String,
-  ownerId: String,
-  createdAt: Timestamp,
-  updatedAt: Timestamp,
-  sharedWith: List<String>, // Görüntüleyiciler
-  editors: List<String>,    // Editörler
-}
-```
 
-#### `products`
+### Uzun Vadeli (v2.0.0)  id: String,
+
+- [ ] Multi-language (TR, EN, AR)  name: String,
+
+- [ ] AI-powered suggestions  ownerId: String,
+
+- [ ] Store integration (shopping links)  createdAt: Timestamp,
+
+- [ ] Advanced charts & analytics  updatedAt: Timestamp,
+
+  sharedWith: List<String>, // Görüntüleyiciler
+
+---  editors: List<String>,    // Editörler
+
+}
+
+**Son Güncelleme:** 22 Ekim 2025  ```
+
+**Versiyon:** 1.0.18+25  
+
+**Status:** ✅ Production Ready#### `products`
+
 ```dart
 {
   id: String,

@@ -12,11 +12,17 @@
 .swiftpm/
 migrate_working_dir/
 
+# JVM crash logs
+hs_err_pid*.log
+
 # IntelliJ related
 *.iml
 *.ipr
 *.iws
 .idea/
+
+# Claude AI
+.claude/
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -71,3 +77,37 @@ app.*.map.json
 **/*serviceAccount*.json
 **/*service-account*.json
 **/*firebase-adminsdk*.json
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*~
+
+# OS specific
+Thumbs.db
+Desktop.ini
+.Spotlight-V100
+.Trashes
+
+# IDE specific
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/.ropeproject
+
+# Build scripts output
+build_release.log
+build_debug.log
+
+# Unused platform folders (only Android and Web are supported)
+/linux/
+/macos/
+/windows/
+/ios/
+/public/
+
+# VSCode Counter
+.VSCodeCounter/
