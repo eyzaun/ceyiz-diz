@@ -1036,7 +1036,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   context,
                   Icons.calendar_today,
                   'Başlangıç',
-                  '${daysSinceCreation} gün önce',
+                  '$daysSinceCreation gün önce',
                   theme,
                 ),
               ),
@@ -1073,7 +1073,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   Icons.event_available,
                   'Tahmini Bitiş',
                   completionDate != null
-                    ? '~${estimatedDaysToComplete} gün'
+                    ? '~$estimatedDaysToComplete gün'
                     : 'Hesaplanamadı',
                   theme,
                 ),

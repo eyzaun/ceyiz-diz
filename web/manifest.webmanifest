@@ -4,9 +4,9 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0175C2",
-  "theme_color": "#0175C2",
-  "description": "Çeyizlerinizi yönetin, ürün ekleyin ve paylaşın.",
+  "background_color": "#111418",
+  "theme_color": "#2563EB",
+  "description": "Çeyiz yönetim uygulaması - Evlilik çeyizlerinizi dijital ortamda organize edin",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
   "icons": [

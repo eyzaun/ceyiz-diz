@@ -420,7 +420,7 @@ class ExcelExportService {
 
     // Toplam Tutar FORMÜLÜ: =SUM(G2:G...)
     var cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: totalRow));
-    cell.value = FormulaCellValue('=SUM(G2:G${totalRow})');
+    cell.value = FormulaCellValue('=SUM(G2:G$totalRow)');
     cell.cellStyle = CellStyle(
       bold: true,
       fontSize: 14,
@@ -435,8 +435,7 @@ class ExcelExportService {
 
     // Kalan hücreler
     for (int c = 7; c <= 10; c++) {
-      sheet.cell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: totalRow))
-        ..cellStyle = totalStyle;
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: totalRow)).cellStyle = totalStyle;
     }
 
     // ═══════════════════════════════════════════════════════════════════

@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/custom_dialog.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../../core/utils/image_optimization_utils.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -171,29 +173,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: theme.colorScheme.primary,
-                      backgroundImage: user?.photoURL != null
-                          ? NetworkImage(user!.photoURL!)
-                          : null,
-                      child: user?.photoURL == null
-                          ? Text(
-                              user?.displayName.substring(0, 1).toUpperCase() ?? 'K',
-                              style: const TextStyle(
-                                fontSize: 36,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                    // Profile Photo with optimization
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: theme.colorScheme.primary,
+                      ),
+                      child: ClipOval(
+                        child: user?.photoURL != null
+                            ? CachedNetworkImage(
+                                imageUrl: ImageOptimizationUtils.getSmallThumbnail(user!.photoURL!),
+                                fit: BoxFit.cover,
+                                width: 100,
+                                height: 100,
+                                memCacheWidth: 200,
+                                memCacheHeight: 200,
+                                placeholder: (context, url) => Container(
+                                  color: theme.colorScheme.primary,
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  color: theme.colorScheme.primary,
+                                  child: Center(
+                                    child: Text(
+                                      user.displayName.substring(0, 1).toUpperCase(),
+                                      style: const TextStyle(
+                                        fontSize: 36,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : Center(
+                                child: Text(
+                                  user?.displayName.substring(0, 1).toUpperCase() ?? 'K',
+                                  style: const TextStyle(
+                                    fontSize: 36,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                            )
-                          : null,
+                      ),
                     ),
                     if (_isUploadingPhoto)
-                      const Positioned.fill(
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.black54,
-                          child: CircularProgressIndicator(color: Colors.white),
+                      Positioned.fill(
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black54,
+                          ),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          ),
                         ),
                       ),
                     Positioned(

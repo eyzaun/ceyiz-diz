@@ -51,7 +51,10 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
         setState(() {
           _nameController.text = trousseau?.name ?? '';
           _descriptionController.text = trousseau?.description ?? '';
-          _budgetController.text = trousseau != null ? CurrencyFormatter.format(trousseau.totalBudget) : '0';
+          // Bütçe 0 ise boş bırak (opsiyonel), değilse formatla
+          _budgetController.text = trousseau != null && trousseau.totalBudget > 0 
+              ? CurrencyFormatter.format(trousseau.totalBudget) 
+              : '';
         });
       }
     });

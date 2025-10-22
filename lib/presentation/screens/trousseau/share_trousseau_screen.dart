@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
 import '../../widgets/common/custom_dialog.dart';
 import '../../../core/themes/design_system.dart';
+import '../../../core/utils/image_optimization_utils.dart';
 
 class ShareTrousseauScreen extends StatefulWidget {
   final String trousseauId;
@@ -208,11 +210,15 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
       builder: (context, snapshot) {
         String titleText = userId;
         String? subtitleExtra;
+        String? photoURL;
+        
         if (snapshot.connectionState == ConnectionState.done && snapshot.hasData && snapshot.data!.exists) {
           final data = snapshot.data!.data();
           if (data != null) {
             final email = data['email'] as String?;
             final displayName = data['displayName'] as String?;
+            photoURL = data['photoURL'] as String?;
+            
             if (email != null && email.isNotEmpty) {
               titleText = email;
               subtitleExtra = (displayName != null && displayName.isNotEmpty) ? displayName : null;
@@ -224,9 +230,47 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
         final subtitleText = subtitleExtra != null ? '$permissionText · $subtitleExtra' : permissionText;
 
         return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: theme.colorScheme.primary,
-            child: Icon(Icons.person, color: theme.colorScheme.onPrimary),
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: theme.colorScheme.primary,
+            ),
+            child: ClipOval(
+              child: photoURL != null && photoURL.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: ImageOptimizationUtils.getSmallThumbnail(photoURL),
+                      fit: BoxFit.cover,
+                      width: 40,
+                      height: 40,
+                      memCacheWidth: 80,
+                      memCacheHeight: 80,
+                      placeholder: (context, url) => Container(
+                        color: theme.colorScheme.primary,
+                        child: const Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Icon(
+                        Icons.person,
+                        color: theme.colorScheme.onPrimary,
+                        size: 24,
+                      ),
+                    )
+                  : Icon(
+                      Icons.person,
+                      color: theme.colorScheme.onPrimary,
+                      size: 24,
+                    ),
+            ),
           ),
           title: Text(titleText),
           subtitle: Text(subtitleText),

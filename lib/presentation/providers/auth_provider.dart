@@ -196,19 +196,14 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = '';
       notifyListeners();
       
-      debugPrint('🔐 [AUTH] Giriş denemesi başladı: $email');
-      
       UserCredential result = await _auth.signInWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
 
       if (result.user != null) {
-        debugPrint('✅ [AUTH] Firebase girişi başarılı: ${result.user!.uid}');
-        
         // Check if email is verified
         if (!result.user!.emailVerified) {
-          debugPrint('⚠️ [AUTH] E-posta doğrulanmamış');
           _errorMessage = 'email-not-verified';
           await _auth.signOut();
           _status = AuthStatus.unauthenticated;
@@ -219,18 +214,15 @@ class AuthProvider extends ChangeNotifier {
         _firebaseUser = result.user;
         await _loadUserData(result.user!.uid);
         _status = AuthStatus.authenticated;
-        debugPrint('✅ [AUTH] Kullanıcı verisi yüklendi, giriş tamamlandı');
         notifyListeners();
         return true;
       }
       
-      debugPrint('❌ [AUTH] Kullanıcı bilgisi alınamadı');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
     } on FirebaseAuthException catch (e) {
       _status = AuthStatus.unauthenticated;
-      debugPrint('❌ [AUTH] Firebase hata kodu: ${e.code}, mesaj: ${e.message}');
       
       switch (e.code) {
         case 'user-not-found':
@@ -262,7 +254,6 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       _status = AuthStatus.unauthenticated;
-      debugPrint('❌ [AUTH] Beklenmeyen hata: $e');
       _errorMessage = '❌ Beklenmeyen bir hata oluştu.\n💡 Lütfen daha sonra tekrar deneyin.';
       notifyListeners();
       return false;
@@ -279,22 +270,16 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = '';
       notifyListeners();
       
-      debugPrint('📝 [AUTH] Kayıt denemesi başladı: $email');
-      
       UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
       
       if (result.user != null) {
-        debugPrint('✅ [AUTH] Firebase hesabı oluşturuldu: ${result.user!.uid}');
-        
         await result.user!.updateDisplayName(displayName);
-        debugPrint('✅ [AUTH] Kullanıcı adı güncellendi: $displayName');
 
         // Send email verification
         await result.user!.sendEmailVerification();
-        debugPrint('📧 [AUTH] Doğrulama e-postası gönderildi');
 
         _firebaseUser = result.user;
 
@@ -314,25 +299,20 @@ class AuthProvider extends ChangeNotifier {
             .collection('users')
             .doc(result.user!.uid)
             .set(userModel.toFirestore());
-        
-        debugPrint('✅ [AUTH] Firestore kullanıcı belgesi oluşturuldu');
 
         _currentUser = userModel;
 
         // Keep user logged in but mark as unauthenticated for navigation
         _status = AuthStatus.unauthenticated;
-        debugPrint('✅ [AUTH] Kayıt başarıyla tamamlandı');
         notifyListeners();
         return true;
       }
       
-      debugPrint('❌ [AUTH] Kullanıcı bilgisi alınamadı');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
     } on FirebaseAuthException catch (e) {
       _status = AuthStatus.unauthenticated;
-      debugPrint('❌ [AUTH] Firebase hata kodu: ${e.code}, mesaj: ${e.message}');
       
       switch (e.code) {
         case 'weak-password':
@@ -358,7 +338,6 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       _status = AuthStatus.unauthenticated;
-      debugPrint('❌ [AUTH] Beklenmeyen hata: $e');
       _errorMessage = '❌ Beklenmeyen bir hata oluştu.\n💡 Lütfen daha sonra tekrar deneyin.';
       notifyListeners();
       return false;
@@ -389,13 +368,8 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = '';
       notifyListeners();
 
-      debugPrint('🔐 [GOOGLE] Google Sign-In başlatıldı');
-
       final authRepo = AuthRepository();
       final (user, userModel) = await authRepo.signInWithGoogle();
-
-      debugPrint('✅ [GOOGLE] Google girişi başarılı: ${user.uid}');
-      debugPrint('👤 [GOOGLE] Kullanıcı: ${userModel.displayName} (${userModel.email})');
 
       _firebaseUser = user;
       _currentUser = userModel;
@@ -406,12 +380,10 @@ class AuthProvider extends ChangeNotifier {
       await _updateLastLogin();
       await _checkForUpdates();
 
-      debugPrint('✅ [GOOGLE] Kullanıcı verisi yüklendi, giriş tamamlandı');
       notifyListeners();
       return true;
     } on FirebaseAuthException catch (e) {
       _status = AuthStatus.unauthenticated;
-      debugPrint('❌ [GOOGLE] Firebase hata kodu: ${e.code}, mesaj: ${e.message}');
 
       switch (e.code) {
         case 'account-exists-with-different-credential':
@@ -434,6 +406,7 @@ class AuthProvider extends ChangeNotifier {
           break;
         case 'ERROR_ABORTED_BY_USER':
         case 'popup_closed_by_user':
+        case 'popup_closed':
         case 'cancelled':
           _errorMessage = 'ℹ️ Google girişi iptal edildi.\n💡 Tekrar denemek için butona tıklayın.';
           break;
@@ -448,7 +421,6 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       _status = AuthStatus.unauthenticated;
-      debugPrint('❌ [GOOGLE] Beklenmeyen hata: $e');
       
       // Check if user cancelled
       if (e.toString().contains('cancel') || 

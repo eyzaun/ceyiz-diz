@@ -64,7 +64,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
     if (product != null) {
       _nameController = TextEditingController(text: product.name);
       _descriptionController = TextEditingController(text: product.description);
-      _priceController = TextEditingController(text: CurrencyFormatter.format(product.price));
+      // Fiyat 0 ise boş bırak (opsiyonel), değilse formatla
+      _priceController = TextEditingController(
+        text: product.price > 0 ? CurrencyFormatter.format(product.price) : '',
+      );
       _linkController = TextEditingController(text: product.link);
       _link2Controller = TextEditingController(text: product.link2);
       _link3Controller = TextEditingController(text: product.link3);
@@ -107,10 +110,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
   }
 
   String? _validatePrice(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Fiyat gereklidir';
-    }
-    final price = CurrencyFormatter.parse(value);
+    if (value == null || value.trim().isEmpty) return null; // Opsiyonel
+    final price = CurrencyFormatter.parse(value.trim());
     if (price == null || price <= 0) {
       return 'Geçerli bir fiyat girin';
     }
@@ -194,11 +195,16 @@ class _EditProductScreenState extends State<EditProductScreen> {
     });
 
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    
+    // Fiyat opsiyonel - boş ise 0 olarak kaydet
+    final priceText = _priceController.text.trim();
+    final price = priceText.isEmpty ? 0.0 : (CurrencyFormatter.parse(priceText) ?? 0.0);
+    
     final success = await productProvider.updateProduct(
       productId: widget.productId,
       name: _nameController.text,
       description: _descriptionController.text,
-      price: CurrencyFormatter.parse(_priceController.text),
+      price: price,
       category: _selectedCategory,
       newImageFiles: _selectedImages,
       existingImages: _existingImages,

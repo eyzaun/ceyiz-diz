@@ -7,6 +7,26 @@
 /// - 200x200: Ürün kartları için (küçük thumbnail)
 /// - 400x400: Product detail için (medium thumbnail)
 /// - Original: Tam ekran görünüm için
+/// 
+/// ÖNEMLI: Firebase Extension Konfigürasyonu
+/// Extension'ın doğru çalışması için şu ayarlar yapılmalı:
+/// 
+/// 1. Resize Mode: "Cover" (fotoğrafın en-boy oranını koruyarak crop eder)
+///    - NOT: "Contain" kullanılırsa fotoğraf sığdırılır (beyaz kenarlıklar oluşur)
+///    - NOT: "Fill" kullanılırsa fotoğraf deforme olur (oranlar bozulur)
+/// 
+/// 2. Monitored Paths: /profile_photos,/products
+/// 
+/// 3. Sizes: 200x200,400x400
+/// 
+/// 4. Delete Original: false (original'i koru, thumbnail oluştur)
+/// 
+/// Cover mode ile:
+/// - Fotoğrafın merkezinden crop alınır (center crop)
+/// - En-boy oranı bozulmaz
+/// - 200x200 kare thumbnail tam olarak 200x200 px olur
+/// - Profil fotoğrafları ve ürün fotoğrafları için ideal
+library;
 
 class ImageOptimizationUtils {
   ImageOptimizationUtils._();
