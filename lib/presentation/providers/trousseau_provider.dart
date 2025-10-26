@@ -13,6 +13,7 @@ class TrousseauProvider extends ChangeNotifier {
   List<TrousseauModel> _trousseaus = [];
   List<TrousseauModel> _sharedTrousseaus = [];
   TrousseauModel? _selectedTrousseau;
+  String? _selectedTrousseauId; // Shared selected trousseau ID for both tabs
   bool _isLoading = false;
   String _errorMessage = '';
   AuthProvider? _authProvider;
@@ -25,6 +26,7 @@ class TrousseauProvider extends ChangeNotifier {
   List<TrousseauModel> get trousseaus => _trousseaus;
   List<TrousseauModel> get sharedTrousseaus => _sharedTrousseaus;
   TrousseauModel? get selectedTrousseau => _selectedTrousseau;
+  String? get selectedTrousseauId => _selectedTrousseauId;
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
   String? get currentUserId => _authProvider?.currentUser?.uid;
@@ -36,6 +38,24 @@ class TrousseauProvider extends ChangeNotifier {
     final pinnedIds = _authProvider?.currentUser?.pinnedSharedTrousseauIds ?? [];
     final pinnedShared = _sharedTrousseaus.where((t) => pinnedIds.contains(t.id)).toList();
     return [..._trousseaus, ...pinnedShared];
+  }
+  
+  // Set selected trousseau ID (shared across tabs)
+  void setSelectedTrousseauId(String? trousseauId) {
+    if (_selectedTrousseauId != trousseauId) {
+      _selectedTrousseauId = trousseauId;
+      notifyListeners();
+    }
+  }
+  
+  // Auto-select first pinned trousseau if none selected
+  void ensureSelection() {
+    if (_selectedTrousseauId == null || !pinnedTrousseaus.any((t) => t.id == _selectedTrousseauId)) {
+      if (pinnedTrousseaus.isNotEmpty) {
+        _selectedTrousseauId = pinnedTrousseaus.first.id;
+        notifyListeners();
+      }
+    }
   }
   
   void updateAuth(AuthProvider authProvider) {
@@ -52,6 +72,7 @@ class TrousseauProvider extends ChangeNotifier {
     _trousseaus = [];
     _sharedTrousseaus = [];
     _selectedTrousseau = null;
+    _selectedTrousseauId = null;
     _errorMessage = '';
     notifyListeners();
   }
@@ -424,53 +445,135 @@ class TrousseauProvider extends ChangeNotifier {
       
       final targetUser = UserModel.fromFirestore(userQuery.docs.first);
       
-      // Prepare updates to switch or grant permissions
-      Map<String, dynamic> updates = {
-        'updatedAt': Timestamp.fromDate(DateTime.now()),
-      };
-
-      final alreadyViewer = trousseau.sharedWith.contains(targetUser.uid);
-      final alreadyEditor = trousseau.editors.contains(targetUser.uid);
-
-      if (alreadyEditor && !canEdit) {
-        // Downgrade: editor -> viewer
-        updates['editors'] = FieldValue.arrayRemove([targetUser.uid]);
-        updates['sharedWith'] = FieldValue.arrayUnion([targetUser.uid]);
-      } else if (alreadyViewer && canEdit) {
-        // Upgrade: viewer -> editor
-        updates['sharedWith'] = FieldValue.arrayRemove([targetUser.uid]);
-        updates['editors'] = FieldValue.arrayUnion([targetUser.uid]);
-      } else if (!alreadyViewer && !alreadyEditor) {
-        // New share
-        if (canEdit) {
-          updates['editors'] = FieldValue.arrayUnion([targetUser.uid]);
-        } else {
-          updates['sharedWith'] = FieldValue.arrayUnion([targetUser.uid]);
-        }
-      } else {
-        // No change needed
-        _errorMessage = 'Bu kullanıcı için paylaşım durumu zaten geçerli';
+      // Check if there's already a pending invitation for this trousseau
+      final existingInvitation = await _firestore
+          .collection('users')
+          .doc(targetUser.uid)
+          .collection('trousseauInvitations')
+          .where('trousseauId', isEqualTo: trousseauId)
+          .where('ownerId', isEqualTo: trousseau.ownerId)
+          .limit(1)
+          .get();
+      
+      if (existingInvitation.docs.isNotEmpty) {
+        _errorMessage = 'Bu kullanıcıya zaten bir davet gönderilmiş';
         notifyListeners();
         return false;
       }
-
-      await _firestore
-          .collection('trousseaus')
-          .doc(trousseauId)
-          .update(updates);
       
-      // Update target user's shared list
+      // Instead of immediately granting access, create an invitation for the recipient
+      // Recipient will accept/reject the invitation. Invitation stored under the target user's doc.
+      final invitation = {
+        'trousseauId': trousseauId,
+        'trousseauName': trousseau.name,
+        'ownerId': trousseau.ownerId,
+        'ownerEmail': _authProvider?.currentUser?.email ?? '',
+        'canEdit': canEdit,
+        'createdAt': Timestamp.fromDate(DateTime.now()),
+      };
+
       await _firestore
           .collection('users')
           .doc(targetUser.uid)
-          .update({
-        'sharedTrousseauIds': FieldValue.arrayUnion([trousseauId]),
-      });
-      
-      // Let live snapshots update local lists; no optimistic local mutation to avoid inconsistencies
+          .collection('trousseauInvitations')
+          .add(invitation);
+
       return true;
     } catch (e) {
       _errorMessage = 'Paylaşım yapılamadı: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Recipient accepts an invitation. This will add the recipient to the trousseau's
+  /// `sharedWith` or `editors` arrays, update the user's `sharedTrousseauIds` and remove the invitation.
+  Future<bool> acceptShare({
+    required String invitationDocPath,
+    required String trousseauId,
+  }) async {
+    if (_authProvider?.currentUser == null) return false;
+
+    try {
+      _errorMessage = '';
+      final userId = _authProvider!.currentUser!.uid;
+
+      // Read invitation
+      final invRef = FirebaseFirestore.instance.doc(invitationDocPath);
+      final invSnap = await invRef.get();
+      if (!invSnap.exists) return false;
+      final inv = invSnap.data() as Map<String, dynamic>;
+      final canEdit = inv['canEdit'] == true;
+
+      // Update trousseau doc: add to editors or sharedWith
+      final updates = <String, dynamic>{
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+      };
+      if (canEdit) {
+        updates['editors'] = FieldValue.arrayUnion([userId]);
+      } else {
+        updates['sharedWith'] = FieldValue.arrayUnion([userId]);
+      }
+
+      await _firestore.collection('trousseaus').doc(trousseauId).update(updates);
+
+      // Update user's shared list
+      await _firestore.collection('users').doc(userId).update({
+        'sharedTrousseauIds': FieldValue.arrayUnion([trousseauId]),
+      });
+
+      // Delete invitation
+      await invRef.delete();
+
+      return true;
+    } catch (e) {
+      _errorMessage = 'Paylaşım kabul edilemedi: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Recipient rejects an invitation. Simply delete invitation doc.
+  Future<bool> declineShare({
+    required String invitationDocPath,
+  }) async {
+    if (_authProvider?.currentUser == null) return false;
+
+    try {
+      _errorMessage = '';
+      final invRef = FirebaseFirestore.instance.doc(invitationDocPath);
+      await invRef.delete();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Daveti reddedilemedi: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Allow current user to remove their own access to a shared trousseau (revoke self).
+  Future<bool> leaveSharedTrousseau({
+    required String trousseauId,
+  }) async {
+    if (_authProvider?.currentUser == null) return false;
+
+    try {
+      _errorMessage = '';
+      final userId = _authProvider!.currentUser!.uid;
+
+      await _firestore.collection('trousseaus').doc(trousseauId).update({
+        'sharedWith': FieldValue.arrayRemove([userId]),
+        'editors': FieldValue.arrayRemove([userId]),
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+      });
+
+      await _firestore.collection('users').doc(userId).update({
+        'sharedTrousseauIds': FieldValue.arrayRemove([trousseauId]),
+      });
+
+      return true;
+    } catch (e) {
+      _errorMessage = 'Paylaşımdan çıkılamadı: ${e.toString()}';
       notifyListeners();
       return false;
     }
@@ -491,8 +594,9 @@ class TrousseauProvider extends ChangeNotifier {
         return false;
       }
       
-      // Only owner can remove share
-      if (trousseau.ownerId != _authProvider!.currentUser!.uid) {
+      // Owner can remove anyone's access; a recipient can remove their own access (self-revoke)
+      final currentUid = _authProvider!.currentUser!.uid;
+      if (trousseau.ownerId != currentUid && userId != currentUid) {
         _errorMessage = 'Sadece çeyiz sahibi paylaşımı kaldırabilir';
         return false;
       }

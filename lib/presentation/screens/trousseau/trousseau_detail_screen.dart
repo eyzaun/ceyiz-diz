@@ -254,6 +254,35 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                     ),
                   ],
                 ),
+              if (!isOwner)
+                AppIconButton(
+                  icon: Icons.person_remove_outlined,
+                  tooltip: 'Paylaşımdan Çık',
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Paylaşımdan Çık'),
+                        content: const Text('Bu çeyizden çıkmak istediğinize emin misiniz? Erişiminiz kaldırılacaktır.'),
+                        actions: [
+                          AppTextButton(label: 'İptal', onPressed: () => Navigator.pop(ctx, false)),
+                          AppDangerButton(label: 'Çık', icon: Icons.exit_to_app, onPressed: () => Navigator.pop(ctx, true)),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true) {
+                      final ok = await trousseauProvider.leaveSharedTrousseau(trousseauId: trousseau.id);
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(ok ? 'Paylaşımdan çıkıldı' : trousseauProvider.errorMessage)),
+                      );
+                      if (ok) {
+                        // Navigate away to avoid showing removed trousseau
+                        if (context.mounted) context.pop();
+                      }
+                    }
+                  },
+                ),
             ],
           ),
           body: Stack(

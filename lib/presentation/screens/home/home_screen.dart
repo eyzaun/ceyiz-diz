@@ -229,8 +229,15 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // Show first trousseau detail
-    final id = pinnedTrousseaus.first.id;
+    // Ensure a trousseau is selected (after build completes)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        trousseauProvider.ensureSelection();
+      }
+    });
+
+    // Show selected trousseau detail
+    final id = trousseauProvider.selectedTrousseauId ?? pinnedTrousseaus.first.id;
     return TrousseauDetailScreen(trousseauId: id, key: ValueKey(id));
   }
 

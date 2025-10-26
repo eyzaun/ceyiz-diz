@@ -12,17 +12,64 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_card.dart';
 
-class SharedTrousseauListScreen extends StatelessWidget {
+class SharedTrousseauListScreen extends StatefulWidget {
   const SharedTrousseauListScreen({super.key});
 
   @override
+  State<SharedTrousseauListScreen> createState() => _SharedTrousseauListScreenState();
+}
+
+class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Benimle Paylaşılanlar'),
+        leading: AppIconButton(
+          icon: Icons.arrow_back,
+          onPressed: () => context.pop(),
+          tooltip: 'Geri',
+        ),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Paylaşılanlar', icon: Icon(Icons.folder_shared)),
+            Tab(text: 'Davetler', icon: Icon(Icons.mail_outline)),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildSharedTrousseausTab(context),
+          _buildInvitationsTab(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSharedTrousseausTab(BuildContext context) {
     final theme = Theme.of(context);
     final provider = Provider.of<TrousseauProvider>(context);
     final list = provider.sharedTrousseaus;
@@ -165,6 +212,192 @@ class SharedTrousseauListScreen extends StatelessWidget {
               separatorBuilder: (_, __) => AppSpacing.sm.verticalSpace,
               itemCount: list.length,
             ),
+    );
+  }
+
+  Widget _buildInvitationsTab(BuildContext context) {
+    final theme = Theme.of(context);
+    final trousseauProvider = Provider.of<TrousseauProvider>(context);
+    final currentUserId = trousseauProvider.currentUserId;
+
+    if (currentUserId == null) {
+      return Padding(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: const EmptyStateWidget(
+          icon: Icons.person_outline,
+          title: 'Giriş yapmalısınız',
+          subtitle: 'Davetleri görmek için giriş yapın',
+        ),
+      );
+    }
+
+    final invitationsStream = FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUserId)
+        .collection('trousseauInvitations')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: invitationsStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Padding(
+            padding: EdgeInsets.all(AppSpacing.lg),
+            child: EmptyStateWidget(
+              icon: Icons.error_outline,
+              title: 'Hata oluştu',
+              subtitle: snapshot.error.toString(),
+            ),
+          );
+        }
+
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return Padding(
+            padding: EdgeInsets.all(AppSpacing.lg),
+            child: const EmptyStateWidget(
+              icon: Icons.mail_outline,
+              title: 'Yeni davet yok',
+              subtitle: 'Size gönderilen davetler burada görünecek',
+            ),
+          );
+        }
+
+        return ListView.separated(
+          padding: EdgeInsets.all(AppSpacing.md),
+          itemCount: docs.length,
+          separatorBuilder: (_, __) => AppSpacing.sm.verticalSpace,
+          itemBuilder: (context, index) {
+            final doc = docs[index];
+            final data = doc.data() as Map<String, dynamic>;
+            final trousseauId = data['trousseauId'] as String? ?? '';
+            final trousseauName = data['trousseauName'] as String? ?? 'Çeyiz';
+            final ownerEmail = data['ownerEmail'] as String? ?? '';
+            final canEdit = data['canEdit'] == true;
+
+            return AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  Text(
+                    trousseauName,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: AppTypography.bold,
+                      fontSize: AppTypography.sizeLG,
+                    ),
+                  ),
+                  AppSpacing.sm.verticalSpace,
+                  
+                  // Owner info
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.person_outline,
+                        size: AppDimensions.iconSizeSmall,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                      AppSpacing.xs.horizontalSpace,
+                      Expanded(
+                        child: Text(
+                          ownerEmail,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: AppTypography.sizeBase,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  AppSpacing.xs.verticalSpace,
+                  
+                  // Permission info
+                  Row(
+                    children: [
+                      Icon(
+                        canEdit ? Icons.edit_outlined : Icons.visibility_outlined,
+                        size: AppDimensions.iconSizeSmall,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                      AppSpacing.xs.horizontalSpace,
+                      Text(
+                        canEdit ? 'Düzenleme izni' : 'Sadece görüntüleme',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: AppTypography.sizeSM,
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  AppSpacing.md.verticalSpace,
+                  
+                  // Action buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      AppTextButton(
+                        label: 'Reddet',
+                        onPressed: () async {
+                          final success = await trousseauProvider.declineShare(
+                            invitationDocPath: doc.reference.path,
+                          );
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                success
+                                    ? 'Davet reddedildi'
+                                    : trousseauProvider.errorMessage,
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: AppRadius.radiusMD,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      AppSpacing.sm.horizontalSpace,
+                      AppPrimaryButton(
+                        label: 'Kabul Et',
+                        onPressed: () async {
+                          final success = await trousseauProvider.acceptShare(
+                            invitationDocPath: doc.reference.path,
+                            trousseauId: trousseauId,
+                          );
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                success
+                                    ? 'Davet kabul edildi! Paylaşılanlar sekmesinde görünecek.'
+                                    : trousseauProvider.errorMessage,
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: AppRadius.radiusMD,
+                              ),
+                            ),
+                          );
+                          if (success) {
+                            // Switch to shared trousseaus tab
+                            _tabController.animateTo(0);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

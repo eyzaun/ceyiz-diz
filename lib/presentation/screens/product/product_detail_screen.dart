@@ -672,6 +672,64 @@ class ProductDetailScreen extends StatelessWidget {
                     ),
                   ],
 
+                  // Ürün linkleri (tıklanabilir)
+                  if (product.link.isNotEmpty || product.link2.isNotEmpty || product.link3.isNotEmpty) ...[
+                    AppSpacing.lg.verticalSpace,
+                    Text(
+                      'Linkler',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: AppTypography.bold,
+                        fontSize: AppTypography.sizeLG,
+                      ),
+                    ),
+                    AppSpacing.sm.verticalSpace,
+                    if (product.link.isNotEmpty)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.link_outlined),
+                        title: Text(
+                          product.link,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.open_in_new),
+                          onPressed: () => _openLink(context, product.link),
+                        ),
+                        onTap: () => _openLink(context, product.link),
+                      ),
+                    if (product.link2.isNotEmpty)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.link_outlined),
+                        title: Text(
+                          product.link2,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.open_in_new),
+                          onPressed: () => _openLink(context, product.link2),
+                        ),
+                        onTap: () => _openLink(context, product.link2),
+                      ),
+                    if (product.link3.isNotEmpty)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.link_outlined),
+                        title: Text(
+                          product.link3,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.open_in_new),
+                          onPressed: () => _openLink(context, product.link3),
+                        ),
+                        onTap: () => _openLink(context, product.link3),
+                      ),
+                  ],
+
                   // Purchase Date Info (if purchased)
                   if (product.isPurchased && product.purchaseDate != null) ...[
                     AppSpacing.lg.verticalSpace,

@@ -7,7 +7,6 @@ import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/auth/email_verification_screen.dart';
-import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/trousseau/trousseau_detail_screen.dart';
 import '../screens/trousseau/create_trousseau_screen.dart';
@@ -25,6 +24,7 @@ import '../screens/settings/feedback_screen.dart';
 import '../screens/settings/feedback_history_screen.dart';
 import '../screens/settings/kac_saat_settings_screen.dart';
 import '../screens/trousseau/shared_trousseau_list_screen.dart';
+import '../screens/onboarding/new_onboarding_screen.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -44,11 +44,15 @@ class AppRouter {
         return null;
       }
 
-      final prefs = await SharedPreferences.getInstance();
-      final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
       String currentLoc = state.matchedLocation;
 
-      // Onboarding
+      // ═════════════════════════════════════════════════════════════════
+      // ONBOARDING CHECK
+      // İlk kez açan kullanıcılar için onboarding göster
+      // ═════════════════════════════════════════════════════════════════
+      final prefs = await SharedPreferences.getInstance();
+      final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+      
       if (!onboardingCompleted && currentLoc != '/onboarding') {
         _lastRedirect = '/onboarding';
         _lastRedirectTime = now;
@@ -207,6 +211,10 @@ class AppRouter {
         ],
       ),
       GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const NewOnboardingScreen(),
+      ),
+      GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
       ),
@@ -224,10 +232,6 @@ class AppRouter {
           final email = state.pathParameters['email']!;
           return EmailVerificationScreen(email: Uri.decodeComponent(email));
         },
-      ),
-      GoRoute(
-        path: '/onboarding',
-        builder: (context, state) => const OnboardingScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

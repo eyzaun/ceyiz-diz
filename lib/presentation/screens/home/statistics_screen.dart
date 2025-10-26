@@ -30,8 +30,6 @@ class StatisticsScreen extends StatefulWidget {
 }
 
 class _StatisticsScreenState extends State<StatisticsScreen> {
-  String? _selectedTrousseauId;
-
   @override
   void initState() {
     super.initState();
@@ -43,29 +41,25 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   void _ensureInitialSelection() {
     final trProv = Provider.of<TrousseauProvider>(context, listen: false);
-    final pinnedTrousseaus = trProv.pinnedTrousseaus;
-
-    if (pinnedTrousseaus.isNotEmpty && _selectedTrousseauId == null) {
-      setState(() {
-        _selectedTrousseauId = pinnedTrousseaus.first.id;
-      });
-
+    trProv.ensureSelection();
+    
+    final selectedId = trProv.selectedTrousseauId;
+    if (selectedId != null) {
       final productProv = Provider.of<ProductProvider>(context, listen: false);
-      productProv.loadProducts(_selectedTrousseauId!);
+      productProv.loadProducts(selectedId);
 
       final catProv = Provider.of<CategoryProvider>(context, listen: false);
-      catProv.bind(_selectedTrousseauId!, userId: trProv.currentUserId ?? '');
+      catProv.bind(selectedId, userId: trProv.currentUserId ?? '');
     }
   }
 
   void _selectTrousseau(String trousseauId) {
-    if (_selectedTrousseauId == trousseauId) return;
-
-    setState(() {
-      _selectedTrousseauId = trousseauId;
-    });
-
     final trProv = Provider.of<TrousseauProvider>(context, listen: false);
+    
+    if (trProv.selectedTrousseauId == trousseauId) return;
+
+    trProv.setSelectedTrousseauId(trousseauId);
+
     final productProv = Provider.of<ProductProvider>(context, listen: false);
     productProv.loadProducts(trousseauId);
 
@@ -93,7 +87,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     }
 
     // Auto-select first if none selected
-    if (_selectedTrousseauId == null) {
+    final selectedTrousseauId = trousseauProvider.selectedTrousseauId;
+    if (selectedTrousseauId == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _ensureInitialSelection();
       });
@@ -103,7 +98,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       );
     }
 
-    final trousseau = trousseauProvider.getTrousseauById(_selectedTrousseauId!);
+    final trousseau = trousseauProvider.getTrousseauById(selectedTrousseauId);
     if (trousseau == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('İstatistikler')),
@@ -140,7 +135,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           // FITTS YASASI: 48dp height, kolay dokunma
           // ═══════════════════════════════════════════════════════════════════
           if (pinnedTrousseaus.length > 1) ...[
-            _buildTrousseauSelector(context, pinnedTrousseaus, theme),
+            _buildTrousseauSelector(context, pinnedTrousseaus, selectedTrousseauId, theme),
             AppSpacing.lg.verticalSpace,
           ],
 
@@ -476,7 +471,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               AppTextButton(
                 label: 'Tümünü Gör',
                 icon: Icons.arrow_forward,
-                onPressed: () => context.push('/trousseau/$_selectedTrousseauId/products'),
+                onPressed: () => context.push('/trousseau/$selectedTrousseauId/products'),
               ),
             ],
           ),
@@ -492,7 +487,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   // FITTS YASASI: 48dp height, kolay dokunma
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildTrousseauSelector(BuildContext context, List<dynamic> trousseaus, ThemeData theme) {
+  Widget _buildTrousseauSelector(BuildContext context, List<dynamic> trousseaus, String selectedTrousseauId, ThemeData theme) {
     return Container(
       height: AppDimensions.touchTargetSize,
       decoration: BoxDecoration(
@@ -506,7 +501,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         separatorBuilder: (_, __) => AppSpacing.xs.horizontalSpace,
         itemBuilder: (context, index) {
           final trousseau = trousseaus[index];
-          final isSelected = trousseau.id == _selectedTrousseauId;
+          final isSelected = trousseau.id == selectedTrousseauId;
 
           return Material(
             color: isSelected ? theme.colorScheme.primaryContainer : Colors.transparent,
