@@ -14,6 +14,7 @@ import 'presentation/providers/onboarding_provider.dart';
 import 'presentation/providers/trousseau_provider.dart';
 import 'presentation/providers/product_provider.dart';
 import 'presentation/providers/category_provider.dart';
+import 'presentation/providers/locale_provider.dart';
 import 'presentation/router/app_router.dart';
 import 'presentation/widgets/common/web_frame.dart';
 import 'presentation/widgets/dialogs/update_available_dialog.dart';
