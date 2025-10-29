@@ -5,6 +5,7 @@ import 'dart:async';
 import '../../../core/theme/design_tokens.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_button.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   final String email;
@@ -52,11 +53,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       if (isVerified && mounted) {
         _pollTimer?.cancel();
         // Show success message and navigate to login
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('E-posta adresiniz doğrulandı! Giriş yapabilirsiniz.'),
+          SnackBar(
+            content: Text(l10n?.emailVerified ?? 'E-posta adresiniz doğrulandı! Giriş yapabilirsiniz.'),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
         await Future.delayed(const Duration(milliseconds: 500));
@@ -90,9 +92,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         }
       });
 
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Doğrulama e-postası tekrar gönderildi'),
+        SnackBar(
+          content: Text(l10n?.verificationEmailResent ?? 'Doğrulama e-postası tekrar gönderildi'),
           backgroundColor: Colors.green,
         ),
       );
@@ -116,11 +119,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
     if (isVerified && mounted) {
       _pollTimer?.cancel();
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('E-posta adresiniz doğrulandı! Giriş yapabilirsiniz.'),
+        SnackBar(
+          content: Text(l10n?.emailVerified ?? 'E-posta adresiniz doğrulandı! Giriş yapabilirsiniz.'),
           backgroundColor: Colors.green,
-          duration: Duration(seconds: 3),
+          duration: const Duration(seconds: 3),
         ),
       );
       await Future.delayed(const Duration(milliseconds: 500));
@@ -130,9 +134,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         context.go('/login');
       }
     } else if (!isVerified && mounted) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('E-posta henüz doğrulanmadı. Lütfen gelen kutunuzu kontrol edin.'),
+        SnackBar(
+          content: Text(l10n?.emailNotVerifiedYet ?? 'E-posta henüz doğrulanmadı. Lütfen gelen kutunuzu kontrol edin.'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -155,14 +160,15 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('E-posta Doğrulama'),
+        title: Text(l10n?.emailVerification ?? 'E-posta Doğrulama'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            tooltip: 'Çıkış Yap',
+            tooltip: l10n?.logout ?? 'Çıkış Yap',
             onPressed: _handleLogout,
           ),
         ],
@@ -191,7 +197,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
               // Title
               Text(
-                'E-postanızı Doğrulayın',
+                l10n?.verifyYourEmail ?? 'E-postanızı Doğrulayın',
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: AppTypography.bold,
                 ),
@@ -202,7 +208,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
               // Description
               Text(
-                '${widget.email} adresine bir doğrulama e-postası gönderdik.',
+                l10n?.verificationEmailSent(widget.email) ?? '${widget.email} adresine bir doğrulama e-postası gönderdik.',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurface,
                 ),
@@ -212,7 +218,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               AppSpacing.sm.verticalSpace,
 
               Text(
-                'Lütfen e-postanızdaki bağlantıya tıklayarak hesabınızı doğrulayın.',
+                l10n?.clickLinkToVerify ?? 'Lütfen e-postanızdaki bağlantıya tıklayarak hesabınızı doğrulayın.',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface,
                 ),
@@ -223,7 +229,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
               // Check Verification Button
               AppPrimaryButton(
-                label: 'Doğrulamayı Kontrol Et',
+                label: l10n?.checkVerification ?? 'Doğrulamayı Kontrol Et',
                 icon: Icons.refresh,
                 onPressed: _isChecking ? null : _checkVerification,
                 isLoading: _isChecking,
@@ -234,8 +240,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               // Resend Email Button
               AppSecondaryButton(
                 label: _resendCooldown > 0
-                    ? 'Tekrar Gönder ($_resendCooldown saniye)'
-                    : 'Doğrulama E-postasını Tekrar Gönder',
+                    ? (l10n?.resendInSeconds(_resendCooldown) ?? 'Tekrar Gönder ($_resendCooldown saniye)')
+                    : (l10n?.resendVerificationEmail ?? 'Doğrulama E-postasını Tekrar Gönder'),
                 icon: Icons.email_outlined,
                 onPressed: _resendCooldown > 0 || _isResending ? null : _resendVerificationEmail,
                 isLoading: _isResending,
@@ -260,7 +266,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                           ),
                           AppSpacing.sm.horizontalSpace,
                           Text(
-                            'İpuçları',
+                            l10n?.tips ?? 'İpuçları',
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: AppTypography.semiBold,
                               color: theme.colorScheme.primary,
@@ -270,9 +276,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       ),
                       AppSpacing.sm.verticalSpace,
                       Text(
-                        '• E-postayı bulamıyorsanız spam klasörünü kontrol edin\n'
-                        '• E-posta birkaç dakika içinde gelmezse "Tekrar Gönder" butonunu kullanın\n'
-                        '• Doğrulama tamamlandığında otomatik olarak giriş sayfasına yönlendirileceksiniz',
+                        '${l10n?.verificationTip1 ?? '• E-postayı bulamıyorsanız spam klasörünü kontrol edin'}\n'
+                        '${l10n?.verificationTip2 ?? '• E-posta birkaç dakika içinde gelmezse "Tekrar Gönder" butonunu kullanın'}\n'
+                        '${l10n?.verificationTip3 ?? '• Doğrulama tamamlandığında otomatik olarak giriş sayfasına yönlendirileceksiniz'}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface,
                           height: 1.5,

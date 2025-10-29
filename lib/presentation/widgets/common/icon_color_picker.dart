@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../data/models/category_model.dart';
 
 class IconColorResult {
@@ -63,6 +64,7 @@ class _IconColorPickerState extends State<IconColorPicker> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -73,13 +75,13 @@ class _IconColorPickerState extends State<IconColorPicker> {
             children: [
               CircleAvatar(backgroundColor: _color.withValues(alpha: 0.15), child: Icon(_icon, color: _color)),
               const SizedBox(width: 12),
-              Text('Sembol ve Renk Seçin', style: Theme.of(context).textTheme.titleMedium),
+              Text(l10n?.selectSymbolAndColor ?? 'Sembol ve Renk Seçin', style: Theme.of(context).textTheme.titleMedium),
               const Spacer(),
               IconButton(onPressed: () => Navigator.pop(context, null), icon: const Icon(Icons.close)),
             ],
           ),
           const SizedBox(height: 12),
-          Text('Sembol', style: Theme.of(context).textTheme.labelLarge),
+          Text(l10n?.symbol ?? 'Sembol', style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
           SizedBox(
             height: 320,
@@ -135,7 +137,7 @@ class _IconColorPickerState extends State<IconColorPicker> {
             child: ElevatedButton.icon(
               onPressed: () => Navigator.pop(context, IconColorResult(_icon, _color)),
               icon: const Icon(Icons.check),
-              label: const Text('Kaydet'),
+              label: Text(l10n?.save ?? 'Kaydet'),
             ),
           ),
         ],

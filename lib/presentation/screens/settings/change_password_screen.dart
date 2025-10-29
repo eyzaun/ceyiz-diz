@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -29,41 +30,43 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     super.dispose();
   }
   
-  String? _validateCurrentPassword(String? value) {
+  String? _validateCurrentPassword(String? value, AppLocalizations? l10n) {
     if (value == null || value.isEmpty) {
-      return 'Mevcut şifre gereklidir';
+      return l10n?.currentPasswordRequired ?? 'Current password is required';
     }
     return null;
   }
   
-  String? _validateNewPassword(String? value) {
+  String? _validateNewPassword(String? value, AppLocalizations? l10n) {
     if (value == null || value.isEmpty) {
-      return 'Yeni şifre gereklidir';
+      return l10n?.newPasswordRequired ?? 'New password is required';
     }
     if (value.length < 6) {
-      return 'Şifre en az 6 karakter olmalıdır';
+      return l10n?.passwordMinLength ?? 'Password must be at least 6 characters';
     }
     if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$').hasMatch(value)) {
-      return 'Şifre en az bir büyük harf, bir küçük harf ve bir rakam içermelidir';
+      return l10n?.passwordMustContain ?? 'Password must contain at least one uppercase, one lowercase and one number';
     }
     if (value == _currentPasswordController.text) {
-      return 'Yeni şifre mevcut şifreden farklı olmalıdır';
+      return l10n?.newPasswordMustBeDifferent ?? 'New password must be different from current password';
     }
     return null;
   }
   
-  String? _validateConfirmPassword(String? value) {
+  String? _validateConfirmPassword(String? value, AppLocalizations? l10n) {
     if (value == null || value.isEmpty) {
-      return 'Şifre tekrarı gereklidir';
+      return l10n?.confirmPasswordRequired ?? 'Password confirmation is required';
     }
     if (value != _newPasswordController.text) {
-      return 'Şifreler eşleşmiyor';
+      return l10n?.passwordsNotMatch ?? 'Passwords do not match';
     }
     return null;
   }
   
   Future<void> _changePassword() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    final l10n = AppLocalizations.of(context);
     
     setState(() {
       _isLoading = true;
@@ -81,8 +84,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Şifre başarıyla değiştirildi'),
+        SnackBar(
+          content: Text(l10n?.passwordChangedSuccessfully ?? 'Password changed successfully'),
           backgroundColor: Colors.green,
         ),
       );
@@ -99,13 +102,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     
     return LoadingOverlay(
       isLoading: _isLoading,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Şifre Değiştir'),
+          title: Text(l10n?.changePassword ?? 'Change Password'),
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -123,14 +127,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.amber),
-                      SizedBox(width: 12),
+                      const Icon(Icons.info_outline, color: Colors.amber),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Güçlü bir şifre seçin: En az 6 karakter, büyük/küçük harf ve rakam içermelidir.',
-                          style: TextStyle(fontSize: 12),
+                          l10n?.strongPasswordHint ?? 'Choose a strong password: At least 6 characters, uppercase/lowercase letters and numbers.',
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ),
                     ],
@@ -143,7 +147,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   controller: _currentPasswordController,
                   obscureText: !_isCurrentPasswordVisible,
                   decoration: InputDecoration(
-                    labelText: 'Mevcut Şifre',
+                    labelText: l10n?.currentPassword ?? 'Current Password',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -158,7 +162,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       },
                     ),
                   ),
-                  validator: _validateCurrentPassword,
+                  validator: (value) => _validateCurrentPassword(value, l10n),
                 ),
                 const SizedBox(height: 16),
                 
@@ -170,7 +174,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   controller: _newPasswordController,
                   obscureText: !_isNewPasswordVisible,
                   decoration: InputDecoration(
-                    labelText: 'Yeni Şifre',
+                    labelText: l10n?.newPassword ?? 'New Password',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -185,7 +189,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       },
                     ),
                   ),
-                  validator: _validateNewPassword,
+                  validator: (value) => _validateNewPassword(value, l10n),
                 ),
                 const SizedBox(height: 16),
                 
@@ -194,7 +198,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   controller: _confirmPasswordController,
                   obscureText: !_isConfirmPasswordVisible,
                   decoration: InputDecoration(
-                    labelText: 'Yeni Şifre Tekrar',
+                    labelText: l10n?.newPasswordAgain ?? 'New Password Again',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -209,7 +213,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       },
                     ),
                   ),
-                  validator: _validateConfirmPassword,
+                  validator: (value) => _validateConfirmPassword(value, l10n),
                 ),
                 
                 const SizedBox(height: 32),
@@ -219,7 +223,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   height: 48,
                   child: ElevatedButton(
                     onPressed: _changePassword,
-                    child: const Text('Şifreyi Değiştir'),
+                    child: Text(l10n?.changePassword ?? 'Change Password'),
                   ),
                 ),
               ],

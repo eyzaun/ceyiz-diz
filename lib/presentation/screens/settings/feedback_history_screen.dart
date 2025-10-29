@@ -3,26 +3,28 @@ import 'package:intl/intl.dart';
 import '../../../data/repositories/feedback_repository.dart';
 import '../../../data/models/feedback_model.dart';
 import '../../../data/services/firebase_service.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class FeedbackHistoryScreen extends StatelessWidget {
   const FeedbackHistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final userId = FirebaseService.auth.currentUser?.uid;
 
     if (userId == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Geri Bildirimlerim')),
-        body: const Center(
-          child: Text('Giriş yapmanız gerekiyor'),
+        appBar: AppBar(title: Text(l10n?.myFeedback ?? 'My Feedback')),
+        body: Center(
+          child: Text(l10n?.loginRequired ?? 'You need to log in'),
         ),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Geri Bildirimlerim'),
+        title: Text(l10n?.myFeedback ?? 'My Feedback'),
       ),
       body: StreamBuilder<List<FeedbackModel>>(
         stream: FeedbackRepository().getUserFeedbackStream(userId),
@@ -43,7 +45,7 @@ class FeedbackHistoryScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Bir hata oluştu',
+                    l10n?.anErrorOccurred ?? 'An error occurred',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
@@ -71,12 +73,12 @@ class FeedbackHistoryScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Henüz geri bildirim göndermediniz',
+                    l10n?.noFeedbackYet ?? 'You haven\'t sent any feedback yet',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Görüş ve önerilerinizi bizimle paylaşın',
+                    l10n?.shareYourOpinions ?? 'Share your opinions and suggestions with us',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
@@ -178,7 +180,7 @@ class _FeedbackCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Sizin Mesajınız',
+                        AppLocalizations.of(context)?.yourMessage ?? 'Your Message',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w600,
@@ -224,7 +226,7 @@ class _FeedbackCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Destek Ekibinden',
+                              AppLocalizations.of(context)?.fromSupportTeam ?? 'From Support Team',
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.w600,
@@ -274,7 +276,7 @@ class _FeedbackCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Henüz yanıtlanmadı',
+                      AppLocalizations.of(context)?.notAnsweredYet ?? 'Not answered yet',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface,
                         fontStyle: FontStyle.italic,

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/icon_color_picker.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class CategoryManagementScreen extends StatefulWidget {
   final String trousseauId;
@@ -26,6 +27,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final categoryProvider = context.watch<CategoryProvider>();
     final trousseauProvider = context.watch<TrousseauProvider>();
     final trousseau = trousseauProvider.getTrousseauById(widget.trousseauId);
@@ -33,11 +35,11 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kategori Yönetimi'),
+        title: Text(l10n?.categoryManagement ?? 'Category Management'),
         actions: [
           if (canEdit)
             IconButton(
-              tooltip: 'Yeni Kategori',
+              tooltip: l10n?.newCategory ?? 'New Category',
               icon: const Icon(Icons.add),
               onPressed: () async {
                 await _promptAddCategory(context, categoryProvider);
@@ -53,7 +55,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                   child: Text(
-                    'Varsayılan Kategoriler',
+                    l10n?.defaultCategories ?? 'Default Categories',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
@@ -67,7 +69,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                   child: Text(
-                    'Özel Kategoriler',
+                    l10n?.customCategories ?? 'Custom Categories',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
@@ -75,7 +77,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                   Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: Text(
-                      'Henüz özel kategori yok. Sağ üstten ekleyebilirsiniz.',
+                      l10n?.noCustomCategoriesYet ?? 'No custom categories yet. You can add them from the top right.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
@@ -92,6 +94,8 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
   }
 
   Widget _tile(BuildContext context, String title, dynamic c, {required bool canEdit}) {
+    final l10n = AppLocalizations.of(context);
+    
     return Card(
       child: ListTile(
         leading: CircleAvatar(
@@ -99,13 +103,13 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
           child: Icon(c.icon, color: c.color),
         ),
         title: Text(title),
-        subtitle: Text(c.isCustom ? 'Özel' : 'Varsayılan'),
+        subtitle: Text(c.isCustom ? (l10n?.custom ?? 'Custom') : (l10n?.defaultText ?? 'Default')),
         trailing: canEdit
             ? Wrap(
                 spacing: 4,
                 children: [
                   IconButton(
-                    tooltip: 'Düzenle',
+                    tooltip: l10n?.edit ?? 'Edit',
                     icon: const Icon(Icons.edit),
                     onPressed: () async {
                       await _promptEdit(context, c);
@@ -132,6 +136,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
   }
 
   Future<void> _promptAddCategory(BuildContext context, CategoryProvider provider) async {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
     IconData selIcon = Icons.category;
@@ -140,7 +145,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocalState) => AlertDialog(
-          title: const Text('Yeni Kategori'),
+          title: Text(l10n?.newCategory ?? 'New Category'),
           content: Form(
             key: formKey,
             child: Column(
@@ -148,11 +153,11 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
               children: [
                 TextFormField(
                   controller: controller,
-                  decoration: const InputDecoration(hintText: 'Kategori adı'),
+                  decoration: InputDecoration(hintText: l10n?.categoryName ?? 'Category name'),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Ad gerekli';
+                    if (v == null || v.trim().isEmpty) return l10n?.nameRequired ?? 'Name required';
                     if (provider.allCategories.any((c) => c.displayName.toLowerCase() == v.trim().toLowerCase())) {
-                      return 'Bu ad kullanılıyor';
+                      return l10n?.nameAlreadyUsed ?? 'This name is already used';
                     }
                     return null;
                   },
@@ -165,7 +170,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                     Expanded(
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.palette_outlined),
-                        label: const Text('Sembol ve Renk Seç'),
+                        label: Text(l10n?.selectSymbolAndColor ?? 'Select Symbol and Color'),
                         onPressed: () async {
                           final res = await IconColorPicker.pick(context, icon: selIcon, color: selColor);
                           if (res != null) {
@@ -183,7 +188,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n?.giveUp ?? 'Cancel')),
             ElevatedButton(
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
@@ -193,7 +198,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                 if (!ctx.mounted) return;
                 Navigator.pop(ctx, res);
               },
-              child: const Text('Ekle'),
+              child: Text(l10n?.add ?? 'Add'),
             ),
           ],
         ),
@@ -203,6 +208,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
   }
 
   Future<void> _promptEdit(BuildContext context, dynamic category) async {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController(text: category.displayName);
     final formKey = GlobalKey<FormState>();
     final provider = context.read<CategoryProvider>();
@@ -213,7 +219,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocalState) => AlertDialog(
-          title: const Text('Kategoriyi Düzenle'),
+          title: Text(l10n?.editCategory ?? 'Edit Category'),
           content: Form(
             key: formKey,
             child: Column(
@@ -221,12 +227,12 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
               children: [
                 TextFormField(
                   controller: controller,
-                  decoration: const InputDecoration(
-                    labelText: 'Kategori Adı',
-                    hintText: 'Kategori adını girin',
+                  decoration: InputDecoration(
+                    labelText: l10n?.categoryName ?? 'Category Name',
+                    hintText: l10n?.enterCategoryName ?? 'Enter category name',
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Ad gerekli';
+                    if (v == null || v.trim().isEmpty) return l10n?.nameRequired ?? 'Name required';
                     return null;
                   },
                 ),
@@ -241,7 +247,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                     Expanded(
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.palette_outlined),
-                        label: const Text('Sembol ve Renk Değiştir'),
+                        label: Text(l10n?.changeSymbolAndColor ?? 'Change Symbol and Color'),
                         onPressed: () async {
                           final res = await IconColorPicker.pick(
                             context,
@@ -265,7 +271,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Vazgeç'),
+              child: Text(l10n?.giveUp ?? 'Cancel'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -280,7 +286,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                 if (!ctx.mounted) return;
                 Navigator.pop(ctx, res);
               },
-              child: const Text('Kaydet'),
+              child: Text(l10n?.save ?? 'Save'),
             ),
           ],
         ),
@@ -290,14 +296,15 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
   }
 
   Future<bool> _confirmDelete(BuildContext context, String name) async {
+    final l10n = AppLocalizations.of(context);
     final res = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Kategoriyi Sil'),
-        content: Text('"$name" kategorisini silmek istediğinize emin misiniz? Ürünler silinmez; kategori görünümü Diğer olabilir.'),
+        title: Text(l10n?.deleteCategory ?? 'Delete Category'),
+        content: Text(l10n?.deleteCategoryConfirm(name) ?? 'Are you sure you want to delete the "$name" category? Products will not be deleted; category view may be Other.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('İptal')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sil')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n?.cancel ?? 'Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n?.delete ?? 'Delete')),
         ],
       ),
     );

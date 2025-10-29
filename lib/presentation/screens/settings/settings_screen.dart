@@ -5,8 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:intl/intl.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import 'dart:io';
 import '../../providers/auth_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../widgets/common/custom_dialog.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/utils/image_optimization_utils.dart';
@@ -20,11 +23,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
-  String _language = 'Türkçe';
   bool _isUploadingPhoto = false;
 
   Future<void> _pickAndUploadPhoto() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final l10n = AppLocalizations.of(context);
 
     try {
       final ImagePicker picker = ImagePicker();
@@ -67,7 +70,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await uploadTask.timeout(
         const Duration(seconds: 30),
         onTimeout: () {
-          throw Exception('Yükleme süresi aşıldı. İnternet bağlantınızı kontrol edin.');
+          final l10n = AppLocalizations.of(context);
+          throw Exception(l10n?.uploadTimeout ?? 'Yükleme süresi aşıldı. İnternet bağlantınızı kontrol edin.');
         },
       );
 
@@ -78,15 +82,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profil fotoğrafı güncellendi'),
+            SnackBar(
+              content: Text(l10n?.profilePhotoUpdated ?? 'Profil fotoğrafı güncellendi'),
               backgroundColor: Colors.green,
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Profil güncellenemedi: ${authProvider.errorMessage}'),
+              content: Text('${l10n?.profileNotUpdated ?? 'Profil güncellenemedi'}: ${authProvider.errorMessage}'),
               backgroundColor: Colors.red,
             ),
           );
@@ -96,7 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Hata: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text('${AppLocalizations.of(context)?.error ?? 'Hata'}: ${e.toString().replaceAll('Exception: ', '')}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
@@ -111,33 +115,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _editName() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController(
       text: authProvider.currentUser?.displayName ?? '',
     );
 
     final result = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
-        title: const Text('İsim Düzenle'),
+        title: Text(l10n?.editName ?? 'İsim Düzenle'),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'İsim',
-            hintText: 'Yeni isminizi girin',
+          decoration: InputDecoration(
+            labelText: l10n?.name ?? 'İsim',
+            hintText: l10n?.enterNewName ?? 'Yeni isminizi girin',
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n?.cancel ?? 'İptal'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Kaydet'),
+            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            child: Text(l10n?.save ?? 'Kaydet'),
           ),
         ],
       ),
@@ -147,7 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final success = await authProvider.updateProfile(displayName: result);
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('İsim güncellendi')),
+          SnackBar(content: Text(l10n?.nameUpdated ?? 'İsim güncellendi')),
         );
       }
     }
@@ -158,10 +163,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final theme = Theme.of(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
+    final l10n = AppLocalizations.of(context);
+    
+    debugPrint('🔧 [SettingsScreen] build() çağrıldı');
+    debugPrint('🔧 [SettingsScreen] Locale: ${Localizations.localeOf(context)}');
+    debugPrint('🔧 [SettingsScreen] l10n null mu? ${l10n == null}');
+    
+    // If localization is not ready, show loading
+    if (l10n == null) {
+      debugPrint('🔧 [SettingsScreen] l10n null! Loading gösteriliyor...');
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    debugPrint('🔧 [SettingsScreen] l10n hazır! settings key: ${l10n.settings}');
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ayarlar'),
+        title: Text(l10n.settings),
       ),
       body: ListView(
         children: [
@@ -199,23 +219,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     ),
                                   ),
                                 ),
-                                errorWidget: (context, url, error) => Container(
-                                  color: theme.colorScheme.primary,
-                                  child: Center(
-                                    child: Text(
-                                      user.displayName.substring(0, 1).toUpperCase(),
-                                      style: const TextStyle(
-                                        fontSize: 36,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                                errorWidget: (context, url, error) {
+                                  final displayName = user.displayName;
+                                  final initial = displayName.isNotEmpty
+                                      ? displayName.substring(0, 1).toUpperCase()
+                                      : 'K';
+                                  return Container(
+                                    color: theme.colorScheme.primary,
+                                    child: Center(
+                                      child: Text(
+                                        initial,
+                                        style: const TextStyle(
+                                          fontSize: 36,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
+                                  );
+                                },
                               )
                             : Center(
                                 child: Text(
-                                  user?.displayName.substring(0, 1).toUpperCase() ?? 'K',
+                                  () {
+                                    final displayName = user?.displayName ?? '';
+                                    return displayName.isNotEmpty 
+                                        ? displayName.substring(0, 1).toUpperCase()
+                                        : 'K';
+                                  }(),
                                   style: const TextStyle(
                                     fontSize: 36,
                                     color: Colors.white,
@@ -260,7 +291,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  user?.displayName ?? 'Kullanıcı',
+                  user?.displayName ?? (l10n?.userDefaultName ?? 'Kullanıcı'),
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -275,6 +306,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (user?.createdAt != null) ...[
                   const SizedBox(height: 4),
                   Text(
+                    l10n?.membershipSince(_formatDate(user!.createdAt)) ?? 
                     'Üyelik: ${_formatDate(user!.createdAt)}',
                     style: theme.textTheme.bodySmall,
                   ),
@@ -288,19 +320,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Account Settings
           _buildSection(
             context,
-            'Hesap Ayarları',
+            l10n.accountSettings,
             [
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
-                title: const Text('İsmi Düzenle'),
-                subtitle: const Text('Görünen adınızı değiştirin'),
+                title: Text(l10n.editName),
+                subtitle: Text(l10n.editNameSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: _editName,
               ),
               ListTile(
                 leading: const Icon(Icons.lock_outline),
-                title: const Text('Şifre Değiştir'),
-                subtitle: const Text('Hesap güvenliğiniz için şifrenizi güncelleyin'),
+                title: Text(l10n.changePasswordButton),
+                subtitle: Text(l10n.changePasswordSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/settings/change-password'),
               ),
@@ -310,12 +342,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Features Settings
           _buildSection(
             context,
-            'Özellikler',
+            l10n.features,
             [
               ListTile(
                 leading: const Icon(Icons.access_time),
-                title: const Text('Kaç Saat Hesaplayıcı'),
-                subtitle: const Text('Ürün fiyatlarını çalışma saatine çevir'),
+                title: Text(l10n.kacSaatTitle),
+                subtitle: Text(l10n.kacSaatSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/settings/kac-saat'),
               ),
@@ -325,12 +357,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Appearance Settings
           _buildSection(
             context,
-            'Görünüm',
+            l10n.appearance,
             [
               ListTile(
                 leading: const Icon(Icons.palette_outlined),
-                title: const Text('Tema Ayarları'),
-                subtitle: const Text('Uygulama temasını ve renklerini değiştirin'),
+                title: Text(l10n.themeSettings),
+                subtitle: Text(l10n.themeSettingsSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/settings/theme'),
               ),
@@ -340,12 +372,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // App Settings
           _buildSection(
             context,
-            'Uygulama',
+            l10n.application,
             [
               ListTile(
                 leading: const Icon(Icons.notifications_outlined),
-                title: const Text('Bildirimler'),
-                subtitle: const Text('Bildirim tercihlerinizi yönetin'),
+                title: Text(l10n.notificationsTitle),
+                subtitle: Text(l10n.notificationsSubtitle),
                 trailing: Switch(
                   value: _notificationsEnabled,
                   onChanged: (value) {
@@ -354,7 +386,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Bildirimler ${value ? 'açık' : 'kapalı'}'),
+                        content: Text(l10n.notificationsStatus(value ? l10n.enabled : l10n.disabled)),
                         duration: const Duration(seconds: 1),
                       ),
                     );
@@ -363,34 +395,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.language),
-                title: const Text('Dil'),
-                subtitle: Text(_language),
+                title: Text(l10n.language),
+                subtitle: Text(
+                  context.watch<LocaleProvider>().currentLanguageName,
+                ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
+                  debugPrint('🔧 [SettingsScreen] Dil değiştirme modal açılıyor...');
                   showModalBottomSheet(
                     context: context,
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                     ),
-                    builder: (context) {
+                    builder: (modalContext) {
+                      final currentLocale = context.read<LocaleProvider>().locale.languageCode;
+                      debugPrint('🔧 [SettingsScreen] Modal açıldı. Mevcut dil: $currentLocale');
+                      
                       return SafeArea(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             ListTile(
                               leading: const Icon(Icons.language),
-                              title: const Text('Türkçe'),
+                              title: Text(l10n.turkish),
+                              trailing: currentLocale == 'tr'
+                                  ? Icon(Icons.check, color: Theme.of(modalContext).primaryColor)
+                                  : null,
                               onTap: () {
-                                setState(() => _language = 'Türkçe');
-                                Navigator.pop(context);
+                                debugPrint('🔧 [SettingsScreen] Türkçe seçildi');
+                                context.read<LocaleProvider>().setTurkish();
+                                Navigator.pop(modalContext);
                               },
                             ),
                             ListTile(
                               leading: const Icon(Icons.language),
-                              title: const Text('English'),
+                              title: Text(l10n.english),
+                              trailing: currentLocale == 'en'
+                                  ? Icon(Icons.check, color: Theme.of(modalContext).primaryColor)
+                                  : null,
                               onTap: () {
-                                setState(() => _language = 'English');
-                                Navigator.pop(context);
+                                debugPrint('🔧 [SettingsScreen] İngilizce seçildi');
+                                context.read<LocaleProvider>().setEnglish();
+                                Navigator.pop(modalContext);
                               },
                             ),
                           ],
@@ -406,19 +452,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Sharing & Feedback
           _buildSection(
             context,
-            'Paylaşım',
+            l10n.sharing,
             [
               ListTile(
                 leading: const Icon(Icons.share_outlined),
-                title: const Text('Benimle Paylaşılan Çeyizler'),
-                subtitle: const Text('Paylaşılan çeyiz listelerini görüntüle'),
+                title: Text(l10n.sharedWithMeTitle),
+                subtitle: Text(l10n.sharedWithMeSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/shared-trousseaus'),
               ),
               ListTile(
                 leading: const Icon(Icons.feedback_outlined),
-                title: const Text('Geri Bildirim Gönder'),
-                subtitle: const Text('Önerilerinizi bizimle paylaşın'),
+                title: Text(l10n.sendFeedback),
+                subtitle: Text(l10n.sendFeedbackSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/settings/feedback'),
               ),
@@ -428,17 +474,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // About Section
           _buildSection(
             context,
-            'Hakkında',
+            l10n.about,
             [
               ListTile(
                 leading: const Icon(Icons.info_outline),
-                title: const Text('Uygulama Hakkında'),
-                subtitle: const Text('Versiyon 1.0.17'),
+                title: Text(l10n.appAbout),
+                subtitle: Text('${l10n.version} 1.0.17'),
                 onTap: () => _showAboutDialog(context),
               ),
               ListTile(
                 leading: const Icon(Icons.privacy_tip_outlined),
-                title: const Text('Gizlilik Politikası'),
+                title: Text(l10n.privacyPolicy),
                 onTap: () {
                   showDialog(
                     context: context,
@@ -446,12 +492,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.xl),
                       ),
-                      title: const Text('Gizlilik Politikası'),
-                      content: const Text('Gizlilik politikası metni burada gösterilecektir.'),
+                      title: Text(l10n.privacyPolicy),
+                      content: Text(l10n.privacyPolicyText),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('Kapat'),
+                          child: Text(l10n.close),
                         ),
                       ],
                     ),
@@ -460,7 +506,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.description_outlined),
-                title: const Text('Kullanım Koşulları'),
+                title: Text(l10n.termsOfService),
                 onTap: () {
                   showDialog(
                     context: context,
@@ -468,12 +514,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.xl),
                       ),
-                      title: const Text('Kullanım Koşulları'),
-                      content: const Text('Kullanım koşulları metni burada gösterilecektir.'),
+                      title: Text(l10n.termsOfService),
+                      content: Text(l10n.termsOfServiceText),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('Kapat'),
+                          child: Text(l10n.close),
                         ),
                       ],
                     ),
@@ -486,21 +532,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Danger Zone
           _buildSection(
             context,
-            'Tehlikeli Bölge',
+            l10n.dangerZone,
             [
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.orange),
-                title: const Text(
-                  'Çıkış Yap',
-                  style: TextStyle(color: Colors.orange),
+                title: Text(
+                  l10n.signOut,
+                  style: const TextStyle(color: Colors.orange),
                 ),
-                subtitle: const Text('Hesabınızdan çıkış yapın'),
+                subtitle: Text(l10n.signOutSubtitle),
                 onTap: () async {
                   final confirmed = await CustomDialog.showConfirmation(
                     context: context,
-                    title: 'Çıkış Yap',
-                    subtitle: 'Çıkış yapmak istediğinizden emin misiniz?',
-                    confirmText: 'Çıkış Yap',
+                    title: l10n.signOut,
+                    subtitle: l10n.signOutConfirm,
+                    confirmText: l10n.signOut,
                     confirmColor: Colors.orange,
                   );
 
@@ -514,11 +560,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.delete_forever, color: Colors.red),
-                title: const Text(
-                  'Hesabı Sil',
-                  style: TextStyle(color: Colors.red),
+                title: Text(
+                  l10n.deleteAccount,
+                  style: const TextStyle(color: Colors.red),
                 ),
-                subtitle: const Text('Hesabınızı kalıcı olarak silin'),
+                subtitle: Text(l10n.deleteAccountSubtitle),
                 onTap: () => _showDeleteAccountDialog(context),
               ),
             ],
@@ -555,14 +601,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   String _formatDate(DateTime date) {
-    final months = [
-      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
+    // Use intl package for locale-aware date formatting
+    final locale = AppLocalizations.of(context)?.localeName ?? 'tr';
+    final formatter = DateFormat.yMMMMd(locale);
+    return formatter.format(date);
   }
 
   void _showAboutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AboutDialog(
@@ -581,9 +627,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: Theme.of(context).colorScheme.primary,
           ),
         ),
-        children: const [
+        children: [
           Text(
-            'Çeyiz Diz, hayalinizdeki çeyizi kolayca planlamanızı ve yönetmenizi sağlayan modern bir uygulamadır.',
+            l10n?.appDescription ?? 'Çeyiz Diz, hayalinizdeki çeyizi kolayca planlamanızı ve yönetmenizi sağlayan modern bir uygulamadır.',
             textAlign: TextAlign.center,
           ),
         ],
@@ -593,12 +639,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showDeleteAccountDialog(BuildContext context) {
     final passwordController = TextEditingController();
+    final l10n = AppLocalizations.of(context);
 
     showDialog(
       context: context,
       builder: (context) => CustomDialog(
-        title: 'Hesabı Sil',
-        subtitle: 'Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.',
+        title: l10n?.deleteAccount ?? 'Hesabı Sil',
+        subtitle: l10n?.deleteAccountIrreversible ?? 'Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.',
         content: Column(
           children: [
             Container(
@@ -607,14 +654,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: Theme.of(context).colorScheme.error.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.warning, color: Colors.red),
-                  SizedBox(width: AppSpacing.sm),
+                  const Icon(Icons.warning, color: Colors.red),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
-                      'Hesabınızı sildikten sonra tüm çeyizleriniz ve ürünleriniz kalıcı olarak silinecektir.',
-                      style: TextStyle(color: Colors.red),
+                      l10n?.deleteAccountWarning ?? 'Hesabınızı sildikten sonra tüm çeyizleriniz ve ürünleriniz kalıcı olarak silinecektir.',
+                      style: const TextStyle(color: Colors.red),
                     ),
                   ),
                 ],
@@ -624,10 +671,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             TextField(
               controller: passwordController,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Şifrenizi girin',
-                hintText: 'Güvenlik için şifreniz gereklidir',
-                prefixIcon: Icon(Icons.lock_outline),
+              decoration: InputDecoration(
+                labelText: l10n?.enterPasswordToDelete ?? 'Şifrenizi girin',
+                hintText: l10n?.passwordRequiredForSecurity ?? 'Güvenlik için şifreniz gereklidir',
+                prefixIcon: const Icon(Icons.lock_outline),
               ),
             ),
           ],
@@ -635,14 +682,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('İptal'),
+            child: Text(l10n?.cancel ?? 'İptal'),
           ),
           ElevatedButton(
             onPressed: () async {
               if (passwordController.text.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Şifre gereklidir'),
+                  SnackBar(
+                    content: Text(l10n?.passwordRequiredSimple ?? 'Şifre gereklidir'),
                     backgroundColor: Colors.orange,
                   ),
                 );
@@ -666,7 +713,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Hesabı Sil'),
+            child: Text(l10n?.deleteAccountButton ?? 'Hesabı Sil'),
           ),
         ],
       ),

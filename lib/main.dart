@@ -107,6 +107,9 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
+          create: (_) => LocaleProvider(),
+        ),
+        ChangeNotifierProvider(
           create: (_) => ThemeProvider(widget.prefs),
         ),
         ChangeNotifierProvider(
@@ -127,16 +130,39 @@ class _MyAppState extends State<MyApp> {
           create: (_) => CategoryProvider(),
         ),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
+      child: Consumer2<ThemeProvider, LocaleProvider>(
+        builder: (context, themeProvider, localeProvider, _) {
+          debugPrint('🌍 [MyApp] Consumer2 builder çağrıldı');
+          debugPrint('🌍 [MyApp] Mevcut locale: ${localeProvider.locale}');
+          debugPrint('🌍 [MyApp] Mevcut tema: ${themeProvider.currentTheme.brightness}');
+          
           return MaterialApp.router(
             title: 'Çeyiz Diz',
             debugShowCheckedModeBanner: false,
             theme: themeProvider.currentTheme,
+            locale: localeProvider.locale,
+            localeResolutionCallback: (locale, supportedLocales) {
+              debugPrint('🌍 [MyApp] localeResolutionCallback çağrıldı');
+              debugPrint('🌍 [MyApp] Gelen locale: $locale');
+              debugPrint('🌍 [MyApp] LocaleProvider locale: ${localeProvider.locale}');
+              
+              // LocaleProvider'dan gelen locale'i kullan
+              if (supportedLocales.contains(localeProvider.locale)) {
+                debugPrint('🌍 [MyApp] LocaleProvider locale destekleniyor: ${localeProvider.locale}');
+                return localeProvider.locale;
+              }
+              
+              // Fallback olarak Türkçe
+              debugPrint('🌍 [MyApp] Fallback Türkçe kullanılıyor');
+              return const Locale('tr');
+            },
             routerConfig: AppRouter.router,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            builder: (context, child) => WebAppFrame(child: child ?? const SizedBox.shrink()),
+            builder: (context, child) {
+              debugPrint('🌍 [MyApp] MaterialApp.router builder çağrıldı');
+              return WebAppFrame(child: child ?? const SizedBox.shrink());
+            },
           );
         },
       ),

@@ -2,30 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/themes/theme_provider.dart';
 import '../../../core/themes/design_system.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class ThemeSettingsScreen extends StatelessWidget {
   const ThemeSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
   // ignore: unused_local_variable
   final themeProvider = Provider.of<ThemeProvider>(context);
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tema Ayarları'),
+        title: Text(l10n?.themeSettings ?? 'Theme Settings'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'Tema Seçimi',
+            l10n?.themeSelection ?? 'Theme Selection',
             style: theme.textTheme.headlineSmall,
           ),
           const SizedBox(height: 8),
           Text(
-            'Uygulamanın görünümünü kişiselleştirin',
+            l10n?.customizeAppearance ?? 'Customize the app\'s appearance',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.textTheme.bodySmall?.color,
             ),
@@ -35,8 +37,8 @@ class ThemeSettingsScreen extends StatelessWidget {
           // Theme Options
           _buildThemeOption(
             context,
-            'Varsayılan',
-            'Modern ve canlı renkler',
+            l10n?.defaultTheme ?? 'Default',
+            l10n?.modernVibrantColors ?? 'Modern and vibrant colors',
             DesignSystem.palettes[AppThemeType.defaultTheme]!.primary,
             DesignSystem.palettes[AppThemeType.defaultTheme]!.secondary,
             DesignSystem.palettes[AppThemeType.defaultTheme]!.tertiary,
@@ -45,8 +47,8 @@ class ThemeSettingsScreen extends StatelessWidget {
           ),
           _buildThemeOption(
             context,
-            'Monokrom',
-            'Saf siyah üzerine beyaz vurgu',
+            l10n?.monochromeTheme ?? 'Monochrome',
+            l10n?.pureBlackWhiteAccent ?? 'Pure black with white accents',
             DesignSystem.palettes[AppThemeType.modern]!.primary,
             DesignSystem.palettes[AppThemeType.modern]!.secondary,
             DesignSystem.palettes[AppThemeType.modern]!.tertiary,
@@ -55,8 +57,8 @@ class ThemeSettingsScreen extends StatelessWidget {
           ),
           _buildThemeOption(
             context,
-            'Mor Okyanus',
-            'Koyu gri zemin, mor vurgular',
+            l10n?.purpleOcean ?? 'Purple Ocean',
+            l10n?.darkGreyPurpleAccents ?? 'Dark grey background, purple accents',
             DesignSystem.palettes[AppThemeType.ocean]!.primary,
             DesignSystem.palettes[AppThemeType.ocean]!.secondary,
             DesignSystem.palettes[AppThemeType.ocean]!.tertiary,
@@ -65,8 +67,8 @@ class ThemeSettingsScreen extends StatelessWidget {
           ),
           _buildThemeOption(
             context,
-            'Orman Yeşili',
-            'Doğal yeşil tonlar',
+            l10n?.forestGreen ?? 'Forest Green',
+            l10n?.naturalGreenTones ?? 'Natural green tones',
             DesignSystem.palettes[AppThemeType.forest]!.primary,
             DesignSystem.palettes[AppThemeType.forest]!.secondary,
             DesignSystem.palettes[AppThemeType.forest]!.tertiary,
@@ -75,8 +77,8 @@ class ThemeSettingsScreen extends StatelessWidget {
           ),
           _buildThemeOption(
             context,
-            'Gün Batımı',
-            'Sıcak turuncu, pembe ve mor tonlar',
+            l10n?.sunset ?? 'Sunset',
+            l10n?.warmOrangePinkPurple ?? 'Warm orange, pink and purple tones',
             DesignSystem.palettes[AppThemeType.sunset]!.primary,
             DesignSystem.palettes[AppThemeType.sunset]!.secondary,
             DesignSystem.palettes[AppThemeType.sunset]!.tertiary,
@@ -104,7 +106,7 @@ class ThemeSettingsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Önizleme',
+                  l10n?.preview ?? 'Preview',
                   style: theme.textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
@@ -113,30 +115,30 @@ class ThemeSettingsScreen extends StatelessWidget {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {},
-                        child: const Text('Birincil Buton'),
+                        child: Text(l10n?.primaryButton ?? 'Primary Button'),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {},
-                        child: const Text('İkincil Buton'),
+                        child: Text(l10n?.secondaryButton ?? 'Secondary Button'),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Örnek Giriş Alanı',
-                    hintText: 'Metin girin',
+                  decoration: InputDecoration(
+                    labelText: l10n?.exampleInputField ?? 'Example Input Field',
+                    hintText: l10n?.enterText ?? 'Enter text',
                   ),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
                     Checkbox(value: true, onChanged: (_) {}),
-                    const Text('Seçim Kutusu'),
+                    Text(l10n?.checkbox ?? 'Checkbox'),
                     const Spacer(),
                     Switch(value: true, onChanged: (_) {}),
                   ],
@@ -159,6 +161,7 @@ class ThemeSettingsScreen extends StatelessWidget {
     AppThemeType type,
     bool isDark,
   ) {
+    final l10n = AppLocalizations.of(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isSelected = themeProvider.currentThemeType == type;
     
@@ -226,9 +229,9 @@ class ThemeSettingsScreen extends StatelessWidget {
                               color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
-                              'Koyu',
-                              style: TextStyle(fontSize: 10),
+                            child: Text(
+                              l10n?.dark ?? 'Dark',
+                              style: const TextStyle(fontSize: 10),
                             ),
                           ),
                       ],

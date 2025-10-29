@@ -14,6 +14,7 @@ import '../../../core/theme/design_tokens.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/category_model.dart';
 import '../../../data/models/product_model.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../core/services/kac_saat_calculator.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
@@ -131,6 +132,7 @@ class AppProductCard extends StatelessWidget {
   }
 
   Future<void> _openLink(BuildContext context, String link) async {
+    final l10n = AppLocalizations.of(context);
     try {
       final normalized = _normalizeUrl(link);
       if (normalized.isEmpty) return;
@@ -142,7 +144,7 @@ class AppProductCard extends StatelessWidget {
       if (!launched && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Link açılamadı'),
+            content: Text(l10n?.cantOpenLink ?? 'Link açılamadı'),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: AppRadius.radiusMD,
@@ -154,7 +156,7 @@ class AppProductCard extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Geçersiz link'),
+            content: Text(l10n?.invalidLink ?? 'Geçersiz link'),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: AppRadius.radiusMD,

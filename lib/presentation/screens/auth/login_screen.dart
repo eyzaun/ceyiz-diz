@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_input.dart';
@@ -95,21 +96,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   // ═══════════════════════════════════════════════════════════════════════════
 
   String? _validateEmail(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value == null || value.isEmpty) {
-      return '❌ E-posta adresi boş bırakılamaz';
+      return l10n?.emailRequired ?? '❌ E-posta adresi boş bırakılamaz';
     }
     if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
-      return '❌ Geçerli bir e-posta adresi girin (örn: ornek@email.com)';
+      return l10n?.emailInvalid ?? '❌ Geçerli bir e-posta adresi girin (örn: ornek@email.com)';
     }
     return null;
   }
 
   String? _validatePassword(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value == null || value.isEmpty) {
-      return '❌ Şifre boş bırakılamaz';
+      return l10n?.passwordRequired ?? '❌ Şifre boş bırakılamaz';
     }
     if (value.length < 6) {
-      return '❌ Şifre en az 6 karakter olmalı';
+      return l10n?.passwordMinLength ?? '❌ Şifre en az 6 karakter olmalı';
     }
     return null;
   }
@@ -154,24 +157,25 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       // Check if error is email not verified
       if (authProvider.errorMessage == 'email-not-verified') {
         if (!mounted) return;
+        final l10n = AppLocalizations.of(context);
         showDialog(
           context: context,
           builder: (dialogContext) => AlertDialog(
             shape: RoundedRectangleBorder(
               borderRadius: AppRadius.radiusXL,
             ),
-            title: const Text('E-posta Doğrulanmadı'),
-            content: const Text(
-              'Hesabınıza giriş yapmak için e-posta adresinizi doğrulamanız gerekmektedir. '
-              'E-posta adresinize gönderilen bağlantıya tıklayın.',
+            title: Text(l10n?.emailNotVerified ?? 'E-posta Doğrulanmadı'),
+            content: Text(
+              l10n?.emailNotVerifiedMessage ?? 
+              'Hesabınıza giriş yapmak için e-posta adresinizi doğrulamanız gerekmektedir.',
             ),
             actions: [
               AppTextButton(
-                label: 'İptal',
+                label: l10n?.cancel ?? 'İptal',
                 onPressed: () => Navigator.of(dialogContext).pop(),
               ),
               AppPrimaryButton(
-                label: 'Doğrulama Sayfasına Git',
+                label: l10n?.goToVerification ?? 'Doğrulama Sayfasına Git',
                 onPressed: () {
                   Navigator.of(dialogContext).pop();
                   final encodedEmail = Uri.encodeComponent(_emailController.text.trim());
@@ -281,6 +285,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     if (!mounted) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     showDialog(
       context: context,
@@ -309,8 +314,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               Expanded(
                 child: Text(
                   authProvider.forceUpdate
-                    ? 'Güncelleme Gerekli!'
-                    : 'Yeni Versiyon Mevcut',
+                    ? (l10n?.updateRequiredMessage ?? 'Güncelleme Gerekli!')
+                    : (l10n?.newVersionAvailable ?? 'Yeni Versiyon Mevcut'),
                   style: TextStyle(
                     fontSize: AppTypography.sizeLG,
                     fontWeight: AppTypography.bold,
@@ -433,11 +438,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final authProvider = Provider.of<AuthProvider>(context);
+    final l10n = AppLocalizations.of(context);
 
-    // Listen for update flag changes
+    // Listen to AuthProvider for update checks
     if (authProvider.updateAvailable && !_hasShownUpdateDialog && mounted) {
+      _hasShownUpdateDialog = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _checkForUpdateOnce();
+        _showUpdateDialog();
       });
     }
 
@@ -464,7 +471,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         // LOGO VE BAŞLIK
                         // Gestalt: Gruplama - Logo + Başlık + Subtitle yakın
                         // ─────────────────────────────────────────────────────
-                        _buildHeader(theme),
+                        _buildHeader(theme, l10n),
 
                         AppSpacing.xl.verticalSpace,
 
@@ -473,7 +480,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         // Miller Yasası: 2 alan = ideal (email + şifre)
                         // ─────────────────────────────────────────────────────
                         AppTextInput(
-                          label: 'Email',
+                          label: l10n?.email ?? 'Email',
                           hint: 'ornek@email.com',
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -485,8 +492,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         AppSpacing.md.verticalSpace,
 
                         AppPasswordInput(
-                          label: 'Şifre',
-                          hint: 'En az 6 karakter',
+                          label: l10n?.password ?? 'Şifre',
+                          hint: l10n?.passwordHint ?? 'En az 6 karakter',
                           controller: _passwordController,
                           textInputAction: TextInputAction.done,
                           validator: _validatePassword,
@@ -505,14 +512,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     _rememberMe = value ?? false;
                                   });
                                 },
-                                title: const Text('Beni Hatırla'),
+                                title: Text(l10n?.rememberMe ?? 'Beni Hatırla'),
                                 contentPadding: EdgeInsets.zero,
                                 controlAffinity: ListTileControlAffinity.leading,
                               ),
                             ),
                             // Şifremi Unuttum (Secondary action)
                             AppTextButton(
-                              label: 'Şifremi Unuttum',
+                              label: l10n?.forgotPassword ?? 'Şifremi Unuttum',
                               onPressed: () => context.push('/forgot-password'),
                             ),
                           ],
@@ -525,7 +532,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         // FITTS YASASI: 56dp height, full width, kolay basılır
                         // ─────────────────────────────────────────────────────
                         AppPrimaryButton(
-                          label: 'Giriş Yap',
+                          label: l10n?.login ?? 'Giriş Yap',
                           icon: Icons.login,
                           isFullWidth: true,
                           onPressed: _handleLogin,
@@ -560,7 +567,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         // Material 3 uyumlu, outlined style
                         // ─────────────────────────────────────────────────────
                         AppSecondaryButton(
-                          label: 'Google ile Giriş Yap',
+                          label: l10n?.googleSignIn ?? 'Google ile Giriş Yap',
                           icon: Icons.g_mobiledata_rounded, // Google "G" icon
                           isFullWidth: true,
                           onPressed: _handleGoogleSignIn,
@@ -577,14 +584,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Hesabınız yok mu?',
+                              l10n?.noAccount ?? 'Hesabınız yok mu?',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontSize: AppTypography.sizeBase,
                               ),
                             ),
                             AppSpacing.xs.horizontalSpace,
                             AppTextButton(
-                              label: 'Kayıt Olun',
+                              label: l10n?.register ?? 'Kayıt Olun',
                               onPressed: () => context.push('/register'),
                             ),
                           ],
@@ -605,7 +612,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   // HEADER WIDGET (Logo + Başlık)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildHeader(ThemeData theme) {
+  Widget _buildHeader(ThemeData theme, AppLocalizations? l10n) {
     return Column(
       children: [
         // Logo Container
@@ -650,7 +657,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
         // Alt Başlık
         Text(
-          'Hayalinizdeki çeyizi kolayca yönetin',
+          l10n?.trousseauSlogan ?? 'Hayalinizdeki çeyizi kolayca yönetin',
           style: theme.textTheme.bodyLarge?.copyWith(
             color: theme.colorScheme.onSurface,
             fontSize: AppTypography.sizeMD,

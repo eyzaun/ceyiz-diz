@@ -19,6 +19,7 @@ import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_input.dart';
 import '../../widgets/common/app_card.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class CreateTrousseauScreen extends StatefulWidget {
   const CreateTrousseauScreen({super.key});
@@ -47,20 +48,22 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
   // ═══════════════════════════════════════════════════════════════════════════
 
   String? _validateName(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value == null || value.isEmpty) {
-      return 'Çeyiz adı gereklidir';
+      return l10n?.trousseauNameRequired ?? 'Çeyiz adı gereklidir';
     }
     if (value.length < 3) {
-      return 'En az 3 karakter olmalıdır';
+      return l10n?.minThreeCharacters ?? 'En az 3 karakter olmalıdır';
     }
     return null;
   }
 
   String? _validateBudget(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value != null && value.isNotEmpty) {
       final budget = CurrencyFormatter.parse(value);
       if (budget == null || budget < 0) {
-        return 'Geçerli bir tutar girin';
+        return l10n?.enterValidAmount ?? 'Geçerli bir tutar girin';
       }
     }
     return null;
@@ -91,9 +94,10 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
     if (!mounted) return;
 
     if (success) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Çeyiz başarıyla oluşturuldu'),
+          content: Text(l10n?.trousseauCreatedSuccessfully ?? 'Çeyiz başarıyla oluşturuldu'),
           backgroundColor: Theme.of(context).colorScheme.tertiary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -119,18 +123,19 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return LoadingOverlay(
       isLoading: _isLoading,
-      message: 'Çeyiz oluşturuluyor...',
+      message: l10n?.creating ?? 'Oluşturuluyor...',
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Yeni Çeyiz Oluştur'),
+          title: Text(l10n?.createTrousseau ?? 'Yeni Çeyiz Oluştur'),
           // FITTS YASASI: Back button 48x48
           leading: AppIconButton(
             icon: Icons.arrow_back,
             onPressed: () => context.pop(),
-            tooltip: 'Geri',
+            tooltip: l10n?.back ?? 'Geri',
           ),
         ),
         body: SafeArea(
@@ -153,7 +158,7 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
                     // ─────────────────────────────────────────────────────
                     AppInfoCard(
                       icon: Icons.home_work,
-                      title: 'Hayalinizdeki çeyizi planlamaya başlayın',
+                      title: l10n?.startPlanningDream ?? 'Hayalinizdeki çeyizi planlamaya başlayın',
                       color: theme.colorScheme.primary,
                       backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.05),
                     ),
@@ -165,12 +170,12 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
                     // MILLER YASASI: 3 alan (ideal)
                     // ─────────────────────────────────────────────────────
                     AppFormSection(
-                      title: 'Çeyiz Bilgileri',
+                      title: l10n?.trousseauInfo ?? 'Çeyiz Bilgileri',
                       children: [
                         // Trousseau Name
                         AppTextInput(
-                          label: 'Çeyiz Adı',
-                          hint: 'Örn: Evlilik Çeyizim',
+                          label: l10n?.trousseauName ?? 'Çeyiz Adı',
+                          hint: l10n?.trousseauNameExample ?? 'Örn: Evlilik Çeyizim',
                           controller: _nameController,
                           prefixIcon: const Icon(Icons.label_outline),
                           textInputAction: TextInputAction.next,
@@ -179,8 +184,8 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
 
                         // Description
                         AppTextInput(
-                          label: 'Açıklama',
-                          hint: 'Çeyiziniz hakkında notlar ekleyin (Opsiyonel)',
+                          label: l10n?.description ?? 'Açıklama',
+                          hint: l10n?.descriptionHint ?? 'Çeyiziniz hakkında notlar ekleyin (Opsiyonel)',
                           controller: _descriptionController,
                           maxLines: 3,
                           textInputAction: TextInputAction.next,
@@ -189,8 +194,8 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
 
                         // Budget
                         AppTextInput(
-                          label: 'Toplam Bütçe (₺)',
-                          hint: 'Örn: 50.000 (Opsiyonel)',
+                          label: l10n?.budgetOptional ?? 'Toplam Bütçe (₺)',
+                          hint: l10n?.budgetExample ?? 'Örn: 50.000 (Opsiyonel)',
                           controller: _budgetController,
                           keyboardType: TextInputType.number,
                           textInputAction: TextInputAction.done,
@@ -210,14 +215,14 @@ class _CreateTrousseauScreenState extends State<CreateTrousseauScreen> {
                     // ─────────────────────────────────────────────────────
                     AppButtonGroup(
                       primaryButton: AppPrimaryButton(
-                        label: 'Çeyiz Oluştur',
+                        label: l10n?.createTrousseau ?? 'Çeyiz Oluştur',
                         icon: Icons.add,
                         isFullWidth: true,
                         onPressed: _createTrousseau,
                         isLoading: _isLoading,
                       ),
                       secondaryButton: AppSecondaryButton(
-                        label: 'İptal',
+                        label: l10n?.cancel ?? 'İptal',
                         onPressed: () => context.pop(),
                       ),
                     ),

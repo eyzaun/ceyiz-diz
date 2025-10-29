@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/loading_overlay.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -23,12 +24,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
   
-  String? _validateEmail(String? value) {
+  String? _validateEmail(String? value, AppLocalizations? l10n) {
     if (value == null || value.isEmpty) {
-      return 'E-posta adresi gereklidir';
+      return l10n?.emailRequired ?? 'E-posta adresi gereklidir';
     }
     if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
-      return 'Geçerli bir e-posta adresi girin';
+      return l10n?.emailInvalid ?? 'Geçerli bir e-posta adresi girin';
     }
     return null;
   }
@@ -49,9 +50,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
     
     if (success && mounted) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Şifre sıfırlama e-postası gönderildi'),
+        SnackBar(
+          content: Text(l10n?.passwordResetEmailSent ?? 'Şifre sıfırlama e-postası gönderildi'),
           backgroundColor: Colors.green,
         ),
       );
@@ -96,6 +98,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
   
   Widget _buildFormContent(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
+    
     return Form(
       key: _formKey,
       child: Column(
@@ -108,7 +112,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Şifrenizi mi Unuttunuz?',
+            l10n?.forgotPasswordTitle ?? 'Şifrenizi mi Unuttunuz?',
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -116,7 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Endişelenmeyin! E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.',
+            l10n?.forgotPasswordSubtitle ?? 'Endişelenmeyin! E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.textTheme.bodySmall?.color,
             ),
@@ -128,25 +132,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (_) => _resetPassword(),
-            decoration: const InputDecoration(
-              labelText: 'E-posta Adresi',
+            decoration: InputDecoration(
+              labelText: l10n?.emailAddress ?? 'E-posta Adresi',
               hintText: 'ornek@email.com',
-              prefixIcon: Icon(Icons.email_outlined),
+              prefixIcon: const Icon(Icons.email_outlined),
             ),
-            validator: _validateEmail,
+            validator: (value) => _validateEmail(value, l10n),
           ),
           const SizedBox(height: 24),
           SizedBox(
             height: 48,
             child: ElevatedButton(
               onPressed: _resetPassword,
-              child: const Text('Sıfırlama Bağlantısı Gönder'),
+              child: Text(l10n?.sendResetLink ?? 'Sıfırlama Bağlantısı Gönder'),
             ),
           ),
           const SizedBox(height: 16),
           TextButton(
             onPressed: () => context.push('/login'),
-            child: const Text('Giriş sayfasına dön'),
+            child: Text(l10n?.backToLogin ?? 'Giriş sayfasına dön'),
           ),
         ],
       ),
@@ -154,6 +158,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
   
   Widget _buildSuccessContent(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -164,7 +170,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          'E-posta Gönderildi!',
+          l10n?.emailSentTitle ?? 'E-posta Gönderildi!',
           style: theme.textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -172,7 +178,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          '${_emailController.text} adresine şifre sıfırlama bağlantısı gönderdik. Lütfen e-postanızı kontrol edin.',
+          l10n?.emailSentMessage(_emailController.text) ?? '${_emailController.text} adresine şifre sıfırlama bağlantısı gönderdik. Lütfen e-postanızı kontrol edin.',
           style: theme.textTheme.bodyLarge?.copyWith(
             color: theme.textTheme.bodySmall?.color,
           ),
@@ -181,12 +187,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const SizedBox(height: 32),
         OutlinedButton(
           onPressed: _resetPassword,
-          child: const Text('Tekrar Gönder'),
+          child: Text(l10n?.resend ?? 'Tekrar Gönder'),
         ),
         const SizedBox(height: 16),
         ElevatedButton(
           onPressed: () => context.push('/login'),
-          child: const Text('Giriş Sayfasına Dön'),
+          child: Text(l10n?.backToLoginPage ?? 'Giriş Sayfasına Dön'),
         ),
       ],
     );

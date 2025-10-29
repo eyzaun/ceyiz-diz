@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class CustomDialog extends StatelessWidget {
   final String title;
@@ -61,10 +62,11 @@ class CustomDialog extends StatelessWidget {
     required BuildContext context,
     required String title,
     String? subtitle,
-    String confirmText = 'Onayla',
-    String cancelText = 'İptal',
+    String? confirmText,
+    String? cancelText,
     Color? confirmColor,
   }) async {
+    final l10n = AppLocalizations.of(context);
     return showDialog<bool>(
       context: context,
       builder: (context) => CustomDialog(
@@ -74,7 +76,7 @@ class CustomDialog extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(cancelText),
+            child: Text(cancelText ?? l10n?.cancel ?? 'İptal'),
           ),
           const SizedBox(width: 8),
           ElevatedButton(
@@ -82,7 +84,7 @@ class CustomDialog extends StatelessWidget {
             style: confirmColor != null
                 ? ElevatedButton.styleFrom(backgroundColor: confirmColor)
                 : null,
-            child: Text(confirmText),
+            child: Text(confirmText ?? l10n?.confirm ?? 'Onayla'),
           ),
         ],
       ),

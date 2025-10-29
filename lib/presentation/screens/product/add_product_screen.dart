@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/category_provider.dart';
@@ -67,28 +68,31 @@ class _AddProductScreenState extends State<AddProductScreen> {
   // ═══════════════════════════════════════════════════════════════════════════
 
   String? _validateName(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value == null || value.isEmpty) {
-      return 'Ürün adı gereklidir';
+      return l10n?.productNameRequired ?? 'Ürün adı gereklidir';
     }
     return null;
   }
 
   String? _validatePrice(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value == null || value.trim().isEmpty) return null; // Opsiyonel
     final price = CurrencyFormatter.parse(value.trim());
     if (price == null || price <= 0) {
-      return 'Geçerli bir fiyat girin';
+      return l10n?.enterValidPrice ?? 'Geçerli bir fiyat girin';
     }
     return null;
   }
 
   String? _validateQuantity(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value == null || value.isEmpty) {
-      return 'Gerekli';
+      return l10n?.required ?? 'Gerekli';
     }
     final quantity = int.tryParse(value);
     if (quantity == null || quantity < 1) {
-      return 'Geçersiz';
+      return l10n?.invalid ?? 'Geçersiz';
     }
     return null;
   }
@@ -259,6 +263,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final categoryProvider = Provider.of<CategoryProvider>(context);
 
     // Ensure selected category exists in current categories
@@ -286,15 +291,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
     return LoadingOverlay(
       isLoading: _isLoading,
-      message: 'Ürün ekleniyor...',
+      message: l10n?.addingProduct ?? 'Ürün ekleniyor...',
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Ürün Ekle'),
+          title: Text(l10n?.addProduct ?? 'Ürün Ekle'),
           // FITTS YASASI: Back button 48x48 (default IconButton)
           leading: AppIconButton(
             icon: Icons.arrow_back,
             onPressed: () => context.pop(),
-            tooltip: 'Geri',
+            tooltip: l10n?.back ?? 'Geri',
           ),
         ),
         body: SafeArea(
@@ -331,12 +336,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     // Miller Yasası: 4 alan (Ad, Kategori, Fiyat+Adet row)
                     // ─────────────────────────────────────────────────────
                     AppFormSection(
-                      title: 'Temel Bilgiler',
+                      title: l10n?.basicInformation ?? 'Temel Bilgiler',
                       children: [
                         // Product Name
                         AppTextInput(
-                          label: 'Ürün Adı',
-                          hint: 'Örn: Çatal Bıçak Takımı',
+                          label: l10n?.productName ?? 'Ürün Adı',
+                          hint: l10n?.productNameExample ?? 'Örn: Çatal Bıçak Takımı',
                           controller: _nameController,
                           prefixIcon: const Icon(Icons.label_outline),
                           textInputAction: TextInputAction.next,
@@ -345,7 +350,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
                         // Category Dropdown
                         AppDropdown<String>(
-                          label: 'Kategori',
+                          label: l10n?.category ?? 'Kategori',
                           value: _selectedCategory,
                           prefixIcon: const Icon(Icons.category_outlined),
                           items: [
@@ -361,13 +366,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                 ),
                               );
                             }),
-                            const DropdownMenuItem(
+                            DropdownMenuItem(
                               value: '__add_new__',
                               child: Row(
                                 children: [
                                   Icon(Icons.add),
                                   SizedBox(width: 8),
-                                  Text('Yeni kategori ekle...'),
+                                  Text(l10n?.addNewCategory ?? 'Yeni kategori ekle...'),
                                 ],
                               ),
                             ),
@@ -390,7 +395,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             Expanded(
                               flex: 2,
                               child: AppTextInput(
-                                label: 'Fiyat (₺)',
+                                label: l10n?.price ?? 'Fiyat (₺)',
                                 controller: _priceController,
                                 keyboardType: TextInputType.number,
                                 textInputAction: TextInputAction.next,
@@ -402,7 +407,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             AppSpacing.md.horizontalSpace,
                             Expanded(
                               child: AppTextInput(
-                                label: 'Adet',
+                                label: l10n?.quantity ?? 'Adet',
                                 controller: _quantityController,
                                 keyboardType: TextInputType.number,
                                 textInputAction: TextInputAction.next,
@@ -422,13 +427,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     // Miller Yasası: 2 alan (Açıklama, Link)
                     // ─────────────────────────────────────────────────────
                     AppFormSection(
-                      title: 'Ek Bilgiler',
-                      subtitle: 'Opsiyonel',
+                      title: l10n?.additionalInformation ?? 'Ek Bilgiler',
+                      subtitle: l10n?.optional ?? 'Opsiyonel',
                       children: [
                         // Description
                         AppTextInput(
-                          label: 'Açıklama',
-                          hint: 'Ürün hakkında detaylar',
+                          label: l10n?.description ?? 'Açıklama',
+                          hint: l10n?.productDetailsHint ?? 'Ürün hakkında detaylar',
                           controller: _descriptionController,
                           maxLines: 3,
                           textInputAction: TextInputAction.next,
@@ -437,7 +442,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
                         // Product Link
                         AppTextInput(
-                          label: 'Ürün Linki 1',
+                          label: l10n?.productLink ?? 'Ürün Linki 1',
                           hint: 'https://...',
                           controller: _linkController,
                           keyboardType: TextInputType.url,
@@ -447,7 +452,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
                         // Product Link 2
                         AppTextInput(
-                          label: 'Ürün Linki 2',
+                          label: l10n?.productLink2 ?? 'Ürün Linki 2',
                           hint: 'https://...',
                           controller: _link2Controller,
                           keyboardType: TextInputType.url,
@@ -457,7 +462,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
                         // Product Link 3
                         AppTextInput(
-                          label: 'Ürün Linki 3',
+                          label: l10n?.productLink3 ?? 'Ürün Linki 3',
                           hint: 'https://...',
                           controller: _link3Controller,
                           keyboardType: TextInputType.url,
@@ -475,14 +480,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     // ─────────────────────────────────────────────────────
                     AppButtonGroup(
                       primaryButton: AppPrimaryButton(
-                        label: 'Ürün Ekle',
+                        label: l10n?.addProduct ?? 'Ürün Ekle',
                         icon: Icons.add_shopping_cart,
                         isFullWidth: true,
                         onPressed: _addProduct,
                         isLoading: _isLoading,
                       ),
                       secondaryButton: AppSecondaryButton(
-                        label: 'İptal',
+                        label: l10n?.cancel ?? 'İptal',
                         onPressed: () => context.pop(),
                       ),
                     ),

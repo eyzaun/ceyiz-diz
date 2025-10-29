@@ -11,6 +11,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../core/theme/design_tokens.dart';
 
 class FullscreenImageViewer extends StatefulWidget {
@@ -56,6 +57,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -129,14 +131,14 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white),
                       onPressed: () => Navigator.of(context).pop(),
-                      tooltip: 'Kapat',
+                      tooltip: l10n?.close ?? 'Kapat',
                     ),
 
                     // Share button
                     IconButton(
                       icon: const Icon(Icons.share, color: Colors.white),
                       onPressed: _shareImage,
-                      tooltip: 'Paylaş',
+                      tooltip: l10n?.share ?? 'Paylaş',
                     ),
                   ],
                 ),

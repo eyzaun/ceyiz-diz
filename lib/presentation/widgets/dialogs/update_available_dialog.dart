@@ -5,6 +5,7 @@ library;
 /// Yeni versiyon uyarısı gösterir ve kullanıcıya güncelleme seçeneği sunar.
 
 import 'package:flutter/material.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/services/version_service.dart';
 
@@ -19,6 +20,7 @@ class UpdateAvailableDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return AlertDialog(
       icon: Icon(
@@ -27,7 +29,9 @@ class UpdateAvailableDialog extends StatelessWidget {
         color: theme.colorScheme.primary,
       ),
       title: Text(
-        result.forceUpdate ? 'Güncelleme Gerekli' : 'Yeni Versiyon Mevcut',
+        result.forceUpdate 
+          ? (l10n?.updateRequired ?? 'Update Required') 
+          : (l10n?.newVersionAvailable ?? 'New Version Available'),
         textAlign: TextAlign.center,
         style: theme.textTheme.titleLarge?.copyWith(
           fontWeight: AppTypography.bold,
@@ -58,7 +62,7 @@ class UpdateAvailableDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Mevcut Versiyon',
+                      l10n?.currentVersion ?? 'Current Version',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -135,7 +139,7 @@ class UpdateAvailableDialog extends StatelessWidget {
               VersionService.skipVersion(result.latestVersion);
               Navigator.of(context).pop();
             },
-            child: const Text('Daha Sonra'),
+            child: Text(l10n?.later ?? 'Later'),
           ),
         FilledButton(
           onPressed: () {
@@ -143,7 +147,7 @@ class UpdateAvailableDialog extends StatelessWidget {
             // Force reload
             VersionService.forceReload();
           },
-          child: const Text('Güncelle'),
+          child: Text(l10n?.update ?? 'Update'),
         ),
       ],
       actionsAlignment: MainAxisAlignment.end,

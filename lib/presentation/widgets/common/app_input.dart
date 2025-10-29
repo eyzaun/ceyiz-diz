@@ -9,6 +9,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// TEXT INPUT - Standart Metin Girişi
@@ -184,8 +185,9 @@ class _AppPasswordInputState extends State<AppPasswordInput> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AppTextInput(
-      label: widget.label ?? 'Şifre',
+      label: widget.label ?? (l10n?.password ?? 'Şifre'),
       hint: widget.hint,
       helperText: widget.helperText,
       errorText: widget.errorText,

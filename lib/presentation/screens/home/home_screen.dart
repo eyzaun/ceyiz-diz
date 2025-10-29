@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../widgets/common/app_button.dart';
@@ -60,9 +61,10 @@ class _HomeScreenState extends State<HomeScreen> {
       _lastBackPressTime = now;
       
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Çıkmak için tekrar basın'),
+            content: Text(l10n?.pressAgainToExit ?? 'Çıkmak için tekrar basın'),
             duration: const Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -117,54 +119,59 @@ class _HomeScreenState extends State<HomeScreen> {
         // HICK YASASI: Max 3 sekme (kolay seçim)
         // FITTS YASASI: 72dp height, 28dp icons (kolay dokunma)
         // ═════════════════════════════════════════════════════════════════════
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
+        bottomNavigationBar: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context);
+            return BottomNavigationBar(
+              currentIndex: _selectedIndex,
+              onTap: (index) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+              },
+              selectedFontSize: AppTypography.sizeSM,
+              unselectedFontSize: AppTypography.sizeXS,
+              selectedItemColor: Theme.of(context).colorScheme.primary,
+              unselectedItemColor: Theme.of(context).colorScheme.onSurface,
+              type: BottomNavigationBarType.fixed,
+              elevation: 0,
+              items: [
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    Icons.inventory_2_outlined,
+                    size: AppDimensions.bottomNavIconSize,
+                  ),
+                  activeIcon: Icon(
+                    Icons.inventory_2,
+                    size: AppDimensions.bottomNavIconSize,
+                  ),
+                  label: l10n?.trousseau ?? 'Çeyiz',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    Icons.analytics_outlined,
+                    size: AppDimensions.bottomNavIconSize,
+                  ),
+                  activeIcon: Icon(
+                    Icons.analytics,
+                    size: AppDimensions.bottomNavIconSize,
+                  ),
+                  label: l10n?.statistics ?? 'İstatistikler',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    Icons.settings_outlined,
+                    size: AppDimensions.bottomNavIconSize,
+                  ),
+                  activeIcon: Icon(
+                    Icons.settings,
+                    size: AppDimensions.bottomNavIconSize,
+                  ),
+                  label: l10n?.settings ?? 'Ayarlar',
+                ),
+              ],
+            );
           },
-          selectedFontSize: AppTypography.sizeSM,
-          unselectedFontSize: AppTypography.sizeXS,
-          selectedItemColor: Theme.of(context).colorScheme.primary,
-    unselectedItemColor: Theme.of(context).colorScheme.onSurface,
-          type: BottomNavigationBarType.fixed,
-          elevation: 0,
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.inventory_2_outlined,
-                size: AppDimensions.bottomNavIconSize,
-              ),
-              activeIcon: Icon(
-                Icons.inventory_2,
-                size: AppDimensions.bottomNavIconSize,
-              ),
-              label: 'Çeyiz',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.analytics_outlined,
-                size: AppDimensions.bottomNavIconSize,
-              ),
-              activeIcon: Icon(
-                Icons.analytics,
-                size: AppDimensions.bottomNavIconSize,
-              ),
-              label: 'İstatistikler',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.settings_outlined,
-                size: AppDimensions.bottomNavIconSize,
-              ),
-              activeIcon: Icon(
-                Icons.settings,
-                size: AppDimensions.bottomNavIconSize,
-              ),
-              label: 'Ayarlar',
-            ),
-          ],
         ),
       ),
     );
@@ -187,6 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Empty state
     if (pinnedTrousseaus.isEmpty) {
+      final l10n = AppLocalizations.of(context);
       return Scaffold(
         body: Center(
           child: Padding(
@@ -201,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 AppSpacing.lg.verticalSpace,
                 Text(
-                  'Henüz çeyiz oluşturmadınız',
+                  l10n?.noTrousseauYet ?? 'Henüz çeyiz oluşturmadınız',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontSize: AppTypography.sizeLG,
                     fontWeight: AppTypography.semiBold,
@@ -210,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 AppSpacing.sm.verticalSpace,
                 Text(
-                  'İlk çeyizinizi oluşturarak başlayın',
+                  l10n?.createFirstTrousseau ?? 'İlk çeyizinizi oluşturarak başlayın',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
@@ -218,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 AppSpacing.xl.verticalSpace,
                 AppPrimaryButton(
-                  label: 'Çeyiz Oluştur',
+                  label: l10n?.createTrousseau ?? 'Çeyiz Oluştur',
                   icon: Icons.add,
                   onPressed: () => context.push('/create-trousseau'),
                 ),
@@ -260,6 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     showDialog(
       context: context,
@@ -287,7 +296,9 @@ class _HomeScreenState extends State<HomeScreen> {
               AppSpacing.md.horizontalSpace,
               Expanded(
                 child: Text(
-                  authProvider.forceUpdate ? 'Güncelleme Gerekli!' : 'Yeni Versiyon Mevcut',
+                  authProvider.forceUpdate 
+                      ? (l10n?.updateRequired ?? 'Güncelleme Gerekli!') 
+                      : (l10n?.newVersionAvailable ?? 'Yeni Versiyon Mevcut'),
                   style: TextStyle(
                     fontSize: AppTypography.sizeLG,
                     fontWeight: AppTypography.bold,
@@ -319,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Icon(Icons.new_releases, color: theme.colorScheme.primary, size: AppDimensions.iconSizeMedium),
                     AppSpacing.sm.horizontalSpace,
                     Text(
-                      'Yeni Versiyon: ${authProvider.latestVersion}',
+                      '${l10n?.newVersion ?? 'Yeni Versiyon'}: ${authProvider.latestVersion}',
                       style: TextStyle(
                         fontWeight: AppTypography.bold,
                         color: theme.colorScheme.primary,
@@ -343,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       AppSpacing.sm.horizontalSpace,
                       Expanded(
                         child: Text(
-                          'Bu güncelleme zorunludur. Devam etmek için güncellemeniz gerekiyor.',
+                          l10n?.forceUpdateMessage ?? 'Bu güncelleme zorunludur. Devam etmek için güncellemeniz gerekiyor.',
                           style: TextStyle(color: theme.colorScheme.error, fontSize: AppTypography.sizeSM),
                         ),
                       ),
@@ -356,11 +367,11 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             if (!authProvider.forceUpdate)
               AppTextButton(
-                label: 'Daha Sonra',
+                label: l10n?.later ?? 'Daha Sonra',
                 onPressed: () => Navigator.of(dialogContext).pop(),
               ),
             AppPrimaryButton(
-              label: 'Şimdi Güncelle',
+              label: l10n?.updateNow ?? 'Şimdi Güncelle',
               icon: Icons.download,
               onPressed: () async {
                 const url = 'https://play.google.com/store/apps/details?id=com.Loncagames.ceyizdiz';
@@ -369,8 +380,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
                 } else {
                   if (dialogContext.mounted) {
+                    final dialogL10n = AppLocalizations.of(dialogContext);
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      SnackBar(content: const Text('Play Store açılamadı.'), backgroundColor: theme.colorScheme.error),
+                      SnackBar(
+                        content: Text(dialogL10n?.playStoreOpenFailed ?? 'Play Store açılamadı.'),
+                        backgroundColor: theme.colorScheme.error,
+                      ),
                     );
                   }
                 }

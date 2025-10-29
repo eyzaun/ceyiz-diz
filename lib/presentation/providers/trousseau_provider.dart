@@ -107,7 +107,7 @@ class TrousseauProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }, onError: (e) {
-      _errorMessage = 'Çeyizler dinlenemedi: $e';
+      _errorMessage = 'Failed to listen to trousseaus: $e'; // Will be localized in UI layer
       _isLoading = false;
       notifyListeners();
     });
@@ -212,7 +212,7 @@ class TrousseauProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isLoading = false;
-      _errorMessage = 'Çeyizler yüklenemedi: ${e.toString()}';
+      _errorMessage = 'Failed to load trousseaus: ${e.toString()}'; // Will be localized in UI layer
       notifyListeners();
     }
   }
@@ -256,7 +256,7 @@ class TrousseauProvider extends ChangeNotifier {
       
       return true;
     } catch (e) {
-      _errorMessage = 'Çeyiz oluşturulamadı: ${e.toString()}';
+      _errorMessage = 'Failed to create trousseau: ${e.toString()}'; // Will be localized in UI layer
       notifyListeners();
       return false;
     }
@@ -277,13 +277,13 @@ class TrousseauProvider extends ChangeNotifier {
       
       final trousseau = getTrousseauById(trousseauId);
       if (trousseau == null) {
-        _errorMessage = 'Çeyiz bulunamadı';
+        _errorMessage = 'Trousseau not found'; // Will be localized in UI layer
         return false;
       }
       
       // Check permissions
       if (!trousseau.canEdit(_authProvider!.currentUser!.uid)) {
-        _errorMessage = 'Bu çeyizi düzenleme yetkiniz yok';
+        _errorMessage = 'No edit permission'; // Will be localized in UI layer
         return false;
       }
       
@@ -329,7 +329,7 @@ class TrousseauProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = 'Çeyiz güncellenemedi: ${e.toString()}';
+      _errorMessage = 'Failed to update trousseau: ${e.toString()}'; // Will be localized in UI layer
       notifyListeners();
       return false;
     }
@@ -343,13 +343,13 @@ class TrousseauProvider extends ChangeNotifier {
       
       final trousseau = getTrousseauById(trousseauId);
       if (trousseau == null) {
-        _errorMessage = 'Çeyiz bulunamadı';
+        _errorMessage = 'Trousseau not found'; // Will be localized in UI layer
         return false;
       }
       
       // Check permissions
       if (trousseau.ownerId != _authProvider!.currentUser!.uid) {
-        _errorMessage = 'Sadece çeyiz sahibi silebilir';
+        _errorMessage = 'Only owner can delete'; // Will be localized in UI layer
         return false;
       }
       
@@ -388,7 +388,7 @@ class TrousseauProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = 'Çeyiz silinemedi: ${e.toString()}';
+      _errorMessage = 'Failed to delete trousseau: ${e.toString()}'; // Will be localized in UI layer
       notifyListeners();
       return false;
     }
@@ -412,13 +412,13 @@ class TrousseauProvider extends ChangeNotifier {
       
       final trousseau = getTrousseauById(trousseauId);
       if (trousseau == null) {
-        _errorMessage = 'Çeyiz bulunamadı';
+        _errorMessage = 'Trousseau not found'; // Will be localized in UI layer
         return false;
       }
       
       // Only owner can share
       if (trousseau.ownerId != _authProvider!.currentUser!.uid) {
-        _errorMessage = 'Sadece çeyiz sahibi paylaşabilir';
+        _errorMessage = 'Only owner can share'; // Will be localized in UI layer
         return false;
       }
       
@@ -426,7 +426,7 @@ class TrousseauProvider extends ChangeNotifier {
       final normalizedEmail = email.trim().toLowerCase();
       // Prevent sharing to self
       if (_authProvider!.currentUser!.email.toLowerCase() == normalizedEmail) {
-        _errorMessage = 'Kendinize paylaşım yapamazsınız';
+        _errorMessage = 'Cannot share with self'; // Will be localized in UI layer
         notifyListeners();
         return false;
       }
@@ -439,7 +439,7 @@ class TrousseauProvider extends ChangeNotifier {
           .get();
       
       if (userQuery.docs.isEmpty) {
-        _errorMessage = 'Kullanıcı bulunamadı';
+        _errorMessage = 'User not found'; // Will be localized in UI layer
         return false;
       }
       
@@ -456,7 +456,7 @@ class TrousseauProvider extends ChangeNotifier {
           .get();
       
       if (existingInvitation.docs.isNotEmpty) {
-        _errorMessage = 'Bu kullanıcıya zaten bir davet gönderilmiş';
+        _errorMessage = 'Invitation already sent'; // Will be localized in UI layer
         notifyListeners();
         return false;
       }
@@ -480,7 +480,7 @@ class TrousseauProvider extends ChangeNotifier {
 
       return true;
     } catch (e) {
-      _errorMessage = 'Paylaşım yapılamadı: ${e.toString()}';
+      _errorMessage = 'Failed to share: ${e.toString()}'; // Will be localized in UI layer
       notifyListeners();
       return false;
     }
@@ -527,7 +527,7 @@ class TrousseauProvider extends ChangeNotifier {
 
       return true;
     } catch (e) {
-      _errorMessage = 'Paylaşım kabul edilemedi: ${e.toString()}';
+      _errorMessage = 'Failed to accept share: ${e.toString()}'; // Will be localized in UI layer
       notifyListeners();
       return false;
     }
@@ -545,7 +545,7 @@ class TrousseauProvider extends ChangeNotifier {
       await invRef.delete();
       return true;
     } catch (e) {
-      _errorMessage = 'Daveti reddedilemedi: ${e.toString()}';
+      _errorMessage = 'Failed to decline invitation: ${e.toString()}'; // Will be localized in UI layer
       notifyListeners();
       return false;
     }
@@ -573,7 +573,7 @@ class TrousseauProvider extends ChangeNotifier {
 
       return true;
     } catch (e) {
-      _errorMessage = 'Paylaşımdan çıkılamadı: ${e.toString()}';
+      _errorMessage = 'Failed to leave sharing: ${e.toString()}'; // Will be localized in UI layer
       notifyListeners();
       return false;
     }
@@ -590,14 +590,14 @@ class TrousseauProvider extends ChangeNotifier {
       
       final trousseau = getTrousseauById(trousseauId);
       if (trousseau == null) {
-        _errorMessage = 'Çeyiz bulunamadı';
+        _errorMessage = 'Trousseau not found'; // Will be localized in UI layer
         return false;
       }
       
       // Owner can remove anyone's access; a recipient can remove their own access (self-revoke)
       final currentUid = _authProvider!.currentUser!.uid;
       if (trousseau.ownerId != currentUid && userId != currentUid) {
-        _errorMessage = 'Sadece çeyiz sahibi paylaşımı kaldırabilir';
+        _errorMessage = 'Only owner can remove sharing'; // Will be localized in UI layer
         return false;
       }
       
@@ -621,7 +621,7 @@ class TrousseauProvider extends ChangeNotifier {
       // Live snapshots will update local data; no manual local mutation required
       return true;
     } catch (e) {
-      _errorMessage = 'Paylaşım kaldırılamadı: ${e.toString()}';
+      _errorMessage = 'Failed to remove sharing: ${e.toString()}'; // Will be localized in UI layer
       notifyListeners();
       return false;
     }
@@ -684,13 +684,13 @@ class TrousseauProvider extends ChangeNotifier {
       // Check if it's a shared trousseau
       final trousseau = getTrousseauById(trousseauId);
       if (trousseau == null) {
-        _errorMessage = 'Çeyiz bulunamadı';
+        _errorMessage = 'Trousseau not found'; // Will be localized in UI layer
         return false;
       }
       
       // Only shared trousseaus can be pinned
       if (trousseau.ownerId == _authProvider!.currentUser!.uid) {
-        _errorMessage = 'Kendi çeyizinizi ana sayfaya ekleyemezsiniz (zaten görünüyor)';
+        _errorMessage = 'Cannot pin own trousseau'; // Will be localized in UI layer
         return false;
       }
       
@@ -717,7 +717,7 @@ class TrousseauProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = 'Ana sayfaya eklenemedi: ${e.toString()}';
+      _errorMessage = 'Failed to add to home: ${e.toString()}'; // Will be localized in UI layer
       notifyListeners();
       return false;
     }
@@ -750,7 +750,7 @@ class TrousseauProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = 'Ana sayfadan kaldırılamadı: ${e.toString()}';
+      _errorMessage = 'Failed to remove from home: ${e.toString()}'; // Will be localized in UI layer
       notifyListeners();
       return false;
     }

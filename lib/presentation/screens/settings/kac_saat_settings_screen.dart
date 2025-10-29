@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/services/kac_saat_calculator.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_input.dart';
@@ -43,16 +44,6 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
     'cumartesi',
     'pazar'
   ];
-
-  final Map<String, String> _dayNames = {
-    'pazartesi': 'Pazartesi',
-    'salı': 'Salı',
-    'çarşamba': 'Çarşamba',
-    'perşembe': 'Perşembe',
-    'cuma': 'Cuma',
-    'cumartesi': 'Cumartesi',
-    'pazar': 'Pazar',
-  };
 
   List<String> _selectedDays = ['pazartesi', 'salı', 'çarşamba', 'perşembe', 'cuma'];
   bool _isLoading = false;
@@ -142,6 +133,8 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
   }
 
   Future<void> _saveSettings() async {
+    final l10n = AppLocalizations.of(context);
+    
     if (!_enabled) {
       // Sadece enabled durumunu kaydet
       setState(() => _isLoading = true);
@@ -181,8 +174,8 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
 
     if (_selectedDays.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('En az bir gün seçmelisiniz'),
+        SnackBar(
+          content: Text(l10n?.selectAtLeastOneDay ?? 'You must select at least one day'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
         ),
@@ -192,8 +185,8 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
 
     if (_hasPrim && !_quarterlyPrim && !_yearlyPrim) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Prim alıyorsanız, prim sıklığını seçmelisiniz'),
+        SnackBar(
+          content: Text(l10n?.selectBonusFrequency ?? 'If you receive bonus, you must select bonus frequency'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
         ),
@@ -225,8 +218,8 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Ayarlar kaydedildi'),
+          SnackBar(
+            content: Text(l10n?.settingsSaved ?? 'Settings saved'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -249,11 +242,12 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kaç Saat Ayarları'),
+        title: Text(l10n?.kacSaatSettings ?? 'Work Hours Settings'),
       ),
       body: Form(
         key: _formKey,
@@ -274,7 +268,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                     AppSpacing.md.horizontalSpace,
                     Expanded(
                       child: Text(
-                        'Bu özellik, ürün fiyatlarının kaç saatlik çalışmanıza denk geldiğini gösterir',
+                        l10n?.kacSaatFeatureInfo ?? 'This feature shows how many hours of work product prices are equivalent to',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onPrimaryContainer,
                         ),
@@ -290,8 +284,8 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
             // Enable/Disable Switch
             Card(
               child: SwitchListTile(
-                title: const Text('Kaç Saat Özelliğini Kullan'),
-                subtitle: const Text('Ürün fiyatlarının yanında çalışma saati göster'),
+                title: Text(l10n?.useKacSaatFeature ?? 'Use Work Hours Feature'),
+                subtitle: Text(l10n?.showWorkHoursPrices ?? 'Show work hours next to product prices'),
                 value: _enabled,
                 onChanged: (value) {
                   setState(() => _enabled = value);
@@ -305,7 +299,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
             if (_enabled) ...[
               // Salary Input
               Text(
-                'Aylık Maaş (TL)',
+                l10n?.monthlySalaryTL ?? 'Monthly Salary (TL)',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: AppTypography.semiBold,
                 ),
@@ -313,17 +307,17 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
               AppSpacing.sm.verticalSpace,
               AppTextInput(
                 controller: _salaryController,
-                label: 'Aylık Maaş',
-                hint: 'Örneğin: 17000',
+                label: l10n?.monthlySalary ?? 'Monthly Salary',
+                hint: l10n?.forExample17000 ?? 'For example: 17000',
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Maaş gereklidir';
+                    return l10n?.salaryRequired ?? 'Salary is required';
                   }
                   final salary = double.tryParse(value);
                   if (salary == null || salary <= 0) {
-                    return 'Geçerli bir maaş girin';
+                    return l10n?.enterValidSalary ?? 'Enter a valid salary';
                   }
                   return null;
                 },
@@ -334,7 +328,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
 
               // Working Days
               Text(
-                'Çalışma Günleri',
+                l10n?.workingDays ?? 'Working Days',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: AppTypography.semiBold,
                 ),
@@ -348,8 +342,15 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                     runSpacing: AppSpacing.sm,
                     children: _allDays.map((day) {
                       final isSelected = _selectedDays.contains(day);
+                      final dayName = day == 'pazartesi' ? (l10n?.monday ?? 'Monday')
+                        : day == 'salı' ? (l10n?.tuesday ?? 'Tuesday')
+                        : day == 'çarşamba' ? (l10n?.wednesday ?? 'Wednesday')
+                        : day == 'perşembe' ? (l10n?.thursday ?? 'Thursday')
+                        : day == 'cuma' ? (l10n?.friday ?? 'Friday')
+                        : day == 'cumartesi' ? (l10n?.saturday ?? 'Saturday')
+                        : (l10n?.sunday ?? 'Sunday');
                       return FilterChip(
-                        label: Text(_dayNames[day]!),
+                        label: Text(dayName),
                         selected: isSelected,
                         onSelected: (selected) {
                           setState(() {
@@ -373,7 +374,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
 
               // Daily Hours
               Text(
-                'Günlük Çalışma Saati',
+                l10n?.dailyWorkHours ?? 'Daily Work Hours',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: AppTypography.semiBold,
                 ),
@@ -381,19 +382,19 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
               AppSpacing.sm.verticalSpace,
               AppTextInput(
                 controller: _hoursController,
-                label: 'Günlük Saat',
-                hint: 'Örneğin: 8',
+                label: l10n?.dailyHours ?? 'Daily Hours',
+                hint: l10n?.forExample8 ?? 'For example: 8',
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                 ],
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Çalışma saati gereklidir';
+                    return l10n?.workHoursRequired ?? 'Work hours are required';
                   }
                   final hours = double.tryParse(value);
                   if (hours == null || hours <= 0 || hours > 24) {
-                    return 'Geçerli bir saat girin (0-24)';
+                    return l10n?.enterValidHours024 ?? 'Enter valid hours (0-24)';
                   }
                   return null;
                 },
@@ -404,7 +405,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
 
               // Prim Section
               Text(
-                'Prim Bilgisi',
+                l10n?.bonusInfo ?? 'Bonus Information',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: AppTypography.semiBold,
                 ),
@@ -414,7 +415,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                 child: Column(
                   children: [
                     SwitchListTile(
-                      title: const Text('Prim Alıyorum'),
+                      title: Text(l10n?.iReceiveBonus ?? 'I Receive Bonus'),
                       value: _hasPrim,
                       onChanged: (value) {
                         setState(() {
@@ -430,7 +431,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                     if (_hasPrim) ...[
                       const Divider(height: 1),
                       CheckboxListTile(
-                        title: const Text('3 Ayda Bir'),
+                        title: Text(l10n?.every3Months ?? 'Every 3 Months'),
                         value: _quarterlyPrim,
                         onChanged: (value) {
                           setState(() {
@@ -452,14 +453,14 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                           ),
                           child: AppTextInput(
                             controller: _quarterlyPrimController,
-                            label: '3 Aylık Prim Miktarı (TL)',
-                            hint: 'Maaşla aynı',
+                            label: l10n?.quarterlyBonusAmountTL ?? 'Quarterly Bonus Amount (TL)',
+                            hint: l10n?.sameAsSalary ?? 'Same as salary',
                             keyboardType: TextInputType.number,
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                             validator: _quarterlyPrim
                                 ? (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Prim miktarı gereklidir';
+                                      return l10n?.bonusAmountRequired ?? 'Bonus amount is required';
                                     }
                                     return null;
                                   }
@@ -469,7 +470,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                         ),
                       const Divider(height: 1),
                       CheckboxListTile(
-                        title: const Text('12 Ayda Bir'),
+                        title: Text(l10n?.every12Months ?? 'Every 12 Months'),
                         value: _yearlyPrim,
                         onChanged: (value) {
                           setState(() {
@@ -491,14 +492,14 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                           ),
                           child: AppTextInput(
                             controller: _yearlyPrimController,
-                            label: 'Yıllık Prim Miktarı (TL)',
-                            hint: 'Maaşla aynı',
+                            label: l10n?.yearlyBonusAmountTL ?? 'Yearly Bonus Amount (TL)',
+                            hint: l10n?.sameAsSalary ?? 'Same as salary',
                             keyboardType: TextInputType.number,
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                             validator: _yearlyPrim
                                 ? (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Prim miktarı gereklidir';
+                                      return l10n?.bonusAmountRequired ?? 'Bonus amount is required';
                                     }
                                     return null;
                                   }
@@ -516,7 +517,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
 
             // Save Button
             AppPrimaryButton(
-              label: 'Kaydet',
+              label: l10n?.save ?? 'Save',
               icon: Icons.check,
               onPressed: _isLoading ? null : _saveSettings,
               isLoading: _isLoading,

@@ -24,6 +24,7 @@ import '../../widgets/common/icon_color_picker.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_input.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class EditProductScreen extends StatefulWidget {
   final String trousseauId;
@@ -102,29 +103,29 @@ class _EditProductScreenState extends State<EditProductScreen> {
   // VALIDATION
   // ═══════════════════════════════════════════════════════════════════════════
 
-  String? _validateName(String? value) {
+  String? _validateName(String? value, AppLocalizations? l10n) {
     if (value == null || value.isEmpty) {
-      return 'Ürün adı gereklidir';
+      return l10n?.productNameRequired ?? 'Product name is required';
     }
     return null;
   }
 
-  String? _validatePrice(String? value) {
+  String? _validatePrice(String? value, AppLocalizations? l10n) {
     if (value == null || value.trim().isEmpty) return null; // Opsiyonel
     final price = CurrencyFormatter.parse(value.trim());
     if (price == null || price <= 0) {
-      return 'Geçerli bir fiyat girin';
+      return l10n?.enterValidPrice ?? 'Enter a valid price';
     }
     return null;
   }
 
-  String? _validateQuantity(String? value) {
+  String? _validateQuantity(String? value, AppLocalizations? l10n) {
     if (value == null || value.isEmpty) {
-      return 'Gerekli';
+      return l10n?.required ?? 'Required';
     }
     final quantity = int.tryParse(value);
     if (quantity == null || quantity < 1) {
-      return 'Geçersiz';
+      return l10n?.invalid ?? 'Invalid';
     }
     return null;
   }
@@ -220,11 +221,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
     });
 
     if (!mounted) return;
+    
+    final l10n = AppLocalizations.of(context);
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Ürün başarıyla güncellendi'),
+          content: Text(l10n?.productUpdatedSuccessfully ?? 'Product updated successfully'),
           backgroundColor: Theme.of(context).colorScheme.tertiary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -253,22 +256,23 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   Future<void> _deleteProduct() async {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     // Confirmation Dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Ürünü Sil'),
-        content: const Text(
-          'Bu ürünü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+        title: Text(l10n?.deleteProduct ?? 'Delete Product'),
+        content: Text(
+          l10n?.deleteProductWarning ?? 'Are you sure you want to delete this product? This action cannot be undone.',
         ),
         actions: [
           AppTextButton(
-            label: 'Vazgeç',
+            label: l10n?.giveUp ?? 'Cancel',
             onPressed: () => Navigator.pop(ctx, false),
           ),
           AppDangerButton(
-            label: 'Sil',
+            label: l10n?.delete ?? 'Delete',
             icon: Icons.delete,
             onPressed: () => Navigator.pop(ctx, true),
           ),
@@ -292,11 +296,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
     });
 
     if (!mounted) return;
+    
+    final l10nMsg = AppLocalizations.of(context);
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Ürün başarıyla silindi'),
+          content: Text(l10nMsg?.productDeletedSuccessfully ?? 'Product deleted successfully'),
           backgroundColor: theme.colorScheme.tertiary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -326,6 +332,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   Future<void> _promptAddQuickCategory(BuildContext context, CategoryProvider provider) async {
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    final l10n = AppLocalizations.of(context);
     IconData selIcon = Icons.category;
     Color selColor = const Color(0xFF607D8B);
 
@@ -333,7 +340,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocalState) => AlertDialog(
-          title: const Text('Yeni Kategori'),
+          title: Text(l10n?.newCategory ?? 'New Category'),
           content: Form(
             key: formKey,
             child: Column(
@@ -341,11 +348,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
               children: [
                 TextFormField(
                   controller: controller,
-                  decoration: const InputDecoration(hintText: 'Kategori adı'),
+                  decoration: InputDecoration(hintText: l10n?.categoryName ?? 'Category name'),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Ad gerekli';
+                    if (v == null || v.trim().isEmpty) return l10n?.nameRequired ?? 'Name required';
                     if (provider.allCategories.any((c) => c.displayName.toLowerCase() == v.trim().toLowerCase())) {
-                      return 'Bu ad kullanılıyor';
+                      return l10n?.nameAlreadyUsed ?? 'This name is already used';
                     }
                     return null;
                   },
@@ -360,7 +367,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: AppSecondaryButton(
-                        label: 'Sembol ve Renk Seç',
+                        label: l10n?.selectSymbolAndColor ?? 'Select Symbol and Color',
                         icon: Icons.palette_outlined,
                         onPressed: () async {
                           final res = await IconColorPicker.pick(context, icon: selIcon, color: selColor);
@@ -380,11 +387,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
           ),
           actions: [
             AppTextButton(
-              label: 'Vazgeç',
+              label: l10n?.giveUp ?? 'Cancel',
               onPressed: () => Navigator.pop(ctx, null),
             ),
             AppPrimaryButton(
-              label: 'Ekle',
+              label: l10n?.add ?? 'Add',
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
                 final name = controller.text.trim();
@@ -429,6 +436,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final categoryProvider = Provider.of<CategoryProvider>(context);
 
     // Ensure selected category exists in current categories
@@ -456,15 +464,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
     return LoadingOverlay(
       isLoading: _isLoading,
-      message: 'İşlem yapılıyor...',
+      message: l10n?.processing ?? 'Processing...',
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Ürünü Düzenle'),
+          title: Text(l10n?.editProduct ?? 'Edit Product'),
           // FITTS YASASI: Back button 48x48 (default IconButton)
           leading: AppIconButton(
             icon: Icons.arrow_back,
             onPressed: () => context.pop(),
-            tooltip: 'Geri',
+            tooltip: l10n?.back ?? 'Back',
           ),
         ),
         body: SafeArea(
@@ -486,7 +494,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     // ─────────────────────────────────────────────────────
                     if (_existingImages.isNotEmpty) ...[
                       Text(
-                        'Mevcut Fotoğraflar',
+                        l10n?.existingPhotos ?? 'Existing Photos',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: AppTypography.bold,
                           fontSize: AppTypography.sizeLG,
@@ -554,7 +562,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     // ─────────────────────────────────────────────────────
                     if (_existingImages.length + _selectedImages.length < 5) ...[
                       Text(
-                        'Yeni Fotoğraf Ekle',
+                        l10n?.addNewPhoto ?? 'Add New Photo',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: AppTypography.bold,
                           fontSize: AppTypography.sizeLG,
@@ -579,20 +587,20 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     // Miller Yasası: 4 alan (Ad, Kategori, Fiyat+Adet)
                     // ─────────────────────────────────────────────────────
                     AppFormSection(
-                      title: 'Temel Bilgiler',
+                      title: l10n?.basicInformation ?? 'Basic Information',
                       children: [
                         // Product Name
                         AppTextInput(
-                          label: 'Ürün Adı',
+                          label: l10n?.productName ?? 'Product Name',
                           controller: _nameController,
                           prefixIcon: const Icon(Icons.label_outline),
                           textInputAction: TextInputAction.next,
-                          validator: _validateName,
+                          validator: (value) => _validateName(value, l10n),
                         ),
 
                         // Category Dropdown
                         AppDropdown<String>(
-                          label: 'Kategori',
+                          label: l10n?.category ?? 'Category',
                           value: _selectedCategory,
                           prefixIcon: const Icon(Icons.category_outlined),
                           items: [
@@ -608,13 +616,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                 ),
                               );
                             }),
-                            const DropdownMenuItem(
+                            DropdownMenuItem(
                               value: '__add_new__',
                               child: Row(
                                 children: [
-                                  Icon(Icons.add),
-                                  SizedBox(width: 8),
-                                  Text('Yeni kategori ekle...'),
+                                  const Icon(Icons.add),
+                                  const SizedBox(width: 8),
+                                  Text(l10n?.addNewCategory ?? 'Add new category...'),
                                 ],
                               ),
                             ),
@@ -637,24 +645,24 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             Expanded(
                               flex: 2,
                               child: AppTextInput(
-                                label: 'Fiyat (₺)',
+                                label: l10n?.price ?? 'Price (₺)',
                                 controller: _priceController,
                                 keyboardType: TextInputType.number,
                                 textInputAction: TextInputAction.next,
                                 prefixIcon: const Icon(Icons.attach_money),
                                 inputFormatters: [CurrencyInputFormatter()],
-                                validator: _validatePrice,
+                                validator: (value) => _validatePrice(value, l10n),
                               ),
                             ),
                             AppSpacing.md.horizontalSpace,
                             Expanded(
                               child: AppTextInput(
-                                label: 'Adet',
+                                label: l10n?.quantity ?? 'Quantity',
                                 controller: _quantityController,
                                 keyboardType: TextInputType.number,
                                 textInputAction: TextInputAction.next,
                                 prefixIcon: const Icon(Icons.numbers),
-                                validator: _validateQuantity,
+                                validator: (value) => _validateQuantity(value, l10n),
                               ),
                             ),
                           ],
@@ -669,12 +677,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     // Miller Yasası: 3 alan (Açıklama, Link, Satın Alındı)
                     // ─────────────────────────────────────────────────────
                     AppFormSection(
-                      title: 'Ek Bilgiler',
-                      subtitle: 'Opsiyonel',
+                      title: l10n?.additionalInformation ?? 'Additional Information',
+                      subtitle: l10n?.optional ?? 'Optional',
                       children: [
                         // Description
                         AppTextInput(
-                          label: 'Açıklama',
+                          label: l10n?.description ?? 'Description',
                           controller: _descriptionController,
                           maxLines: 3,
                           textInputAction: TextInputAction.next,
@@ -683,7 +691,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
                         // Product Link
                         AppTextInput(
-                          label: 'Ürün Linki 1',
+                          label: l10n?.productLink ?? 'Product Link 1',
                           controller: _linkController,
                           keyboardType: TextInputType.url,
                           textInputAction: TextInputAction.next,
@@ -692,7 +700,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
                         // Product Link 2
                         AppTextInput(
-                          label: 'Ürün Linki 2',
+                          label: l10n?.productLink2 ?? 'Product Link 2',
                           controller: _link2Controller,
                           keyboardType: TextInputType.url,
                           textInputAction: TextInputAction.next,
@@ -701,7 +709,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
                         // Product Link 3
                         AppTextInput(
-                          label: 'Ürün Linki 3',
+                          label: l10n?.productLink3 ?? 'Product Link 3',
                           controller: _link3Controller,
                           keyboardType: TextInputType.url,
                           textInputAction: TextInputAction.done,
@@ -711,8 +719,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         // Purchased Status
                         // FITTS YASASI: SwitchListTile has large touch area
                         SwitchListTile(
-                          title: const Text('Ürün Alındı'),
-                          subtitle: const Text('Bu ürün satın alındı mı?'),
+                          title: Text(l10n?.productPurchased ?? 'Product Purchased'),
+                          subtitle: Text(l10n?.isProductPurchased ?? 'Is this product purchased?'),
                           value: _isPurchased,
                           onChanged: (value) {
                             setState(() {
@@ -732,14 +740,14 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     // ─────────────────────────────────────────────────────
                     AppButtonGroup(
                       primaryButton: AppPrimaryButton(
-                        label: 'Güncelle',
+                        label: l10n?.update ?? 'Update',
                         icon: Icons.save,
                         isFullWidth: true,
                         onPressed: _updateProduct,
                         isLoading: _isLoading,
                       ),
                       secondaryButton: AppSecondaryButton(
-                        label: 'İptal',
+                        label: l10n?.cancel ?? 'Cancel',
                         onPressed: () => context.pop(),
                       ),
                     ),
@@ -756,7 +764,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     ),
 
                     AppDangerButton(
-                      label: 'Ürünü Sil',
+                      label: l10n?.deleteProduct ?? 'Delete Product',
                       icon: Icons.delete_forever,
                       isOutlined: true,
                       onPressed: _deleteProduct,

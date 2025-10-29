@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../providers/onboarding_provider.dart';
 import '../../widgets/common/app_button.dart';
@@ -69,6 +70,7 @@ class _NewOnboardingScreenState extends State<NewOnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
@@ -98,7 +100,7 @@ class _NewOnboardingScreenState extends State<NewOnboardingScreen> {
                     ),
                   ),
                   child: Text(
-                    'Geç',
+                    l10n?.skip ?? 'Geç',
                     style: TextStyle(
                       fontSize: AppTypography.sizeSM,
                       fontWeight: FontWeight.w600,
@@ -168,8 +170,8 @@ class _NewOnboardingScreenState extends State<NewOnboardingScreen> {
                 ),
                 child: AppPrimaryButton(
                   label: _currentPage == OnboardingContent.pages.length - 1
-                      ? 'Hadi Başlayalım!'
-                      : 'İleri',
+                      ? l10n?.letsGetStarted ?? 'Hadi Başlayalım!'
+                      : l10n?.next ?? 'İleri',
                   icon: _currentPage == OnboardingContent.pages.length - 1
                       ? Icons.rocket_launch_outlined
                       : Icons.arrow_forward,

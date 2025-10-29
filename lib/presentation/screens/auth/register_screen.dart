@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_input.dart';
@@ -284,6 +285,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final authProvider = Provider.of<AuthProvider>(context);
+    final l10n = AppLocalizations.of(context);
 
     return LoadingOverlay(
       isLoading: authProvider.status == AuthStatus.loading,
@@ -314,91 +316,98 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // ─────────────────────────────────────────────────────
-                        // BAŞLIK
+                        // LOGO VE BAŞLIK
                         // ─────────────────────────────────────────────────────
                         Text(
-                          'Hesap Oluştur',
+                          l10n?.registerTitle ?? 'Hesap Oluştur',
                           style: theme.textTheme.displaySmall?.copyWith(
                             fontWeight: AppTypography.bold,
-                            fontSize: AppTypography.size4XL,
+                            fontSize: AppTypography.size3XL,
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
 
                         AppSpacing.xs.verticalSpace,
 
                         Text(
-                          'Çeyiz planlamanıza hemen başlayın',
+                          l10n?.createAccountSubtitle ?? 'Yeni hesabınızı oluşturun',
                           style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurface,
-                            fontSize: AppTypography.sizeMD,
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            fontSize: AppTypography.sizeBase,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),                        AppSpacing.xl.verticalSpace,
+
+                        // ─────────────────────────────────────────────────────
+                        // FORM SECTIONS
+                        // Miller Yasası: 4 alan ama 2 gruba bölünmüş
+                        // ─────────────────────────────────────────────────────
+                        // Kişisel Bilgiler Section
+                        Text(
+                          l10n?.personalInfo ?? 'Kişisel Bilgiler',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-
-                        AppSpacing.xl.verticalSpace,
-
-                        // ─────────────────────────────────────────────────────
-                        // FORM BÖLÜM 1: KİŞİSEL BİLGİLER
-                        // Miller Yasası: 2 alan per grup
-                        // ─────────────────────────────────────────────────────
-                        AppFormSection(
-                          title: 'Kişisel Bilgiler',
-                          children: [
-                            AppTextInput(
-                              label: 'Ad Soyad',
-                              hint: 'Adınızı ve soyadınızı girin',
-                              controller: _nameController,
-                              keyboardType: TextInputType.name,
-                              textInputAction: TextInputAction.next,
-                              prefixIcon: const Icon(Icons.person_outline),
-                              validator: _validateName,
-                            ),
-                            AppTextInput(
-                              label: 'Email',
-                              hint: 'ornek@email.com',
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              prefixIcon: const Icon(Icons.email_outlined),
-                              validator: _validateEmail,
-                            ),
-                          ],
+                        AppSpacing.sm.verticalSpace,
+                        AppTextInput(
+                          label: l10n?.displayName ?? 'Ad Soyad',
+                          hint: 'Ahmet Yılmaz',
+                          controller: _nameController,
+                          keyboardType: TextInputType.name,
+                          textInputAction: TextInputAction.next,
+                          prefixIcon: const Icon(Icons.person_outline),
+                          validator: _validateName,
+                        ),
+                        AppSpacing.md.verticalSpace,
+                        AppTextInput(
+                          label: l10n?.email ?? 'Email',
+                          hint: 'ornek@email.com',
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          prefixIcon: const Icon(Icons.email_outlined),
+                          validator: _validateEmail,
                         ),
 
                         AppSpacing.lg.verticalSpace,
 
-                        // ─────────────────────────────────────────────────────
-                        // FORM BÖLÜM 2: GÜVENLİK BİLGİLERİ
-                        // Miller Yasası: 2 alan per grup
-                        // Gestalt: İlgili alanlar (şifre + tekrar) birlikte
-                        // ─────────────────────────────────────────────────────
-                        AppFormSection(
-                          title: 'Güvenlik',
-                          subtitle: 'En az 6 karakter, 1 büyük harf, 1 küçük harf ve 1 rakam',
-                          children: [
-                            AppPasswordInput(
-                              label: 'Şifre',
-                              hint: 'Güçlü bir şifre oluşturun',
-                              controller: _passwordController,
-                              textInputAction: TextInputAction.next,
-                              validator: _validatePassword,
-                            ),
-                            AppPasswordInput(
-                              label: 'Şifre Tekrarı',
-                              hint: 'Şifrenizi tekrar girin',
-                              controller: _confirmPasswordController,
-                              textInputAction: TextInputAction.done,
-                              validator: _validateConfirmPassword,
-                            ),
-                          ],
+                        // Security Section
+                        Text(
+                          l10n?.security ?? 'Güvenlik',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-
+                        AppSpacing.xs.verticalSpace,
+                        Text(
+                          l10n?.securityRequirements ?? 'En az 6 karakter, 1 büyük harf, 1 küçük harf ve 1 rakam',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        AppSpacing.sm.verticalSpace,
+                        AppPasswordInput(
+                          label: l10n?.password ?? 'Şifre',
+                          hint: 'Güçlü bir şifre oluşturun',
+                          controller: _passwordController,
+                          textInputAction: TextInputAction.next,
+                          validator: _validatePassword,
+                        ),
                         AppSpacing.md.verticalSpace,
+                        AppPasswordInput(
+                          label: l10n?.confirmPassword ?? 'Şifre Tekrarı',
+                          hint: l10n?.confirmPasswordHint ?? 'Şifrenizi tekrar girin',
+                          controller: _confirmPasswordController,
+                          textInputAction: TextInputAction.done,
+                          validator: _validateConfirmPassword,
+                        ),                        AppSpacing.md.verticalSpace,
 
                         // ─────────────────────────────────────────────────────
                         // TERMS CHECKBOX
                         // FITTS YASASI: Checkbox + text 48dp touch area
                         // ─────────────────────────────────────────────────────
-                        _buildTermsCheckbox(theme),
+                        _buildTermsCheckbox(theme, l10n),
 
                         AppSpacing.xl.verticalSpace,
 
@@ -416,8 +425,19 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
                         AppSpacing.lg.verticalSpace,
 
+                        // Primary Action Button
+                        AppPrimaryButton(
+                          label: l10n?.createAccount ?? 'Kayıt Ol',
+                          icon: Icons.person_add,
+                          isFullWidth: true,
+                          onPressed: _handleRegister,
+                          isLoading: authProvider.status == AuthStatus.loading,
+                        ),
+
+                        AppSpacing.lg.verticalSpace,
+
                         // ─────────────────────────────────────────────────────
-                        // DIVIDER - "veya" text
+                        // Divider
                         // ─────────────────────────────────────────────────────
                         Row(
                           children: [
@@ -425,9 +445,9 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                               child: Text(
-                                'veya',
+                                l10n?.or ?? 'veya',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                 ),
                               ),
                             ),
@@ -437,12 +457,38 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
                         AppSpacing.lg.verticalSpace,
 
-                        // ─────────────────────────────────────────────────────
+                        // Google Sign-In Button
+                        AppSecondaryButton(
+                          label: l10n?.registerWithGoogle ?? 'Google ile Kayıt Ol',
+                          icon: Icons.g_mobiledata_rounded,
+                          isFullWidth: true,
+                          onPressed: _handleGoogleSignIn,
+                        ),
+
+                        AppSpacing.lg.verticalSpace,
+
+                        // Login Link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              l10n?.alreadyHaveAccount ?? 'Zaten hesabınız var mı?',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: AppTypography.sizeBase,
+                              ),
+                            ),
+                            AppSpacing.xs.horizontalSpace,
+                            AppTextButton(
+                              label: l10n?.login ?? 'Giriş Yapın',
+                              onPressed: () => context.push('/login'),
+                            ),
+                          ],
+                        ),                        // ─────────────────────────────────────────────────────
                         // GOOGLE SIGN-IN BUTTON
                         // Material 3 uyumlu, outlined style
                         // ─────────────────────────────────────────────────────
                         AppSecondaryButton(
-                          label: 'Google ile Kayıt Ol',
+                          label: l10n?.registerWithGoogle ?? 'Google ile Kayıt Ol',
                           icon: Icons.g_mobiledata_rounded,
                           isFullWidth: true,
                           onPressed: _handleGoogleSignIn,
@@ -486,7 +532,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
   // TERMS CHECKBOX WIDGET
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildTermsCheckbox(ThemeData theme) {
+  Widget _buildTermsCheckbox(ThemeData theme, AppLocalizations? l10n) {
     return InkWell(
       onTap: () {
         setState(() {
@@ -527,7 +573,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             // Text
             Expanded(
               child: Text(
-                'Kullanım koşullarını ve gizlilik politikasını kabul ediyorum',
+                l10n?.acceptTerms ?? 'Kullanım koşullarını ve gizlilik politikasını kabul ediyorum',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontSize: AppTypography.sizeBase,
                   color: theme.colorScheme.onSurface,

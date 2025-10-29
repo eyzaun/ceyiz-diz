@@ -12,9 +12,11 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../data/models/category_model.dart';
 import '../../../core/services/kac_saat_calculator.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../providers/product_provider.dart';
@@ -69,6 +71,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
@@ -81,8 +84,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     // Empty state
     if (pinnedTrousseaus.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('İstatistikler')),
-        body: const Center(child: Text('Çeyiz bulunamadı')),
+        appBar: AppBar(title: Text(l10n?.statistics ?? 'Statistics')),
+        body: Center(child: Text(l10n?.trousseauNotFound ?? 'Trousseau not found')),
       );
     }
 
@@ -93,7 +96,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         _ensureInitialSelection();
       });
       return Scaffold(
-        appBar: AppBar(title: const Text('İstatistikler')),
+        appBar: AppBar(title: Text(l10n?.statistics ?? 'Statistics')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -101,8 +104,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final trousseau = trousseauProvider.getTrousseauById(selectedTrousseauId);
     if (trousseau == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('İstatistikler')),
-        body: const Center(child: Text('Çeyiz bulunamadı')),
+        appBar: AppBar(title: Text(l10n?.statistics ?? 'Statistics')),
+        body: Center(child: Text(l10n?.trousseauNotFound ?? 'Trousseau not found')),
       );
     }
 
@@ -117,12 +120,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('İstatistikler'),
+        title: Text(l10n?.statistics ?? 'Statistics'),
         actions: [
           // HICK YASASI: Sadece 1 secondary action
           AppIconButton(
             icon: Icons.info_outline,
-            tooltip: 'İstatistik Açıklaması',
+            tooltip: l10n?.statisticsGuideTooltip ?? 'Statistics Guide',
             onPressed: () => _showInfoDialog(context),
           ),
         ],
@@ -153,7 +156,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           ),
           AppSpacing.xs.verticalSpace,
           Text(
-            'Genel Bakış',
+            l10n?.overview ?? 'Overview',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface,
               fontSize: AppTypography.sizeBase,
@@ -167,7 +170,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               Expanded(
                 child: AppStatCard(
                   icon: Icons.account_balance_wallet,
-                  title: 'Toplam Bütçe',
+                  title: l10n?.totalBudget ?? 'Total Budget',
                   value: '₺${totalBudget.toStringAsFixed(0)}',
                   color: theme.colorScheme.primary,
                 ),
@@ -176,10 +179,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               Expanded(
                 child: AppStatCard(
                   icon: Icons.shopping_cart,
-                  title: 'Harcanan',
+                  title: l10n?.spent ?? 'Spent',
                   value: '₺${totalSpent.toStringAsFixed(0)}',
                   subtitle: totalBudget > 0 
-                    ? '%${((totalSpent / totalBudget) * 100).toStringAsFixed(0)} kullanıldı'
+                    ? '%${((totalSpent / totalBudget) * 100).toStringAsFixed(0)} ${l10n?.percentUsed ?? 'used'}'
                     : null,
                   color: theme.colorScheme.secondary,
                 ),
@@ -195,11 +198,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               Expanded(
                 child: AppStatCard(
                   icon: remainingBudget >= 0 ? Icons.savings : Icons.warning,
-                  title: 'Kalan Bütçe',
+                  title: l10n?.remainingBudget ?? 'Remaining Budget',
                   value: '₺${remainingBudget.toStringAsFixed(0)}',
                   subtitle: remainingBudget >= 0 
-                    ? 'Bütçe içinde'
-                    : '₺${(-remainingBudget).toStringAsFixed(0)} fazla',
+                    ? l10n?.withinBudget ?? 'Within budget'
+                    : '₺${(-remainingBudget).toStringAsFixed(0)} ${l10n?.excess ?? 'excess'}',
                   color: remainingBudget >= 0 ? theme.colorScheme.tertiary : theme.colorScheme.error,
                 ),
               ),
@@ -207,10 +210,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               Expanded(
                 child: AppStatCard(
                   icon: Icons.calculate,
-                  title: 'Planlanan Toplam',
+                  title: l10n?.plannedTotal ?? 'Planned Total',
                   value: '₺${totalPlanned.toStringAsFixed(0)}',
                   subtitle: totalBudget > 0 
-                    ? '%${((totalPlanned / totalBudget) * 100).toStringAsFixed(0)} bütçeden'
+                    ? '%${((totalPlanned / totalBudget) * 100).toStringAsFixed(0)} ${l10n?.fromBudget ?? 'from budget'}'
                     : null,
                   color: theme.colorScheme.tertiary,
                 ),
@@ -226,11 +229,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               Expanded(
                 child: AppStatCard(
                   icon: Icons.attach_money,
-                  title: 'Ortalama Fiyat',
+                  title: l10n?.averagePrice ?? 'Average Price',
                   value: totalProducts > 0 
                     ? '₺${(totalPlanned / totalProducts).toStringAsFixed(0)}'
                     : '₺0',
-                  subtitle: 'Ürün başına',
+                  subtitle: l10n?.perProduct ?? 'Per product',
                   color: Colors.orange,
                 ),
               ),
@@ -238,7 +241,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               Expanded(
                 child: AppStatCard(
                   icon: Icons.arrow_upward,
-                  title: 'En Pahalı',
+                  title: l10n?.mostExpensive ?? 'Most Expensive',
                   value: _getMostExpensiveProduct(productProvider),
                   subtitle: _getMostExpensiveProductName(productProvider),
                   color: Colors.deepPurple,
@@ -275,7 +278,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'İlerleme',
+                      l10n?.progress ?? 'Progress',
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: AppTypography.bold,
                         fontSize: AppTypography.sizeLG,
@@ -307,21 +310,21 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   children: [
                     _progressStat(
                       context,
-                      'Toplam Ürün',
+                      l10n?.totalProducts ?? 'Total Products',
                       totalProducts.toString(),
                       Icons.inventory_2,
                       theme.colorScheme.primary,
                     ),
                     _progressStat(
                       context,
-                      'Tamamlanan',
+                      l10n?.completed ?? 'Completed',
                       purchasedProducts.toString(),
                       Icons.check_circle,
                       theme.colorScheme.tertiary,
                     ),
                     _progressStat(
                       context,
-                      'Bekleyen',
+                      l10n?.pending ?? 'Pending',
                       (totalProducts - purchasedProducts).toString(),
                       Icons.pending,
                       theme.colorScheme.secondary,
@@ -381,7 +384,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Kaç Saat Analizi',
+                        l10n?.kacSaatAnalysis ?? 'Work Hours Analysis',
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: AppTypography.bold,
                           fontSize: AppTypography.sizeLG,
@@ -389,7 +392,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       ),
                       AppIconButton(
                         icon: Icons.settings,
-                        tooltip: 'Ayarlar',
+                        tooltip: l10n?.settings ?? 'Settings',
                         onPressed: () => context.push('/settings/kac-saat'),
                       ),
                     ],
@@ -417,7 +420,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Bütçe Analizi',
+                    l10n?.budgetAnalysis ?? 'Budget Analysis',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: AppTypography.bold,
                       fontSize: AppTypography.sizeLG,
@@ -426,7 +429,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   AppSpacing.md.verticalSpace,
                   _budgetBar(
                     context,
-                    'Harcanan',
+                    l10n?.spent ?? 'Spent',
                     totalSpent,
                     totalBudget,
                     theme.colorScheme.secondary,
@@ -434,7 +437,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   AppSpacing.md.verticalSpace,
                   _budgetBar(
                     context,
-                    'Planlanan',
+                    l10n?.planned ?? 'Planned',
                     totalPlanned,
                     totalBudget,
                     theme.colorScheme.primary,
@@ -444,8 +447,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     AppSpacing.md.verticalSpace,
                     AppInfoCard(
                       type: InfoCardType.error,
-                      title: 'Bütçe Aşıldı!',
-                      message: '₺${(-remainingBudget).toStringAsFixed(0)} fazla harcandı.',
+                      title: l10n?.budgetExceeded ?? 'Budget Exceeded!',
+                      message: '₺${(-remainingBudget).toStringAsFixed(0)} ${l10n?.excessSpent ?? 'excess spent.'}',
                     ),
                   ],
                 ],
@@ -462,14 +465,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Kategori Dağılımı',
+                l10n?.categoryDistribution ?? 'Category Distribution',
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: AppTypography.bold,
                   fontSize: AppTypography.sizeLG,
                 ),
               ),
               AppTextButton(
-                label: 'Tümünü Gör',
+                label: l10n?.viewAll ?? 'View All',
                 icon: Icons.arrow_forward,
                 onPressed: () => context.push('/trousseau/$selectedTrousseauId/products'),
               ),
@@ -560,11 +563,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   ) {
     final calculator = settings.toCalculator();
 
+    final l10n = AppLocalizations.of(context);
+    
     if (!calculator.isValid) {
       return AppInfoCard(
         type: InfoCardType.warning,
-        title: 'Ayarlar Eksik',
-        message: 'Kaç Saat hesaplaması için ayarlarınızı tamamlayın.',
+        title: l10n?.settingsIncomplete ?? 'Settings Incomplete',
+        message: l10n?.completeKacSaatSettings ?? 'Complete your settings for work hours calculation.',
       );
     }
 
@@ -585,7 +590,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Planlanan Toplam',
+                    l10n?.plannedTotal ?? 'Planned Total',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface,
                       fontSize: AppTypography.sizeSM,
@@ -601,7 +606,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     ),
                   ),
                   Text(
-                    '≈ ${plannedDays.toStringAsFixed(1)} iş günü',
+                    '≈ ${plannedDays.toStringAsFixed(1)} ${l10n?.workDays ?? 'work days'}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface,
                       fontSize: AppTypography.sizeXS,
@@ -626,7 +631,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Harcanan Toplam',
+                    l10n?.spent ?? 'Spent',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface,
                       fontSize: AppTypography.sizeSM,
@@ -642,7 +647,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     ),
                   ),
                   Text(
-                    '≈ ${spentDays.toStringAsFixed(1)} iş günü',
+                    '≈ ${spentDays.toStringAsFixed(1)} ${l10n?.workDays ?? 'work days'}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface,
                       fontSize: AppTypography.sizeXS,
@@ -675,7 +680,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               AppSpacing.sm.horizontalSpace,
               Expanded(
                 child: Text(
-                  'Saatlik kazancınız: ₺${calculator.hourlyRate.toStringAsFixed(2)}',
+                  '${l10n?.hourlyEarnings ?? 'Your hourly earnings'}: ₺${calculator.hourlyRate.toStringAsFixed(2)}',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurface,
                     fontSize: AppTypography.sizeSM,
@@ -773,6 +778,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     ProductProvider productProvider,
     ThemeData theme,
   ) {
+    final l10n = AppLocalizations.of(context);
     final total = categoryStats.values.fold<int>(0, (a, b) => a + b);
 
     if (total == 0) {
@@ -789,7 +795,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 ),
                 AppSpacing.md.verticalSpace,
                 Text(
-                  'Henüz kategori verisi yok',
+                  l10n?.noCategoryDataYet ?? 'No category data yet',
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurface,
                   ),
@@ -907,8 +913,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   String _humanizeId(String id) {
+    final l10n = AppLocalizations.of(context);
     final s = id.replaceAll('-', ' ').replaceAll('_', ' ');
-    if (s.isEmpty) return 'Diğer';
+    if (s.isEmpty) return l10n?.other ?? 'Other';
     return s[0].toUpperCase() + s.substring(1);
   }
 
@@ -969,20 +976,21 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       : null;
 
     // Calculate progress rate
+    final l10n = AppLocalizations.of(context);
     String progressRating = '';
     Color progressColor = theme.colorScheme.primary;
 
     if (avgProductsPerDay >= 1.0) {
-      progressRating = 'Çok Hızlı';
+      progressRating = l10n?.veryFast ?? 'Very Fast';
       progressColor = Colors.green;
     } else if (avgProductsPerDay >= 0.5) {
-      progressRating = 'İyi';
+      progressRating = l10n?.good ?? 'Good';
       progressColor = Colors.lightGreen;
     } else if (avgProductsPerDay >= 0.2) {
-      progressRating = 'Orta';
+      progressRating = l10n?.medium ?? 'Medium';
       progressColor = Colors.orange;
     } else {
-      progressRating = 'Yavaş';
+      progressRating = l10n?.slow ?? 'Slow';
       progressColor = Colors.deepOrange;
     }
 
@@ -994,7 +1002,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Tamamlanma Tahmini',
+                l10n?.completionEstimate ?? 'Completion Estimate',
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: AppTypography.bold,
                   fontSize: AppTypography.sizeLG,
@@ -1030,8 +1038,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: _infoTile(
                   context,
                   Icons.calendar_today,
-                  'Başlangıç',
-                  '$daysSinceCreation gün önce',
+                  l10n?.start ?? 'Start',
+                  '$daysSinceCreation ${l10n?.daysAgo ?? 'days ago'}',
                   theme,
                 ),
               ),
@@ -1040,8 +1048,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: _infoTile(
                   context,
                   Icons.speed,
-                  'Hız',
-                  '${avgProductsPerDay.toStringAsFixed(1)} ürün/gün',
+                  l10n?.speed ?? 'Speed',
+                  '${avgProductsPerDay.toStringAsFixed(1)} ${l10n?.productsPerDay ?? 'products/day'}',
                   theme,
                 ),
               ),
@@ -1056,8 +1064,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: _infoTile(
                   context,
                   Icons.hourglass_empty,
-                  'Kalan',
-                  '$remainingProducts ürün',
+                  l10n?.remaining ?? 'Remaining',
+                  '$remainingProducts ${l10n?.products ?? 'products'}',
                   theme,
                 ),
               ),
@@ -1066,10 +1074,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: _infoTile(
                   context,
                   Icons.event_available,
-                  'Tahmini Bitiş',
+                  l10n?.estimatedCompletion ?? 'Estimated Completion',
                   completionDate != null
-                    ? '~$estimatedDaysToComplete gün'
-                    : 'Hesaplanamadı',
+                    ? '~$estimatedDaysToComplete ${l10n?.days ?? 'days'}'
+                    : l10n?.cannotCalculate ?? 'Cannot calculate',
                   theme,
                 ),
               ),
@@ -1094,7 +1102,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   AppSpacing.sm.horizontalSpace,
                   Expanded(
                     child: Text(
-                      'Mevcut hızınızla çeyizinizi ~${_formatDate(completionDate)} civarında tamamlayabilirsiniz.',
+                      _getCompletionMessage(l10n, completionDate),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontSize: AppTypography.sizeSM,
                         height: 1.4,
@@ -1110,12 +1118,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    final months = [
-      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  String _formatDate(DateTime date, String locale) {
+    final formatter = DateFormat.yMMMMd(locale);
+    return formatter.format(date);
+  }
+
+  String _getCompletionMessage(AppLocalizations? l10n, DateTime date) {
+    final locale = l10n?.localeName ?? 'tr';
+    final formattedDate = _formatDate(date, locale);
+    
+    return l10n?.completionMessage(formattedDate) ?? 
+           'At your current pace, you can complete your trousseau around ~$formattedDate.';
   }
 
   Widget _infoTile(
@@ -1175,6 +1188,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     ProductProvider productProvider,
     ThemeData theme,
   ) {
+    final l10n = AppLocalizations.of(context);
+    
     // Find most/least products category
     final entries = categoryStats.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -1228,7 +1243,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Kategori Analizi',
+                l10n?.categoryAnalysis ?? 'Category Analysis',
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: AppTypography.bold,
                   fontSize: AppTypography.sizeLG,
@@ -1274,7 +1289,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '👑 En Çok Ürün',
+                        '👑 ${l10n?.mostProducts ?? 'Most Products'}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                           fontSize: AppTypography.sizeXS,
@@ -1290,7 +1305,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       ),
                       AppSpacing.xs.verticalSpace,
                       Text(
-                        '${mostProductsEntry.value} ürün • Ort: ₺${avgMostCategory.toStringAsFixed(0)}',
+                        '${mostProductsEntry.value} ${l10n?.products ?? 'products'} • ${l10n?.average ?? 'Avg'}: ₺${avgMostCategory.toStringAsFixed(0)}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface,
                           fontSize: AppTypography.sizeXS,
@@ -1344,7 +1359,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '📉 En Az Ürün',
+                          '📉 ${l10n?.leastProducts ?? 'Least Products'}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                             fontSize: AppTypography.sizeXS,
@@ -1401,7 +1416,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 AppSpacing.sm.horizontalSpace,
                 Expanded(
                   child: Text(
-                    'Toplam ${entries.length} farklı kategoride ürününüz var.',
+                    l10n?.totalCategoryCount(entries.length) ?? 
+                    'You have products in ${entries.length} different categories.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontSize: AppTypography.sizeSM,
                     ),
@@ -1427,12 +1443,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     double remainingBudget,
     ThemeData theme,
   ) {
+    final l10n = AppLocalizations.of(context);
+    
     // Calculate health score (0-100)
     int healthScore = 100;
-    String healthStatus = 'Mükemmel';
+    String healthStatus = l10n?.budgetHealthPerfect ?? 'Perfect';
     Color healthColor = Colors.green;
     IconData healthIcon = Icons.sentiment_very_satisfied;
-    String healthMessage = 'Bütçenizi harika yönetiyorsunuz!';
+    String healthMessage = l10n?.budgetHealthPerfect ?? 'You\'re managing your budget perfectly!';
 
     if (totalBudget > 0) {
       final spentPercent = (totalSpent / totalBudget) * 100;
@@ -1441,38 +1459,38 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       if (remainingBudget < 0) {
         // Budget exceeded
         healthScore = 0;
-        healthStatus = 'Kritik';
+        healthStatus = l10n?.budgetHealthCritical ?? 'Critical';
         healthColor = theme.colorScheme.error;
         healthIcon = Icons.sentiment_very_dissatisfied;
-        healthMessage = 'Bütçenizi aştınız! Harcamalarınızı gözden geçirin.';
+        healthMessage = l10n?.budgetHealthCritical ?? 'You\'ve exceeded your budget! Review your spending.';
       } else if (plannedPercent > 100) {
         // Planned exceeds budget
         healthScore = 30;
-        healthStatus = 'Riskli';
+        healthStatus = l10n?.budgetHealthRisky ?? 'Risky';
         healthColor = Colors.orange;
         healthIcon = Icons.sentiment_dissatisfied;
-        healthMessage = 'Planlanan harcamalar bütçeyi aşıyor. Plan yapın.';
+        healthMessage = l10n?.budgetHealthRisky ?? 'Planned spending exceeds budget. Make a plan.';
       } else if (spentPercent > 80) {
         // 80%+ spent
         healthScore = 50;
-        healthStatus = 'Dikkatli Olun';
+        healthStatus = l10n?.beCareful ?? 'Be Careful';
         healthColor = Colors.orange.shade700;
         healthIcon = Icons.sentiment_neutral;
-        healthMessage = 'Bütçenizin çoğunu harcadınız. Kontrollü ilerleyin.';
+        healthMessage = l10n?.budgetHealthBeCareful ?? 'You\'ve spent most of your budget. Proceed carefully.';
       } else if (spentPercent > 60) {
         // 60-80% spent
         healthScore = 70;
-        healthStatus = 'İyi';
+        healthStatus = l10n?.good ?? 'Good';
         healthColor = Colors.lightGreen;
         healthIcon = Icons.sentiment_satisfied;
-        healthMessage = 'İyi gidiyorsunuz! Harcamalarınızı kontrol altında tutun.';
+        healthMessage = l10n?.budgetHealthGood ?? 'Going well! Keep your spending under control.';
       } else {
         // <60% spent
         healthScore = 100;
-        healthStatus = 'Mükemmel';
+        healthStatus = l10n?.budgetHealthPerfect ?? 'Perfect';
         healthColor = Colors.green;
         healthIcon = Icons.sentiment_very_satisfied;
-        healthMessage = 'Bütçenizi harika yönetiyorsunuz!';
+        healthMessage = l10n?.budgetHealthPerfect ?? 'You\'re managing your budget perfectly!';
       }
     }
 
@@ -1484,7 +1502,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Bütçe Sağlığı',
+                l10n?.budgetHealth ?? 'Budget Health',
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: AppTypography.bold,
                   fontSize: AppTypography.sizeLG,
@@ -1535,7 +1553,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Sağlık Skoru',
+                      l10n?.healthScore ?? 'Health Score',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontSize: AppTypography.sizeSM,
                       ),
@@ -1606,50 +1624,53 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   // ═══════════════════════════════════════════════════════════════════════════
 
   void _showInfoDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: AppRadius.radiusXL,
         ),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.info_outline, size: 28),
-            SizedBox(width: 12),
-            Text('İstatistik Rehberi'),
+            const Icon(Icons.info_outline, size: 28),
+            const SizedBox(width: 12),
+            Text(l10n?.statisticsGuide ?? 'Statistics Guide'),
           ],
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '📊 Genel Bakış\n\n'
-                '• Toplam Bütçe: Belirlediğiniz hedef bütçe\n'
-                '• Harcanan: Satın aldığınız ürünlerin toplamı\n'
-                '• Kalan Bütçe: Harcayabileceğiniz miktar\n'
-                '• Planlanan Toplam: Tüm ürünlerin maliyeti\n'
-                '• Ortalama Fiyat: Ürün başına düşen tutar\n'
-                '• En Pahalı: Listedeki en yüksek fiyatlı ürün\n\n'
-                '💚 Bütçe Sağlığı\n\n'
-                '• Mükemmel (100): %60\'tan az harcadınız\n'
-                '• İyi (70): %60-80 arası harcama\n'
-                '• Dikkatli (50): %80\'den fazla kullanıldı\n'
-                '• Riskli (30): Planlanan bütçeyi aşıyor\n'
-                '• Kritik (0): Bütçe aşıldı!\n\n'
-                '📅 Tamamlanma Tahmini\n\n'
-                'Mevcut alışveriş hızınıza göre çeyizinizi ne zaman tamamlayacağınızı tahmin eder.\n\n'
-                '🏆 Kategori Analizi\n\n'
-                'En çok/az ürüne sahip kategoriler, ortalama harcamalar ve kategori bazlı istatistikler.',
-                style: TextStyle(height: 1.5, fontSize: 14),
+                l10n?.statisticsGuide ?? 
+                '📊 Overview\n\n'
+                '• Total Budget: Your target budget\n'
+                '• Spent: Total of purchased items\n'
+                '• Remaining Budget: Amount you can spend\n'
+                '• Planned Total: Cost of all items\n'
+                '• Average Price: Amount per item\n'
+                '• Most Expensive: Highest priced item\n\n'
+                '💚 Budget Health\n\n'
+                '• Perfect (100): Spent less than 60%\n'
+                '• Good (70): 60-80% spending\n'
+                '• Be Careful (50): Over 80% used\n'
+                '• Risky (30): Planned exceeds budget\n'
+                '• Critical (0): Budget exceeded!\n\n'
+                '📅 Completion Estimate\n\n'
+                'Estimates when you\'ll complete your trousseau based on current shopping speed.\n\n'
+                '🏆 Category Analysis\n\n'
+                'Categories with most/least products, average spending, and category-based statistics.',
+                style: const TextStyle(height: 1.5, fontSize: 14),
               ),
             ],
           ),
         ),
         actions: [
           AppTextButton(
-            label: 'Anladım',
+            label: l10n?.understood ?? 'Understood',
             onPressed: () => Navigator.of(dialogContext).pop(),
           ),
         ],

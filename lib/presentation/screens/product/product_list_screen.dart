@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
@@ -67,6 +68,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   }
 
   Future<bool> _promptAddCategory(BuildContext context, CategoryProvider provider) async {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
     IconData selIcon = Icons.category;
@@ -76,7 +78,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocalState) => AlertDialog(
-          title: const Text('Yeni Kategori'),
+          title: Text(l10n?.newCategory ?? 'Yeni Kategori'),
           content: Form(
             key: formKey,
             child: Column(
@@ -84,12 +86,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
               children: [
                 TextFormField(
                   controller: controller,
-                  decoration: const InputDecoration(hintText: 'Kategori adı'),
+                  decoration: InputDecoration(hintText: l10n?.categoryName ?? 'Kategori adı'),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Ad gerekli';
-                    if (provider.allCategories.any((c) =>
-                        c.displayName.toLowerCase() == v.trim().toLowerCase())) {
-                      return 'Bu ad kullanılıyor';
+                    if (v == null || v.trim().isEmpty) return l10n?.nameRequired ?? 'Ad gerekli';
+                    if (provider.allCategories.any((c) => c.displayName.toLowerCase() == v.trim().toLowerCase())) {
+                      return l10n?.nameAlreadyUsed ?? 'Bu ad kullanılıyor';
                     }
                     return null;
                   },
@@ -104,7 +105,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     AppSpacing.sm.horizontalSpace,
                     Expanded(
                       child: AppSecondaryButton(
-                        label: 'Sembol ve Renk Seç',
+                        label: l10n?.selectIconAndColor ?? 'Sembol ve Renk Seç',
                         icon: Icons.palette_outlined,
                         onPressed: () async {
                           final res = await IconColorPicker.pick(
@@ -125,11 +126,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
           ),
           actions: [
             AppTextButton(
-              label: 'Vazgeç',
+              label: l10n?.cancel ?? 'Vazgeç',
               onPressed: () => Navigator.pop(ctx, false),
             ),
             AppPrimaryButton(
-              label: 'Ekle',
+              label: l10n?.add ?? 'Ekle',
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
                 final name = controller.text.trim();
@@ -158,6 +159,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   }
 
   void _showFilterDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
     final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
     final trousseauProvider = Provider.of<TrousseauProvider>(context, listen: false);
@@ -198,7 +200,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            'Kategoriler',
+                            l10n?.categories ?? 'Kategoriler',
                             style: theme.textTheme.headlineSmall?.copyWith(
                               fontWeight: AppTypography.bold,
                             ),
@@ -211,7 +213,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                               final result = await _promptAddCategory(context, categoryProvider);
                               if (result) setState(() {});
                             },
-                            tooltip: 'Kategori Ekle',
+                            tooltip: l10n?.addCategory ?? 'Kategori Ekle',
                           ),
                       ],
                     ),
@@ -244,17 +246,17 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       children: [
                         Expanded(
                           child: AppSecondaryButton(
-                            label: 'Temizle',
+                            label: l10n?.clear ?? 'Temizle',
                             onPressed: () {
                               productProvider.clearCategoryFilter();
                               Navigator.pop(context);
                             },
                           ),
                         ),
-                        AppSpacing.md.horizontalSpace,
+                        AppSpacing.sm.horizontalSpace,
                         Expanded(
                           child: AppPrimaryButton(
-                            label: 'Uygula',
+                            label: l10n?.apply ?? 'Uygula',
                             onPressed: () => Navigator.pop(context),
                           ),
                         ),
@@ -273,6 +275,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final productProvider = Provider.of<ProductProvider>(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
     final trousseau = trousseauProvider.getTrousseauById(widget.trousseauId);
@@ -286,8 +289,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
     if (trousseau == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(
-          child: Text('Çeyiz bulunamadı'),
+        body: Center(
+          child: Text(l10n?.trousseauNotFound ?? 'Çeyiz bulunamadı'),
         ),
       );
     }
@@ -296,7 +299,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ürünler'),
+        title: Text(l10n?.products ?? 'Ürünler'),
         // HICK YASASI: Max 2 actions
         // FITTS YASASI: 48x48dp touch area
         actions: [
@@ -305,12 +308,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
               icon: Icons.settings_outlined,
               onPressed: () => context.push(
                   '/trousseau/${widget.trousseauId}/products/categories'),
-              tooltip: 'Kategorileri Yönet',
+              tooltip: l10n?.manageCategories ?? 'Kategorileri Yönet',
             ),
           AppIconButton(
             icon: Icons.filter_list,
             onPressed: () => _showFilterDialog(context),
-            tooltip: 'Filtrele',
+            tooltip: l10n?.filter ?? 'Filtrele',
           ),
         ],
       ),
@@ -327,7 +330,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               child: AppSearchInput(
                 controller: _searchController,
-                hint: 'Ürün ara...',
+                hint: l10n?.searchProduct ?? 'Ürün ara...',
                 onChanged: (v) {
                   _debounce?.cancel();
                   _debounce = Timer(const Duration(milliseconds: 300), () {
@@ -357,14 +360,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
               scrollDirection: Axis.horizontal,
               children: [
                 FilterPill(
-                  label: 'Tümü',
+                  label: l10n?.all ?? 'Tümü',
                   selected: productProvider.currentFilter == ProductFilter.all,
                   onTap: () => productProvider.setFilter(ProductFilter.all),
                   count: productProvider.products.length,
                 ),
                 AppSpacing.sm.horizontalSpace,
                 FilterPill(
-                  label: 'Alınanlar',
+                  label: l10n?.purchased ?? 'Alınanlar',
                   selected: productProvider.currentFilter == ProductFilter.purchased,
                   onTap: () => productProvider.setFilter(ProductFilter.purchased),
                   count: productProvider.getPurchasedCount(),
@@ -372,7 +375,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 ),
                 AppSpacing.sm.horizontalSpace,
                 FilterPill(
-                  label: 'Alınmayanlar',
+                  label: l10n?.notPurchased ?? 'Alınmayanlar',
                   selected: productProvider.currentFilter == ProductFilter.notPurchased,
                   onTap: () => productProvider.setFilter(ProductFilter.notPurchased),
                   count: productProvider.getNotPurchasedCount(),
@@ -429,11 +432,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: EmptyStateWidget(
                       icon: Icons.shopping_bag_outlined,
-                      title: 'Henüz ürün eklenmemiş',
-                      subtitle: 'İlk ürününüzü ekleyerek başlayın',
+                      title: l10n?.noProductsYet ?? 'Henüz ürün eklenmemiş',
+                      subtitle: l10n?.addFirstProduct ?? 'İlk ürününüzü ekleyerek başlayın',
                       action: canEdit
                           ? AppPrimaryButton(
-                              label: 'Ürün Ekle',
+                              label: l10n?.addProduct ?? 'Ürün Ekle',
                               icon: Icons.add,
                               onPressed: () => context.push(
                                 '/trousseau/${widget.trousseauId}/products/add',
@@ -461,8 +464,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                   padding: EdgeInsets.only(top: AppSpacing.xl2),
                                   child: EmptyStateWidget(
                                     icon: Icons.search_off,
-                                    title: 'Ürün bulunamadı',
-                                    subtitle: 'Farklı filtreler deneyebilirsiniz',
+                                    title: l10n?.productNotFound ?? 'Ürün bulunamadı',
+                                    subtitle: l10n?.tryDifferentFilters ?? 'Farklı filtreler deneyebilirsiniz',
                                   ),
                                 ),
                               );
@@ -517,17 +520,17 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                           final confirmed = await showDialog<bool>(
                                             context: context,
                                             builder: (ctx) => AlertDialog(
-                                              title: const Text('Ürünü Sil'),
+                                              title: Text(l10n?.deleteProduct ?? 'Ürünü Sil'),
                                               content: Text(
-                                                '${product.name} ürününü silmek istediğinizden emin misiniz?',
+                                                l10n?.deleteProductConfirm(product.name) ?? '${product.name} ürününü silmek istediğinizden emin misiniz?',
                                               ),
                                               actions: [
                                                 AppTextButton(
-                                                  label: 'İptal',
+                                                  label: l10n?.cancel ?? 'İptal',
                                                   onPressed: () => Navigator.pop(ctx, false),
                                                 ),
                                                 AppDangerButton(
-                                                  label: 'Sil',
+                                                  label: l10n?.delete ?? 'Sil',
                                                   icon: Icons.delete,
                                                   onPressed: () => Navigator.pop(ctx, true),
                                                 ),
@@ -543,7 +546,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                           if (context.mounted) {
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(
-                                                content: Text('${product.name} silindi'),
+                                                content: Text(l10n?.productDeleted(product.name) ?? '${product.name} silindi'),
                                                 behavior: SnackBarBehavior.floating,
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius: AppRadius.radiusMD,
@@ -620,13 +623,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 children: [
                   _buildSummaryItem(
                     context,
-                    'Toplam',
+                    l10n?.total ?? 'Toplam',
                     '₺${productProvider.getTotalPlanned().toStringAsFixed(0)}',
                     theme.colorScheme.primary,
                   ),
                   _buildSummaryItem(
                     context,
-                    'Harcanan',
+                    l10n?.spent ?? 'Harcanan',
                     '₺${productProvider.getTotalSpent().toStringAsFixed(0)}',
                     theme.colorScheme.tertiary,
                   ),

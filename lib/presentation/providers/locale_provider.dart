@@ -20,32 +20,42 @@ class LocaleProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final languageCode = prefs.getString('language_code') ?? 'tr';
     _locale = Locale(languageCode);
+    debugPrint('🌍 [LocaleProvider] Dil yüklendi: $languageCode');
     notifyListeners();
   }
   
   /// Dili değiştir ve kaydet
   Future<void> setLocale(Locale locale) async {
-    if (_locale == locale) return;
+    if (_locale == locale) {
+      debugPrint('🌍 [LocaleProvider] Dil zaten aynı: ${locale.languageCode}');
+      return;
+    }
     
+    debugPrint('🌍 [LocaleProvider] Dil değiştiriliyor: ${_locale.languageCode} -> ${locale.languageCode}');
     _locale = locale;
     notifyListeners();
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language_code', locale.languageCode);
+    debugPrint('🌍 [LocaleProvider] Dil kaydedildi: ${locale.languageCode}');
   }
   
   /// Türkçe'ye geç
   Future<void> setTurkish() async {
+    debugPrint('🌍 [LocaleProvider] Türkçe\'ye geçiliyor...');
     await setLocale(const Locale('tr'));
   }
   
   /// İngilizce'ye geç
   Future<void> setEnglish() async {
+    debugPrint('🌍 [LocaleProvider] İngilizce\'ye geçiliyor...');
     await setLocale(const Locale('en'));
   }
   
   /// Mevcut dil adını döndür (Türkçe / English)
   String get currentLanguageName {
-    return _locale.languageCode == 'tr' ? 'Türkçe' : 'English';
+    final name = _locale.languageCode == 'tr' ? 'Türkçe' : 'English';
+    debugPrint('🌍 [LocaleProvider] Mevcut dil adı: $name (kod: ${_locale.languageCode})');
+    return name;
   }
 }

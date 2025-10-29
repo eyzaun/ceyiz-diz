@@ -18,6 +18,7 @@ import '../../widgets/common/loading_overlay.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_input.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class EditTrousseauScreen extends StatefulWidget {
   final String trousseauId;
@@ -73,20 +74,22 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
   // ═══════════════════════════════════════════════════════════════════════════
 
   String? _validateName(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value == null || value.isEmpty) {
-      return 'Çeyiz adı gereklidir';
+      return l10n?.trousseauNameRequired ?? 'Çeyiz adı gereklidir';
     }
     if (value.length < 3) {
-      return 'En az 3 karakter olmalıdır';
+      return l10n?.minThreeCharacters ?? 'En az 3 karakter olmalıdır';
     }
     return null;
   }
 
   String? _validateBudget(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value != null && value.isNotEmpty) {
       final budget = CurrencyFormatter.parse(value);
       if (budget == null || budget < 0) {
-        return 'Geçerli bir tutar girin';
+        return l10n?.enterValidAmount ?? 'Geçerli bir tutar girin';
       }
     }
     return null;
@@ -103,6 +106,7 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
       _isLoading = true;
     });
 
+    final l10n = AppLocalizations.of(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context, listen: false);
     final success = await trousseauProvider.updateTrousseau(
       trousseauId: widget.trousseauId,
@@ -120,7 +124,7 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Çeyiz başarıyla güncellendi'),
+          content: Text(l10n?.trousseauUpdatedSuccessfully ?? 'Çeyiz başarıyla güncellendi'),
           backgroundColor: Theme.of(context).colorScheme.tertiary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -149,6 +153,7 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
 
   Future<void> _deleteTrousseau() async {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final trousseau = Provider.of<TrousseauProvider>(context, listen: false)
         .getTrousseauById(widget.trousseauId);
 
@@ -158,13 +163,13 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Çeyizi Sil'),
+        title: Text(l10n?.deleteTrousseau ?? 'Çeyizi Sil'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '"${trousseau.name}" çeyizini silmek istediğinizden emin misiniz?',
+              l10n?.deleteTrousseauConfirm ?? '"${trousseau.name}" çeyizini silmek istediğinizden emin misiniz?',
               style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             AppSpacing.md.verticalSpace,
@@ -183,7 +188,7 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
                   AppSpacing.sm.horizontalSpace,
                   Expanded(
                     child: Text(
-                      'Bu işlem geri alınamaz! Çeyiz içindeki tüm ürünler silinecektir.',
+                      l10n?.deleteTrousseauWarning ?? 'Bu işlem geri alınamaz! Çeyiz içindeki tüm ürünler silinecektir.',
                       style: TextStyle(
                         color: theme.colorScheme.onErrorContainer,
                         fontSize: AppTypography.sizeSM,
@@ -197,11 +202,11 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
         ),
         actions: [
           AppTextButton(
-            label: 'Vazgeç',
+            label: l10n?.cancel ?? 'Vazgeç',
             onPressed: () => Navigator.pop(ctx, false),
           ),
           AppDangerButton(
-            label: 'Sil',
+            label: l10n?.delete ?? 'Sil',
             icon: Icons.delete,
             onPressed: () => Navigator.pop(ctx, true),
           ),
@@ -229,7 +234,7 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Çeyiz başarıyla silindi'),
+          content: Text(l10n?.trousseauDeleted ?? 'Çeyiz başarıyla silindi'),
           backgroundColor: theme.colorScheme.tertiary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -257,17 +262,18 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return LoadingOverlay(
       isLoading: _isLoading,
-      message: 'İşlem yapılıyor...',
+      message: l10n?.processing ?? 'İşlem yapılıyor...',
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Çeyizi Düzenle'),
+          title: Text(l10n?.editTrousseau ?? 'Çeyizi Düzenle'),
           leading: AppIconButton(
             icon: Icons.arrow_back,
             onPressed: () => context.pop(),
-            tooltip: 'Geri',
+            tooltip: l10n?.back ?? 'Geri',
           ),
         ),
         body: SafeArea(
@@ -289,10 +295,10 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
                     // MILLER YASASI: 3 alan (ideal)
                     // ─────────────────────────────────────────────────────
                     AppFormSection(
-                      title: 'Çeyiz Bilgileri',
+                      title: l10n?.trousseauInformation ?? 'Çeyiz Bilgileri',
                       children: [
                         AppTextInput(
-                          label: 'Çeyiz Adı',
+                          label: l10n?.trousseauName ?? 'Çeyiz Adı',
                           controller: _nameController,
                           prefixIcon: const Icon(Icons.label_outline),
                           textInputAction: TextInputAction.next,
@@ -300,7 +306,7 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
                         ),
 
                         AppTextInput(
-                          label: 'Açıklama',
+                          label: l10n?.description ?? 'Açıklama',
                           controller: _descriptionController,
                           maxLines: 3,
                           textInputAction: TextInputAction.next,
@@ -308,7 +314,7 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
                         ),
 
                         AppTextInput(
-                          label: 'Toplam Bütçe (₺)',
+                          label: l10n?.totalBudget ?? 'Toplam Bütçe (₺)',
                           controller: _budgetController,
                           keyboardType: TextInputType.number,
                           textInputAction: TextInputAction.done,
@@ -327,14 +333,14 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
                     // ─────────────────────────────────────────────────────
                     AppButtonGroup(
                       primaryButton: AppPrimaryButton(
-                        label: 'Güncelle',
+                        label: l10n?.update ?? 'Güncelle',
                         icon: Icons.save,
                         isFullWidth: true,
                         onPressed: _updateTrousseau,
                         isLoading: _isLoading,
                       ),
                       secondaryButton: AppSecondaryButton(
-                        label: 'İptal',
+                        label: l10n?.cancel ?? 'İptal',
                         onPressed: () => context.pop(),
                       ),
                     ),
@@ -373,7 +379,7 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
                               ),
                               AppSpacing.sm.horizontalSpace,
                               Text(
-                                'Tehlikeli Alan',
+                                l10n?.dangerZone ?? 'Tehlikeli Alan',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   color: theme.colorScheme.error,
                                   fontWeight: AppTypography.bold,
@@ -384,7 +390,7 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
                           ),
                           AppSpacing.sm.verticalSpace,
                           Text(
-                            'Çeyizi silmek geri alınamaz bir işlemdir. Tüm ürünler ve veriler kalıcı olarak silinecektir.',
+                            l10n?.deleteTrousseauWarning ?? 'Çeyizi silmek geri alınamaz bir işlemdir. Tüm ürünler ve veriler kalıcı olarak silinecektir.',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onErrorContainer,
                               fontSize: AppTypography.sizeSM,
@@ -392,7 +398,7 @@ class _EditTrousseauScreenState extends State<EditTrousseauScreen> {
                           ),
                           AppSpacing.md.verticalSpace,
                           AppDangerButton(
-                            label: 'Çeyizi Sil',
+                            label: l10n?.deleteTrousseau ?? 'Çeyizi Sil',
                             icon: Icons.delete_forever,
                             isOutlined: true,
                             isFullWidth: true,

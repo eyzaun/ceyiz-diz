@@ -17,6 +17,7 @@ import '../../providers/feedback_provider.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_input.dart';
 import '../../widgets/common/app_card.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class FeedbackScreen extends StatelessWidget {
   const FeedbackScreen({super.key});
@@ -35,16 +36,17 @@ class _FeedbackForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final prov = context.watch<FeedbackProvider>();
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Geri Bildirim'),
+        title: Text(l10n?.feedback ?? 'Feedback'),
         leading: AppIconButton(
           icon: Icons.arrow_back,
           onPressed: () => context.pop(),
-          tooltip: 'Geri',
+          tooltip: l10n?.back ?? 'Back',
         ),
         // HICK YASASI: 1 action (History)
         // FITTS YASASI: 48x48dp
@@ -52,7 +54,7 @@ class _FeedbackForm extends StatelessWidget {
           AppIconButton(
             icon: Icons.history,
             onPressed: () => context.push('/settings/feedback/history'),
-            tooltip: 'Geçmiş Geri Bildirimler',
+            tooltip: l10n?.feedbackHistory ?? 'Feedback History',
           ),
         ],
       ),
@@ -74,7 +76,7 @@ class _FeedbackForm extends StatelessWidget {
                 // ─────────────────────────────────────────────────────
                 AppInfoCard(
                   icon: Icons.feedback_outlined,
-                  title: 'Uygulama hakkında görüş ve önerilerinizi bizimle paylaşın.',
+                  title: l10n?.feedbackInfoMessage ?? 'Share your opinions and suggestions about the app with us.',
                   color: theme.colorScheme.primary,
                   backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.05),
                 ),
@@ -86,7 +88,7 @@ class _FeedbackForm extends StatelessWidget {
                 // MILLER YASASI: 3 alan (Rating, Mesaj, Email)
                 // ─────────────────────────────────────────────────────
                 AppFormSection(
-                  title: 'Değerlendirme',
+                  title: l10n?.rating ?? 'Rating',
                   children: [
                     // Rating Bar
                     _RatingBar(
@@ -96,8 +98,8 @@ class _FeedbackForm extends StatelessWidget {
 
                     // Message
                     AppTextInput(
-                      label: 'Geri Bildirim',
-                      hint: 'İyileştirme öneriniz, hata bildiriminiz veya genel yorumunuz...',
+                      label: l10n?.feedback ?? 'Feedback',
+                      hint: l10n?.feedbackHint ?? 'Your improvement suggestions, bug reports or general comments...',
                       controller: prov.messageController,
                       maxLines: 6,
                       prefixIcon: const Icon(Icons.message_outlined),
@@ -105,8 +107,8 @@ class _FeedbackForm extends StatelessWidget {
 
                     // Email (optional)
                     AppTextInput(
-                      label: 'E-posta (opsiyonel)',
-                      hint: 'İsterseniz size dönüş için e-postanızı bırakın',
+                      label: l10n?.emailOptional ?? 'Email (optional)',
+                      hint: l10n?.emailForResponse ?? 'Leave your email if you want us to respond',
                       controller: prov.emailController,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: const Icon(Icons.email_outlined),
@@ -135,7 +137,7 @@ class _FeedbackForm extends StatelessWidget {
                 // ─────────────────────────────────────────────────────
                 AppButtonGroup(
                   primaryButton: AppPrimaryButton(
-                    label: prov.isSubmitting ? 'Gönderiliyor...' : 'Gönder',
+                    label: prov.isSubmitting ? (l10n?.sending ?? 'Sending...') : (l10n?.send ?? 'Send'),
                     icon: Icons.send,
                     isFullWidth: true,
                     isLoading: prov.isSubmitting,
@@ -147,7 +149,7 @@ class _FeedbackForm extends StatelessWidget {
                             if (ok) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: const Text('Geri bildiriminiz için teşekkürler'),
+                                  content: Text(l10n?.thankYouForFeedback ?? 'Thank you for your feedback'),
                                   backgroundColor: theme.colorScheme.tertiary,
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(

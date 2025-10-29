@@ -23,6 +23,7 @@ import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/fullscreen_image_viewer.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final String trousseauId;
@@ -144,10 +145,11 @@ class ProductDetailScreen extends StatelessWidget {
     // Birden fazla çeyiz varsa seçim diyalogu göster
     return await showDialog<String>(
       context: context,
-      builder: (BuildContext context) {
-        final theme = Theme.of(context);
+      builder: (BuildContext dialogContext) {
+        final theme = Theme.of(dialogContext);
+        final l10n = AppLocalizations.of(dialogContext);
         return AlertDialog(
-          title: const Text('Hangi Çeyize Eklensin?'),
+          title: Text(l10n?.selectTrousseau ?? 'Hangi Çeyize Eklensin?'),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.separated(
@@ -199,8 +201,8 @@ class ProductDetailScreen extends StatelessWidget {
           ),
           actions: [
             AppTextButton(
-              label: 'İptal',
-              onPressed: () => Navigator.of(context).pop(),
+              label: l10n?.cancelAction ?? 'İptal',
+              onPressed: () => Navigator.of(dialogContext).pop(),
             ),
           ],
         );
@@ -283,23 +285,26 @@ class ProductDetailScreen extends StatelessWidget {
                     // Confirmation Dialog
                     final confirmed = await showDialog<bool>(
                       context: context,
-                      builder: (dialogCtx) => AlertDialog(
-                        title: const Text('Ürünü Sil'),
-                        content: const Text(
-                          'Bu ürünü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
-                        ),
-                        actions: [
-                          AppTextButton(
-                            label: 'Vazgeç',
-                            onPressed: () => Navigator.pop(dialogCtx, false),
+                      builder: (dialogCtx) {
+                        final l10nDialog = AppLocalizations.of(dialogCtx);
+                        return AlertDialog(
+                          title: Text(l10nDialog?.deleteProduct ?? 'Ürünü Sil'),
+                          content: Text(
+                            l10nDialog?.deleteProductWarning ?? 'Bu ürünü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
                           ),
-                          AppDangerButton(
-                            label: 'Sil',
-                            icon: Icons.delete,
-                            onPressed: () => Navigator.pop(dialogCtx, true),
-                          ),
-                        ],
-                      ),
+                          actions: [
+                            AppTextButton(
+                              label: l10nDialog?.giveUp ?? 'Vazgeç',
+                              onPressed: () => Navigator.pop(dialogCtx, false),
+                            ),
+                            AppDangerButton(
+                              label: l10nDialog?.delete ?? 'Sil',
+                              icon: Icons.delete,
+                              onPressed: () => Navigator.pop(dialogCtx, true),
+                            ),
+                          ],
+                        );
+                      },
                     );
 
                     if (confirmed == true) {
@@ -322,6 +327,7 @@ class ProductDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
     final trousseauProvider = Provider.of<TrousseauProvider>(context, listen: false);
     final product = productProvider.getProductById(productId);
@@ -358,13 +364,13 @@ class ProductDetailScreen extends StatelessWidget {
               onPressed: () => context.push(
                 '/trousseau/$trousseauId/products/$productId/edit',
               ),
-              tooltip: 'Düzenle',
+              tooltip: l10n?.edit ?? 'Düzenle',
             ),
           ],
           AppIconButton(
             icon: Icons.more_vert,
             onPressed: () => _showMoreMenu(context, canEdit),
-            tooltip: 'Daha Fazla',
+            tooltip: l10n?.more ?? 'Daha Fazla',
           ),
         ],
       ),
@@ -479,7 +485,7 @@ class ProductDetailScreen extends StatelessWidget {
                               ),
                               AppSpacing.xs.horizontalSpace,
                               Text(
-                                'Alındı',
+                                l10n?.purchasedLabel ?? 'Alındı',
                                 style: TextStyle(
                                   color: theme.colorScheme.tertiary,
                                   fontWeight: AppTypography.bold,
@@ -539,9 +545,9 @@ class ProductDetailScreen extends StatelessWidget {
                         if (snapshot.hasData && snapshot.data?.exists == true) {
                           final userData = snapshot.data!.data() as Map<String, dynamic>?;
                           final email = userData?['email'] ?? product.addedBy;
-                          displayText = 'Ekleyen: $email';
+                          displayText = l10n?.addedBy(email) ?? 'Ekleyen: $email';
                         } else if (snapshot.hasError) {
-                          displayText = 'Ekleyen: ${product.addedBy}';
+                          displayText = l10n?.addedBy(product.addedBy) ?? 'Ekleyen: ${product.addedBy}';
                         }
 
                         return Row(
@@ -630,7 +636,7 @@ class ProductDetailScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                'Toplam',
+                                l10n?.total ?? 'Toplam',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   fontSize: AppTypography.sizeSM,
                                 ),
@@ -657,7 +663,7 @@ class ProductDetailScreen extends StatelessWidget {
                   if (product.description.isNotEmpty) ...[
                     AppSpacing.lg.verticalSpace,
                     Text(
-                      'Açıklama',
+                      l10n?.descriptionLabel ?? 'Açıklama',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: AppTypography.bold,
                         fontSize: AppTypography.sizeLG,
@@ -676,7 +682,7 @@ class ProductDetailScreen extends StatelessWidget {
                   if (product.link.isNotEmpty || product.link2.isNotEmpty || product.link3.isNotEmpty) ...[
                     AppSpacing.lg.verticalSpace,
                     Text(
-                      'Linkler',
+                      l10n?.linksLabel ?? 'Linkler',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: AppTypography.bold,
                         fontSize: AppTypography.sizeLG,

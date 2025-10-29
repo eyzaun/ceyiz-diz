@@ -14,6 +14,7 @@ import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/services/excel_export_service.dart';
 import '../../providers/auth_provider.dart';
@@ -84,6 +85,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
   Future<void> _exportToExcel(BuildContext context, TrousseauModel trousseau) async {
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
     final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
+    final l10n = AppLocalizations.of(context);
 
     // Loading göster
     showDialog(
@@ -128,7 +130,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Excel dosyası başarıyla oluşturuldu'),
+            content: Text(l10n?.excelExportSuccess ?? 'Excel dosyası başarıyla oluşturuldu'),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: AppRadius.radiusMD,
@@ -142,7 +144,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Hata: $e'),
+            content: Text(l10n?.errorWithMessage(e.toString()) ?? 'Hata: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -177,14 +179,16 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
 
         final trousseau = snapshot.data;
         if (trousseau == null) {
+          final l10n = AppLocalizations.of(context);
           return Scaffold(
             appBar: AppBar(),
-            body: const Center(child: Text('Çeyiz bulunamadı')),
+            body: Center(child: Text(l10n?.trousseauNotFound ?? 'Çeyiz bulunamadı')),
           );
         }
 
         final canEdit = trousseau.canEdit(trousseauProvider.currentUserId ?? '');
         final isOwner = trousseau.ownerId == trousseauProvider.currentUserId;
+        final l10n = AppLocalizations.of(context);
 
         return Scaffold(
           appBar: AppBar(
@@ -197,14 +201,14 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                   icon: Icons.category_outlined,
                   onPressed: () => context.push(
                       '/trousseau/$_currentTrousseauId/products/categories'),
-                  tooltip: 'Kategorileri Yönet',
+                  tooltip: l10n?.manageCategories ?? 'Kategorileri Yönet',
                 ),
               if (canEdit)
                 AppIconButton(
                   icon: Icons.edit,
                   onPressed: () =>
                       context.push('/trousseau/$_currentTrousseauId/edit'),
-                  tooltip: 'Düzenle',
+                  tooltip: l10n?.edit ?? 'Düzenle',
                 ),
               if (isOwner)
                 PopupMenuButton<String>(
@@ -212,7 +216,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                     Icons.share,
                     size: AppDimensions.iconSizeMedium,
                   ),
-                  tooltip: 'Paylaş',
+                  tooltip: l10n?.share ?? 'Paylaş',
                   shape: RoundedRectangleBorder(
                     borderRadius: AppRadius.radiusMD,
                   ),
@@ -234,7 +238,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                             color: theme.colorScheme.onSurface,
                           ),
                           AppSpacing.sm.horizontalSpace,
-                          const Text('Çeyiz Paylaş'),
+                          Text(l10n?.shareTrousseau ?? 'Çeyiz Paylaş'),
                         ],
                       ),
                     ),
@@ -248,7 +252,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                             color: theme.colorScheme.primary,
                           ),
                           AppSpacing.sm.horizontalSpace,
-                          const Text('Excel Olarak Paylaş'),
+                          Text(l10n?.shareAsExcel ?? 'Excel Olarak Paylaş'),
                         ],
                       ),
                     ),
@@ -257,16 +261,16 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
               if (!isOwner)
                 AppIconButton(
                   icon: Icons.person_remove_outlined,
-                  tooltip: 'Paylaşımdan Çık',
+                  tooltip: l10n?.leaveSharing ?? 'Paylaşımdan Çık',
                   onPressed: () async {
                     final confirmed = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        title: const Text('Paylaşımdan Çık'),
-                        content: const Text('Bu çeyizden çıkmak istediğinize emin misiniz? Erişiminiz kaldırılacaktır.'),
+                        title: Text(l10n?.leaveSharing ?? 'Paylaşımdan Çık'),
+                        content: Text(l10n?.leaveShareConfirm ?? 'Bu çeyizden çıkmak istediğinize emin misiniz? Erişiminiz kaldırılacaktır.'),
                         actions: [
-                          AppTextButton(label: 'İptal', onPressed: () => Navigator.pop(ctx, false)),
-                          AppDangerButton(label: 'Çık', icon: Icons.exit_to_app, onPressed: () => Navigator.pop(ctx, true)),
+                          AppTextButton(label: l10n?.cancel ?? 'İptal', onPressed: () => Navigator.pop(ctx, false)),
+                          AppDangerButton(label: l10n?.exit ?? 'Çık', icon: Icons.exit_to_app, onPressed: () => Navigator.pop(ctx, true)),
                         ],
                       ),
                     );
@@ -274,7 +278,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                       final ok = await trousseauProvider.leaveSharedTrousseau(trousseauId: trousseau.id);
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(ok ? 'Paylaşımdan çıkıldı' : trousseauProvider.errorMessage)),
+                        SnackBar(content: Text(ok ? (l10n?.leftSharing ?? 'Paylaşımdan çıkıldı') : trousseauProvider.errorMessage)),
                       );
                       if (ok) {
                         // Navigate away to avoid showing removed trousseau
@@ -316,7 +320,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                           padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
                           child: AppSearchInput(
                             controller: _searchController,
-                            hint: 'Ürün ara...',
+                            hint: l10n?.searchProduct ?? 'Ürün ara...',
                             onChanged: (v) {
                               _debounce?.cancel();
                               _debounce = Timer(
@@ -350,7 +354,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                               scrollDirection: Axis.horizontal,
                               children: [
                                 FilterPill(
-                                  label: 'Tümü',
+                                  label: l10n?.all ?? 'Tümü',
                                   selected: productProvider.currentFilter ==
                                       ProductFilter.all,
                                   onTap: () =>
@@ -359,7 +363,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                                 ),
                                 AppSpacing.sm.horizontalSpace,
                                 FilterPill(
-                                  label: 'Alınanlar',
+                                  label: l10n?.purchased ?? 'Alınanlar',
                                   selected: productProvider.currentFilter ==
                                       ProductFilter.purchased,
                                   onTap: () => productProvider
@@ -369,7 +373,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                                 ),
                                 AppSpacing.sm.horizontalSpace,
                                 FilterPill(
-                                  label: 'Alınmayanlar',
+                                  label: l10n?.notPurchased ?? 'Alınmayanlar',
                                   selected: productProvider.currentFilter ==
                                       ProductFilter.notPurchased,
                                   onTap: () => productProvider
@@ -452,11 +456,11 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                               padding: EdgeInsets.all(AppSpacing.lg),
                               child: EmptyStateWidget(
                                 icon: Icons.shopping_bag_outlined,
-                                title: 'Henüz ürün eklenmemiş',
-                                subtitle: 'İlk ürününüzü ekleyerek başlayın',
+                                title: l10n?.noProductsYet ?? 'Henüz ürün eklenmemiş',
+                                subtitle: l10n?.addFirstProduct ?? 'İlk ürününüzü ekleyerek başlayın',
                                 action: canEdit
                                     ? AppPrimaryButton(
-                                        label: 'Ürün Ekle',
+                                        label: l10n?.addProduct ?? 'Ürün Ekle',
                                         icon: Icons.add,
                                         onPressed: () => context.push(
                                             '/trousseau/$_currentTrousseauId/products/add'),
@@ -474,8 +478,8 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                               padding: EdgeInsets.all(AppSpacing.lg),
                               child: EmptyStateWidget(
                                 icon: Icons.search_off,
-                                title: 'Ürün bulunamadı',
-                                subtitle: 'Farklı filtreler deneyebilirsiniz',
+                                title: l10n?.noProductsFound ?? 'Ürün bulunamadı',
+                                subtitle: l10n?.tryDifferentFilters ?? 'Farklı filtreler deneyebilirsiniz',
                               ),
                             ),
                           );
@@ -536,17 +540,17 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                                               final confirmed = await showDialog<bool>(
                                                 context: context,
                                                 builder: (ctx) => AlertDialog(
-                                                  title: const Text('Ürünü Sil'),
+                                                  title: Text(l10n?.deleteProduct ?? 'Ürünü Sil'),
                                                   content: Text(
-                                                    '${product.name} ürününü silmek istediğinizden emin misiniz?',
+                                                    l10n?.deleteProductConfirm(product.name) ?? '${product.name} ürününü silmek istediğinizden emin misiniz?',
                                                   ),
                                                   actions: [
                                                     AppTextButton(
-                                                      label: 'İptal',
+                                                      label: l10n?.cancel ?? 'İptal',
                                                       onPressed: () => Navigator.pop(ctx, false),
                                                     ),
                                                     AppDangerButton(
-                                                      label: 'Sil',
+                                                      label: l10n?.delete ?? 'Sil',
                                                       icon: Icons.delete,
                                                       onPressed: () => Navigator.pop(ctx, true),
                                                     ),
@@ -562,7 +566,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                                               if (context.mounted) {
                                                 ScaffoldMessenger.of(context).showSnackBar(
                                                   SnackBar(
-                                                    content: Text('${product.name} silindi'),
+                                                    content: Text(l10n?.productDeleted(product.name) ?? '${product.name} silindi'),
                                                     behavior: SnackBarBehavior.floating,
                                                     shape: RoundedRectangleBorder(
                                                       borderRadius: AppRadius.radiusMD,
@@ -631,19 +635,19 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                                 children: [
                                   _buildSummaryItem(
                                     context,
-                                    'Toplam',
+                                    l10n?.total ?? 'Toplam',
                                     '₺${productProvider.getTotalPlanned().toStringAsFixed(0)}',
                                     theme.colorScheme.primary,
                                   ),
                                   _buildSummaryItem(
                                     context,
-                                    'Harcanan',
+                                    l10n?.spent ?? 'Harcanan',
                                     '₺${productProvider.getTotalSpent().toStringAsFixed(0)}',
                                     theme.colorScheme.tertiary,
                                   ),
                                   _buildSummaryItem(
                                     context,
-                                    'Kalan',
+                                    l10n?.remaining ?? 'Kalan',
                                     '₺${(productProvider.getTotalPlanned() - productProvider.getTotalSpent()).toStringAsFixed(0)}',
                                     theme.colorScheme.secondary,
                                   ),
@@ -681,7 +685,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
           // FITTS YASASI: 56dp FAB
           floatingActionButton: canEdit
               ? AppFAB(
-                  label: 'Ürün Ekle',
+                  label: l10n?.addProduct ?? 'Ürün Ekle',
                   icon: Icons.add,
                   onPressed: () => context.push(
                       '/trousseau/$_currentTrousseauId/products/add'),

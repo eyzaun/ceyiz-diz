@@ -12,6 +12,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../providers/trousseau_provider.dart';
@@ -43,19 +44,21 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Benimle Paylaşılanlar'),
+        title: Text(l10n?.sharedWithMe ?? 'Benimle Paylaşılanlar'),
         leading: AppIconButton(
           icon: Icons.arrow_back,
           onPressed: () => context.pop(),
-          tooltip: 'Geri',
+          tooltip: l10n?.back ?? 'Geri',
         ),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Paylaşılanlar', icon: Icon(Icons.folder_shared)),
-            Tab(text: 'Davetler', icon: Icon(Icons.mail_outline)),
+          tabs: [
+            Tab(text: l10n?.sharedItems ?? 'Paylaşılanlar', icon: const Icon(Icons.folder_shared)),
+            Tab(text: l10n?.invitations ?? 'Davetler', icon: const Icon(Icons.mail_outline)),
           ],
         ),
       ),
@@ -71,25 +74,26 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
 
   Widget _buildSharedTrousseausTab(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final provider = Provider.of<TrousseauProvider>(context);
     final list = provider.sharedTrousseaus;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Benimle Paylaşılan Çeyizler'),
+        title: Text(l10n?.sharedTrousseaus ?? 'Benimle Paylaşılan Çeyizler'),
         leading: AppIconButton(
           icon: Icons.arrow_back,
           onPressed: () => context.pop(),
-          tooltip: 'Geri',
+          tooltip: l10n?.back ?? 'Geri',
         ),
       ),
       body: list.isEmpty
           ? Padding(
               padding: EdgeInsets.all(AppSpacing.lg),
-              child: const EmptyStateWidget(
+              child: EmptyStateWidget(
                 icon: Icons.share_outlined,
-                title: 'Paylaşılan çeyiz yok',
-                subtitle: 'Sizinle paylaşılan çeyizler burada görünecek',
+                title: l10n?.noSharedTrousseaus ?? 'Paylaşılan çeyiz yok',
+                subtitle: l10n?.noSharedTrousseausSubtitle ?? 'Sizinle paylaşılan çeyizler burada görünecek',
               ),
             )
           : ListView.separated(
@@ -143,8 +147,8 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
                               }
                             },
                             tooltip: isPinned
-                                ? 'Ana sayfadan kaldır'
-                                : 'Ana sayfaya ekle',
+                                ? l10n?.removeFromHome ?? 'Ana sayfadan kaldır'
+                                : l10n?.addToHome ?? 'Ana sayfaya ekle',
                             iconColor: isPinned
                                 ? theme.colorScheme.primary
                                 : theme.colorScheme.onSurface
@@ -190,7 +194,7 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '${(progress * 100).toInt()}% tamamlandı',
+                            l10n?.completedProgress((progress * 100).toInt()) ?? '${(progress * 100).toInt()}% tamamlandı',
                             style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: AppTypography.sizeSM,
                               fontWeight: AppTypography.medium,
@@ -198,7 +202,7 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
                             ),
                           ),
                           Text(
-                            '${t.totalProducts} ürün',
+                            l10n?.productCount(t.totalProducts) ?? '${t.totalProducts} ürün',
                             style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: AppTypography.sizeSM,
                             ),
@@ -217,16 +221,17 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
 
   Widget _buildInvitationsTab(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
     final currentUserId = trousseauProvider.currentUserId;
 
     if (currentUserId == null) {
       return Padding(
         padding: EdgeInsets.all(AppSpacing.lg),
-        child: const EmptyStateWidget(
+        child: EmptyStateWidget(
           icon: Icons.person_outline,
-          title: 'Giriş yapmalısınız',
-          subtitle: 'Davetleri görmek için giriş yapın',
+          title: l10n?.mustLogin ?? 'Giriş yapmalısınız',
+          subtitle: l10n?.mustLoginToViewInvitations ?? 'Davetleri görmek için giriş yapın',
         ),
       );
     }
@@ -250,7 +255,7 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
             padding: EdgeInsets.all(AppSpacing.lg),
             child: EmptyStateWidget(
               icon: Icons.error_outline,
-              title: 'Hata oluştu',
+              title: l10n?.errorOccurred ?? 'Hata oluştu',
               subtitle: snapshot.error.toString(),
             ),
           );
@@ -260,10 +265,10 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
         if (docs.isEmpty) {
           return Padding(
             padding: EdgeInsets.all(AppSpacing.lg),
-            child: const EmptyStateWidget(
+            child: EmptyStateWidget(
               icon: Icons.mail_outline,
-              title: 'Yeni davet yok',
-              subtitle: 'Size gönderilen davetler burada görünecek',
+              title: l10n?.noNewInvitations ?? 'Yeni davet yok',
+              subtitle: l10n?.noNewInvitationsSubtitle ?? 'Size gönderilen davetler burada görünecek',
             ),
           );
         }
@@ -325,7 +330,9 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
                       ),
                       AppSpacing.xs.horizontalSpace,
                       Text(
-                        canEdit ? 'Düzenleme izni' : 'Sadece görüntüleme',
+                        canEdit 
+                          ? l10n?.editPermission ?? 'Düzenleme izni' 
+                          : l10n?.viewOnly ?? 'Sadece görüntüleme',
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontSize: AppTypography.sizeSM,
                           color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
@@ -341,7 +348,7 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       AppTextButton(
-                        label: 'Reddet',
+                        label: l10n?.decline ?? 'Reddet',
                         onPressed: () async {
                           final success = await trousseauProvider.declineShare(
                             invitationDocPath: doc.reference.path,
@@ -351,7 +358,7 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
                             SnackBar(
                               content: Text(
                                 success
-                                    ? 'Davet reddedildi'
+                                    ? l10n?.invitationDeclined ?? 'Davet reddedildi'
                                     : trousseauProvider.errorMessage,
                               ),
                               behavior: SnackBarBehavior.floating,
@@ -364,7 +371,7 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
                       ),
                       AppSpacing.sm.horizontalSpace,
                       AppPrimaryButton(
-                        label: 'Kabul Et',
+                        label: l10n?.accept ?? 'Kabul Et',
                         onPressed: () async {
                           final success = await trousseauProvider.acceptShare(
                             invitationDocPath: doc.reference.path,
@@ -375,7 +382,7 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
                             SnackBar(
                               content: Text(
                                 success
-                                    ? 'Davet kabul edildi! Paylaşılanlar sekmesinde görünecek.'
+                                    ? l10n?.invitationAcceptedWillAppear ?? 'Davet kabul edildi! Paylaşılanlar sekmesinde görünecek.'
                                     : trousseauProvider.errorMessage,
                               ),
                               behavior: SnackBarBehavior.floating,

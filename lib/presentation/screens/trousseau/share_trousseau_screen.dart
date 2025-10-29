@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/trousseau_provider.dart';
@@ -33,11 +34,13 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
   }
 
   Future<void> _shareTrousseau() async {
+    final l10n = AppLocalizations.of(context);
+    
     if (_emailController.text.isEmpty) {
       final semantics = Theme.of(context).extension<AppSemanticColors>();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('E-posta adresi girin'),
+          content: Text(l10n?.enterEmail ?? 'E-posta adresi girin'),
           backgroundColor: semantics?.warning ?? Theme.of(context).colorScheme.secondary,
         ),
       );
@@ -63,7 +66,7 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
       final semantics = Theme.of(context).extension<AppSemanticColors>();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Çeyiz başarıyla paylaşıldı'),
+          content: Text(l10n?.trousseauSharedSuccessfully ?? 'Çeyiz başarıyla paylaşıldı'),
           backgroundColor: semantics?.success ?? Theme.of(context).colorScheme.tertiary,
         ),
       );
@@ -84,14 +87,15 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
     final trousseau = trousseauProvider.getTrousseauById(widget.trousseauId);
 
     if (trousseau == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(
-          child: Text('Çeyiz bulunamadı'),
+        body: Center(
+          child: Text(l10n?.trousseauNotFound ?? 'Çeyiz bulunamadı'),
         ),
       );
     }
@@ -100,7 +104,7 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
       isLoading: _isLoading,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Çeyizi Paylaş'),
+          title: Text(l10n?.shareTrousseau ?? 'Çeyizi Paylaş'),
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -131,7 +135,7 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Bu çeyizi başkalarıyla paylaşarak birlikte yönetebilirsiniz',
+                      l10n?.shareTrousseauInstruction ?? 'Bu çeyizi başkalarıyla paylaşarak birlikte yönetebilirsiniz',
                       style: theme.textTheme.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -142,17 +146,17 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'E-posta Adresi',
+                decoration: InputDecoration(
+                  labelText: l10n?.email ?? 'E-posta Adresi',
                   hintText: 'ornek@email.com',
-                  prefixIcon: Icon(Icons.email_outlined),
+                  prefixIcon: const Icon(Icons.email_outlined),
                 ),
               ),
               const SizedBox(height: 16),
               SwitchListTile(
-                title: const Text('Düzenleme Yetkisi Ver'),
-                subtitle: const Text(
-                  'Bu kişi çeyize ürün ekleyebilir ve düzenleyebilir',
+                title: Text(l10n?.giveEditPermission ?? 'Düzenleme Yetkisi Ver'),
+                subtitle: Text(
+                  l10n?.giveEditPermissionSubtitle ?? 'Bu kişi çeyize ürün ekleyebilir ve düzenleyebilir',
                 ),
                 value: _canEdit,
                 onChanged: (value) {
@@ -166,13 +170,13 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: _shareTrousseau,
-                  child: const Text('Paylaş'),
+                  child: Text(l10n?.share ?? 'Paylaş'),
                 ),
               ),
               const SizedBox(height: 32),
               if (trousseau.sharedWith.isNotEmpty || trousseau.editors.isNotEmpty) ...[
                 Text(
-                  'Paylaşılan Kişiler',
+                  l10n?.sharedPeople ?? 'Paylaşılan Kişiler',
                   style: theme.textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 16),
@@ -199,6 +203,7 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
   Widget _buildSharedUserTile(
       BuildContext context, String userId, bool canEdit, String trousseauId) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     
     _userDocFutures[userId] ??= FirebaseFirestore.instance
         .collection('users')
@@ -226,7 +231,9 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
           }
         }
 
-        final permissionText = canEdit ? 'Düzenleme yetkisi var' : 'Sadece görüntüleme';
+        final permissionText = canEdit 
+          ? (l10n?.canEditPermission ?? 'Düzenleme yetkisi var') 
+          : (l10n?.viewOnlyPermission ?? 'Sadece görüntüleme');
         final subtitleText = subtitleExtra != null ? '$permissionText · $subtitleExtra' : permissionText;
 
         return ListTile(
@@ -277,11 +284,12 @@ class _ShareTrousseauScreenState extends State<ShareTrousseauScreen> {
           trailing: IconButton(
             icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.error),
             onPressed: () async {
+              final l10n = AppLocalizations.of(context);
               final confirmed = await CustomDialog.showConfirmation(
                 context: context,
-                title: 'Paylaşımı Kaldır',
-                subtitle: 'Bu kişinin erişimini kaldırmak istediğinizden emin misiniz?',
-                confirmText: 'Kaldır',
+                title: l10n?.removeSharing ?? 'Paylaşımı Kaldır',
+                subtitle: l10n?.removeSharingConfirm ?? 'Bu kişinin erişimini kaldırmak istediğinizden emin misiniz?',
+                confirmText: l10n?.remove ?? 'Kaldır',
                 confirmColor: theme.colorScheme.error,
               );
               
