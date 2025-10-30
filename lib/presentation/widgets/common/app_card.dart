@@ -249,12 +249,17 @@ class AppProductCard extends StatelessWidget {
                   children: [
                     _buildCategoryBadge(context),
                     if (displayQuantity > 1)
-                      Text(
-                        '$displayQuantity adet',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: AppTypography.sizeXS,
-                        ),
+                      Builder(
+                        builder: (ctx) {
+                          final l10n = AppLocalizations.of(ctx);
+                          return Text(
+                            '$displayQuantity ${l10n?.piecesLabel ?? 'pcs'}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: AppTypography.sizeXS,
+                            ),
+                          );
+                        },
                       ),
                     // Link İkonları (tüm linkler için)
                     ...allLinks.asMap().entries.map((entry) {
@@ -356,14 +361,19 @@ class AppProductCard extends StatelessWidget {
                 // Toplam Fiyat (eğer adet > 1)
                 if (displayQuantity > 1) ...[
                   const SizedBox(height: 4),
-                  Text(
-                    'Top: ${CurrencyFormatter.formatWithSymbol(displayPrice * displayQuantity)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface,
-                      fontSize: AppTypography.sizeSM,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return Text(
+                        '${l10n?.totalLabel ?? 'Total'}: ${CurrencyFormatter.formatWithSymbol(displayPrice * displayQuantity)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: AppTypography.sizeSM,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    },
                   ),
                 ],
             ],
@@ -548,13 +558,18 @@ class AppProductCard extends StatelessWidget {
             color: color,
           ),
           const SizedBox(width: AppSpacing.xs),
-          Text(
-            '$roundedHours saat',
-            style: TextStyle(
-              fontSize: AppTypography.sizeXS,
-              color: color,
-              fontWeight: AppTypography.medium,
-            ),
+          Builder(
+            builder: (ctx) {
+              final l10n = AppLocalizations.of(ctx);
+              return Text(
+                '$roundedHours ${l10n?.hoursLabel ?? 'hours'}',
+                style: TextStyle(
+                  fontSize: AppTypography.sizeXS,
+                  color: color,
+                  fontWeight: AppTypography.medium,
+                ),
+              );
+            },
           ),
         ],
       ),

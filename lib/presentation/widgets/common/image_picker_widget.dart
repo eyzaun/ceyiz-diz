@@ -18,10 +18,11 @@ class ImagePickerWidget extends StatelessWidget {
 
   Future<void> _pickImage(BuildContext context, ImageSource source) async {
     if (selectedImages.length >= maxImages) {
+      final l10n = AppLocalizations.of(context);
       final semantics = Theme.of(context).extension<AppSemanticColors>();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('En fazla $maxImages fotoğraf ekleyebilirsiniz'),
+          content: Text(l10n?.maxPhotosError(maxImages) ?? 'You can add up to $maxImages photos'),
           backgroundColor: semantics?.warning ?? Theme.of(context).colorScheme.secondary,
         ),
       );
@@ -188,7 +189,7 @@ class ImagePickerWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Ekle',
+                          l10n?.addLabel ?? 'Add',
                           style: theme.textTheme.bodySmall,
                         ),
                       ],

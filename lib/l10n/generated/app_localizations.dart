@@ -3517,6 +3517,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to remove from home: {error}'**
   String removeFromHomeFailed(String error);
+
+  /// No description provided for @maxPhotosError.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add up to {max} photos'**
+  String maxPhotosError(int max);
+
+  /// No description provided for @productImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Image'**
+  String get productImage;
+
+  /// No description provided for @searchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search...'**
+  String get searchPlaceholder;
+
+  /// No description provided for @risky.
+  ///
+  /// In en, this message translates to:
+  /// **'Risky'**
+  String get risky;
+
+  /// No description provided for @critical.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical'**
+  String get critical;
+
+  /// No description provided for @perfect.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect'**
+  String get perfect;
+
+  /// No description provided for @newVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New Version'**
+  String get newVersionLabel;
+
+  /// No description provided for @forceUpdateText.
+  ///
+  /// In en, this message translates to:
+  /// **'This update is required'**
+  String get forceUpdateText;
+
+  /// No description provided for @addLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get addLabel;
+
+  /// No description provided for @totalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get totalLabel;
+
+  /// No description provided for @piecesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'pcs'**
+  String get piecesLabel;
+
+  /// No description provided for @hoursLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'hours'**
+  String get hoursLabel;
 }
 
 class _AppLocalizationsDelegate

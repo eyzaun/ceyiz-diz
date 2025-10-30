@@ -237,12 +237,13 @@ class AppSearchInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller ?? TextEditingController(),
       builder: (context, value, _) {
         return AppTextInput(
           controller: controller,
-          hint: hint ?? 'Ara...',
+          hint: hint ?? (l10n?.searchPlaceholder ?? 'Search...'),
           onChanged: onChanged,
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.search,

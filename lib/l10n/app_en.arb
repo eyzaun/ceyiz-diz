@@ -1320,7 +1320,37 @@
         "type": "String"
       }
     }
-  }
+  },
+  "maxPhotosError": "You can add up to {max} photos",
+  "@maxPhotosError": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "productImage": "Product Image",
+  "@productImage": {},
+  "searchPlaceholder": "Search...",
+  "@searchPlaceholder": {},
+  "risky": "Risky",
+  "@risky": {},
+  "critical": "Critical",
+  "@critical": {},
+  "perfect": "Perfect",
+  "@perfect": {},
+  "newVersionLabel": "New Version",
+  "@newVersionLabel": {},
+  "forceUpdateText": "This update is required",
+  "@forceUpdateText": {},
+  "addLabel": "Add",
+  "@addLabel": {},
+  "totalLabel": "Total",
+  "@totalLabel": {},
+  "piecesLabel": "pcs",
+  "@piecesLabel": {},
+  "hoursLabel": "hours",
+  "@hoursLabel": {}
 }
 
 

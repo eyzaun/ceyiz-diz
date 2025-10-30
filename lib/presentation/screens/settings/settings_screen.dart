@@ -291,7 +291,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  user?.displayName ?? (l10n?.userDefaultName ?? 'Kullanıcı'),
+                  user?.displayName ?? (l10n.userDefaultName),
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -306,8 +306,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (user?.createdAt != null) ...[
                   const SizedBox(height: 4),
                   Text(
-                    l10n?.membershipSince(_formatDate(user!.createdAt)) ?? 
-                    'Üyelik: ${_formatDate(user!.createdAt)}',
+                    l10n.membershipSince(_formatDate(user!.createdAt)),
                     style: theme.textTheme.bodySmall,
                   ),
                 ],

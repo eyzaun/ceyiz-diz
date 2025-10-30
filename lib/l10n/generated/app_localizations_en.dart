@@ -1829,4 +1829,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String removeFromHomeFailed(String error) {
     return 'Failed to remove from home: $error';
   }
+
+  @override
+  String maxPhotosError(int max) {
+    return 'You can add up to $max photos';
+  }
+
+  @override
+  String get productImage => 'Product Image';
+
+  @override
+  String get searchPlaceholder => 'Search...';
+
+  @override
+  String get risky => 'Risky';
+
+  @override
+  String get critical => 'Critical';
+
+  @override
+  String get perfect => 'Perfect';
+
+  @override
+  String get newVersionLabel => 'New Version';
+
+  @override
+  String get forceUpdateText => 'This update is required';
+
+  @override
+  String get addLabel => 'Add';
+
+  @override
+  String get totalLabel => 'Total';
+
+  @override
+  String get piecesLabel => 'pcs';
+
+  @override
+  String get hoursLabel => 'hours';
 }

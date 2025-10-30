@@ -47,9 +47,10 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
 
   void _shareImage() {
     if (widget.imageUrls.isNotEmpty && _currentIndex < widget.imageUrls.length) {
+      final l10n = AppLocalizations.of(context);
       Share.share(
         widget.imageUrls[_currentIndex],
-        subject: 'Ürün Görseli',
+        subject: l10n?.productImage ?? 'Product Image',
       );
     }
   }

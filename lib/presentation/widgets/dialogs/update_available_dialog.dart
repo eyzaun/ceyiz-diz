@@ -83,7 +83,7 @@ class UpdateAvailableDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'Yeni Versiyon',
+                      l10n?.newVersionLabel ?? 'New Version',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -118,7 +118,7 @@ class UpdateAvailableDialog extends StatelessWidget {
                   AppSpacing.xs.horizontalSpace,
                   Expanded(
                     child: Text(
-                      'Bu güncelleme zorunludur',
+                      l10n?.forceUpdateText ?? 'This update is required',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.error,
                         fontWeight: AppTypography.semiBold,

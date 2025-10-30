@@ -1832,4 +1832,42 @@ class AppLocalizationsTr extends AppLocalizations {
   String removeFromHomeFailed(String error) {
     return 'Ana sayfadan kaldırılamadı: $error';
   }
+
+  @override
+  String maxPhotosError(int max) {
+    return 'En fazla $max fotoğraf ekleyebilirsiniz';
+  }
+
+  @override
+  String get productImage => 'Ürün Görseli';
+
+  @override
+  String get searchPlaceholder => 'Ara...';
+
+  @override
+  String get risky => 'Riskli';
+
+  @override
+  String get critical => 'Kritik';
+
+  @override
+  String get perfect => 'Mükemmel';
+
+  @override
+  String get newVersionLabel => 'Yeni Versiyon';
+
+  @override
+  String get forceUpdateText => 'Bu güncelleme zorunludur';
+
+  @override
+  String get addLabel => 'Ekle';
+
+  @override
+  String get totalLabel => 'Top';
+
+  @override
+  String get piecesLabel => 'adet';
+
+  @override
+  String get hoursLabel => 'saat';
 }

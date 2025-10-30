@@ -80,8 +80,8 @@ class _IconColorPickerState extends State<IconColorPicker> {
               IconButton(onPressed: () => Navigator.pop(context, null), icon: const Icon(Icons.close)),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(l10n?.symbol ?? 'Sembol', style: Theme.of(context).textTheme.labelLarge),
+        const SizedBox(height: 16),
+          Text(l10n?.symbol ?? 'Symbol', style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
           SizedBox(
             height: 320,
@@ -109,8 +109,8 @@ class _IconColorPickerState extends State<IconColorPicker> {
               },
             ),
           ),
-          const SizedBox(height: 12),
-          Text('Renk', style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 16),
+          Text(l10n?.color ?? 'Color', style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,

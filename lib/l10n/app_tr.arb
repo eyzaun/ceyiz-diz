@@ -1320,7 +1320,37 @@
         "type": "String"
       }
     }
-  }
+  },
+  "maxPhotosError": "En fazla {max} fotoğraf ekleyebilirsiniz",
+  "@maxPhotosError": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "productImage": "Ürün Görseli",
+  "@productImage": {},
+  "searchPlaceholder": "Ara...",
+  "@searchPlaceholder": {},
+  "risky": "Riskli",
+  "@risky": {},
+  "critical": "Kritik",
+  "@critical": {},
+  "perfect": "Mükemmel",
+  "@perfect": {},
+  "newVersionLabel": "Yeni Versiyon",
+  "@newVersionLabel": {},
+  "forceUpdateText": "Bu güncelleme zorunludur",
+  "@forceUpdateText": {},
+  "addLabel": "Ekle",
+  "@addLabel": {},
+  "totalLabel": "Top",
+  "@totalLabel": {},
+  "piecesLabel": "adet",
+  "@piecesLabel": {},
+  "hoursLabel": "saat",
+  "@hoursLabel": {}
 }
 
 
