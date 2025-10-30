@@ -1870,4 +1870,25 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get hoursLabel => 'saat';
+
+  @override
+  String get sortBy => 'Sırala';
+
+  @override
+  String get sortPurchasedFirst => 'Alınanlar Önce';
+
+  @override
+  String get sortNotPurchasedFirst => 'Alınmayanlar Önce';
+
+  @override
+  String get sortPriceHighToLow => 'Fiyat (Yüksek → Düşük)';
+
+  @override
+  String get sortPriceLowToHigh => 'Fiyat (Düşük → Yüksek)';
+
+  @override
+  String get sortNameAZ => 'İsim (A → Z)';
+
+  @override
+  String get sortNameZA => 'İsim (Z → A)';
 }

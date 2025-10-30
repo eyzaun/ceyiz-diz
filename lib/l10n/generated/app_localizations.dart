@@ -3589,6 +3589,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'hours'**
   String get hoursLabel;
+
+  /// No description provided for @sortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get sortBy;
+
+  /// No description provided for @sortPurchasedFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchased First'**
+  String get sortPurchasedFirst;
+
+  /// No description provided for @sortNotPurchasedFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Purchased First'**
+  String get sortNotPurchasedFirst;
+
+  /// No description provided for @sortPriceHighToLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (High → Low)'**
+  String get sortPriceHighToLow;
+
+  /// No description provided for @sortPriceLowToHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (Low → High)'**
+  String get sortPriceLowToHigh;
+
+  /// No description provided for @sortNameAZ.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (A → Z)'**
+  String get sortNameAZ;
+
+  /// No description provided for @sortNameZA.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (Z → A)'**
+  String get sortNameZA;
 }
 
 class _AppLocalizationsDelegate

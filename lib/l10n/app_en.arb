@@ -1350,7 +1350,21 @@
   "piecesLabel": "pcs",
   "@piecesLabel": {},
   "hoursLabel": "hours",
-  "@hoursLabel": {}
+  "@hoursLabel": {},
+  "sortBy": "Sort",
+  "@sortBy": {},
+  "sortPurchasedFirst": "Purchased First",
+  "@sortPurchasedFirst": {},
+  "sortNotPurchasedFirst": "Not Purchased First",
+  "@sortNotPurchasedFirst": {},
+  "sortPriceHighToLow": "Price (High → Low)",
+  "@sortPriceHighToLow": {},
+  "sortPriceLowToHigh": "Price (Low → High)",
+  "@sortPriceLowToHigh": {},
+  "sortNameAZ": "Name (A → Z)",
+  "@sortNameAZ": {},
+  "sortNameZA": "Name (Z → A)",
+  "@sortNameZA": {}
 }
 
 

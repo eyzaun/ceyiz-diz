@@ -26,6 +26,7 @@ import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_input.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/filter_pill.dart';
+import '../../widgets/dialogs/sort_bottom_sheet.dart';
 import '../../../data/models/trousseau_model.dart';
 
 class TrousseauDetailScreen extends StatefulWidget {
@@ -309,31 +310,77 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                     ),
 
                     // ─────────────────────────────────────────────────────
-                    // SEARCH BAR
+                    // SEARCH BAR + SORT BUTTON
                     // FITTS YASASI: 56dp height
                     // ─────────────────────────────────────────────────────
                     SliverToBoxAdapter(
-                      child: Container(
-                        padding: context.safePaddingHorizontal,
-                        color: theme.cardColor,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-                          child: AppSearchInput(
-                            controller: _searchController,
-                            hint: l10n?.searchProduct ?? 'Ürün ara...',
-                            onChanged: (v) {
-                              _debounce?.cancel();
-                              _debounce = Timer(
-                                  const Duration(milliseconds: 300), () {
-                                if (!mounted) return;
-                                productProvider.setSearchQuery(v);
-                              });
-                            },
-                            onClear: () {
-                              productProvider.setSearchQuery('');
-                            },
-                          ),
-                        ),
+                      child: Consumer<ProductProvider>(
+                        builder: (context, productProvider, _) {
+                          return Container(
+                            padding: context.safePaddingHorizontal,
+                            color: theme.cardColor,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: AppSearchInput(
+                                      controller: _searchController,
+                                      hint: l10n?.searchProduct ?? 'Ürün ara...',
+                                      onChanged: (v) {
+                                        _debounce?.cancel();
+                                        _debounce = Timer(
+                                            const Duration(milliseconds: 300), () {
+                                          if (!mounted) return;
+                                          productProvider.setSearchQuery(v);
+                                        });
+                                      },
+                                      onClear: () {
+                                        productProvider.setSearchQuery('');
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  // Sort Button
+                                  Material(
+                                    color: productProvider.currentSort != null
+                                        ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                                        : theme.colorScheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(AppRadius.md),
+                                    child: InkWell(
+                                      onTap: () {
+                                        showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          backgroundColor: Colors.transparent,
+                                          builder: (context) => SortBottomSheet(
+                                            currentSort: productProvider.currentSort,
+                                            onSortSelected: (sortOption) {
+                                              productProvider.setSort(sortOption);
+                                            },
+                                          ),
+                                        );
+                                      },
+                                      borderRadius: BorderRadius.circular(AppRadius.md),
+                                      child: Container(
+                                        width: 48,
+                                        height: 48,
+                                        alignment: Alignment.center,
+                                        child: Icon(
+                                          Icons.sort,
+                                          color: productProvider.currentSort != null
+                                              ? theme.colorScheme.primary
+                                              : theme.colorScheme.onSurface,
+                                          size: AppDimensions.iconSizeMedium,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
 

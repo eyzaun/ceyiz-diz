@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:image_picker/image_picker.dart';
 import '../../data/models/product_model.dart';
+import '../../core/enums/sort_option.dart';
 import 'auth_provider.dart';
 
 enum ProductFilter {
@@ -32,6 +33,9 @@ class ProductProvider extends ChangeNotifier {
   Set<String> _selectedCategories = {};
   String _searchQuery = '';
   
+  // Sort state
+  ProductSortOption? _currentSort;
+  
   List<ProductModel> get products => _products;
   List<ProductModel> get filteredProducts => _filteredProducts;
   bool get isLoading => _isLoading;
@@ -39,6 +43,7 @@ class ProductProvider extends ChangeNotifier {
   ProductFilter get currentFilter => _currentFilter;
   Set<String> get selectedCategories => _selectedCategories;
   String get searchQuery => _searchQuery;
+  ProductSortOption? get currentSort => _currentSort;
   
   void updateAuth(AuthProvider authProvider) {
     _authProvider = authProvider;
@@ -57,6 +62,7 @@ class ProductProvider extends ChangeNotifier {
     _currentFilter = ProductFilter.all;
     _selectedCategories = {};
     _searchQuery = '';
+    _currentSort = null;
     notifyListeners();
   }
 
@@ -139,7 +145,7 @@ class ProductProvider extends ChangeNotifier {
   
   void _applyFilters() {
     // Create a new filtered list from all products
-    final tempFiltered = _products.where((product) {
+    var tempFiltered = _products.where((product) {
       // Apply purchase filter
       bool matchesFilter = true;
       switch (_currentFilter) {
@@ -166,8 +172,51 @@ class ProductProvider extends ChangeNotifier {
       return matchesFilter && matchesCategory && matchesSearch;
     }).toList();
 
+    // Apply sorting
+    if (_currentSort != null) {
+      tempFiltered = _applySorting(tempFiltered, _currentSort!);
+    }
+
     // Always update the filtered list, even if it's the same
     _filteredProducts = tempFiltered;
+  }
+
+  List<ProductModel> _applySorting(List<ProductModel> products, ProductSortOption sortOption) {
+    final sortedList = List<ProductModel>.from(products);
+    
+    switch (sortOption) {
+      case ProductSortOption.purchasedFirst:
+        sortedList.sort((a, b) {
+          if (a.isPurchased == b.isPurchased) return 0;
+          return a.isPurchased ? -1 : 1;
+        });
+        break;
+        
+      case ProductSortOption.notPurchasedFirst:
+        sortedList.sort((a, b) {
+          if (a.isPurchased == b.isPurchased) return 0;
+          return a.isPurchased ? 1 : -1;
+        });
+        break;
+        
+      case ProductSortOption.priceHighToLow:
+        sortedList.sort((a, b) => b.price.compareTo(a.price));
+        break;
+        
+      case ProductSortOption.priceLowToHigh:
+        sortedList.sort((a, b) => a.price.compareTo(b.price));
+        break;
+        
+      case ProductSortOption.nameAZ:
+        sortedList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        break;
+        
+      case ProductSortOption.nameZA:
+        sortedList.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        break;
+    }
+    
+    return sortedList;
   }
   
   void setFilter(ProductFilter filter) {
@@ -196,6 +245,12 @@ class ProductProvider extends ChangeNotifier {
     final normalized = query.trim();
     if (normalized == _searchQuery) return; // avoid redundant rebuilds
     _searchQuery = normalized;
+    _applyFilters();
+    notifyListeners();
+  }
+
+  void setSort(ProductSortOption? sortOption) {
+    _currentSort = sortOption;
     _applyFilters();
     notifyListeners();
   }

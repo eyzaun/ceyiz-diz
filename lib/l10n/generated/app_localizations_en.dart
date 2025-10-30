@@ -1867,4 +1867,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hoursLabel => 'hours';
+
+  @override
+  String get sortBy => 'Sort';
+
+  @override
+  String get sortPurchasedFirst => 'Purchased First';
+
+  @override
+  String get sortNotPurchasedFirst => 'Not Purchased First';
+
+  @override
+  String get sortPriceHighToLow => 'Price (High → Low)';
+
+  @override
+  String get sortPriceLowToHigh => 'Price (Low → High)';
+
+  @override
+  String get sortNameAZ => 'Name (A → Z)';
+
+  @override
+  String get sortNameZA => 'Name (Z → A)';
 }

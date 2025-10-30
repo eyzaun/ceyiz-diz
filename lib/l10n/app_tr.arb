@@ -1350,7 +1350,21 @@
   "piecesLabel": "adet",
   "@piecesLabel": {},
   "hoursLabel": "saat",
-  "@hoursLabel": {}
+  "@hoursLabel": {},
+  "sortBy": "Sırala",
+  "@sortBy": {},
+  "sortPurchasedFirst": "Alınanlar Önce",
+  "@sortPurchasedFirst": {},
+  "sortNotPurchasedFirst": "Alınmayanlar Önce",
+  "@sortNotPurchasedFirst": {},
+  "sortPriceHighToLow": "Fiyat (Yüksek → Düşük)",
+  "@sortPriceHighToLow": {},
+  "sortPriceLowToHigh": "Fiyat (Düşük → Yüksek)",
+  "@sortPriceLowToHigh": {},
+  "sortNameAZ": "İsim (A → Z)",
+  "@sortNameAZ": {},
+  "sortNameZA": "İsim (Z → A)",
+  "@sortNameZA": {}
 }
 
 
