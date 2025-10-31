@@ -42,25 +42,42 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
-  final _linkController = TextEditingController();
-  final _link2Controller = TextEditingController();
-  final _link3Controller = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
+
+  final List<TextEditingController> _linkControllers = [TextEditingController()];
 
   String _selectedCategory = 'other';
   List<XFile> _selectedImages = [];
   bool _isLoading = false;
+  bool _isPurchased = false;
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
-    _linkController.dispose();
-    _link2Controller.dispose();
-    _link3Controller.dispose();
     _quantityController.dispose();
+    for (var controller in _linkControllers) {
+      controller.dispose();
+    }
     super.dispose();
+  }
+
+  void _addLinkField() {
+    if (_linkControllers.length < 5) {
+      setState(() {
+        _linkControllers.add(TextEditingController());
+      });
+    }
+  }
+
+  void _removeLinkField(int index) {
+    if (_linkControllers.length > 1) {
+      setState(() {
+        _linkControllers[index].dispose();
+        _linkControllers.removeAt(index);
+      });
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -116,10 +133,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
       price: CurrencyFormatter.parse(_priceController.text.trim()) ?? 0.0,
       category: _selectedCategory,
       imageFiles: _selectedImages,
-      link: _linkController.text.trim(),
-      link2: _link2Controller.text.trim(),
-      link3: _link3Controller.text.trim(),
+      link: _linkControllers.isNotEmpty ? _linkControllers[0].text.trim() : '',
+      link2: _linkControllers.length > 1 ? _linkControllers[1].text.trim() : '',
+      link3: _linkControllers.length > 2 ? _linkControllers[2].text.trim() : '',
       quantity: int.parse(_quantityController.text),
+      isPurchased: _isPurchased,
     );
 
     setState(() {
@@ -314,7 +332,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    AppSpacing.md.verticalSpace,
+                    AppSpacing.sm.verticalSpace,
 
                     // ─────────────────────────────────────────────────────
                     // IMAGE PICKER
@@ -329,7 +347,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       maxImages: 5,
                     ),
 
-                    AppSpacing.xl.verticalSpace,
+                    AppSpacing.lg.verticalSpace,
 
                     // ─────────────────────────────────────────────────────
                     // FORM BÖLÜM 1: TEMEL BİLGİLER
@@ -388,8 +406,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           },
                         ),
 
-                        // Price and Quantity Row
-                        // GESTALT: İlgili alanlar yakın (fiyat + adet)
+                        // Price, Quantity, and Purchased Row
+                        // GESTALT: İlgili alanlar yakın (fiyat + adet + alındı)
                         Row(
                           children: [
                             Expanded(
@@ -415,12 +433,63 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                 validator: _validateQuantity,
                               ),
                             ),
+                            AppSpacing.sm.horizontalSpace,
+                            // Purchased Checkbox - Material 3 style, aligned with inputs
+                            Padding(
+                              padding: const EdgeInsets.only(top: 20),
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _isPurchased = !_isPurchased;
+                                  });
+                                },
+                                borderRadius: BorderRadius.circular(AppRadius.md),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: _isPurchased
+                                        ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(AppRadius.md),
+                                    border: Border.all(
+                                      color: _isPurchased
+                                          ? Theme.of(context).colorScheme.primary
+                                          : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                                      width: _isPurchased ? 2 : 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        _isPurchased ? Icons.check_box : Icons.check_box_outline_blank,
+                                        size: 20,
+                                        color: _isPurchased
+                                            ? Theme.of(context).colorScheme.primary
+                                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        l10n?.purchased ?? 'Alındı',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: _isPurchased ? FontWeight.w600 : FontWeight.w500,
+                                          color: _isPurchased
+                                              ? Theme.of(context).colorScheme.primary
+                                              : Theme.of(context).colorScheme.onSurface,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ],
                     ),
 
-                    AppSpacing.xl.verticalSpace,
+                    AppSpacing.lg.verticalSpace,
 
                     // ─────────────────────────────────────────────────────
                     // FORM BÖLÜM 2: EK BİLGİLER
@@ -440,39 +509,65 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           prefixIcon: const Icon(Icons.description_outlined),
                         ),
 
-                        // Product Link
-                        AppTextInput(
-                          label: l10n?.productLink ?? 'Ürün Linki 1',
-                          hint: 'https://...',
-                          controller: _linkController,
-                          keyboardType: TextInputType.url,
-                          textInputAction: TextInputAction.next,
-                          prefixIcon: const Icon(Icons.link),
-                        ),
+                        // Dynamic Product Links
+                        ..._linkControllers.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final controller = entry.value;
+                          final isLast = index == _linkControllers.length - 1;
 
-                        // Product Link 2
-                        AppTextInput(
-                          label: l10n?.productLink2 ?? 'Ürün Linki 2',
-                          hint: 'https://...',
-                          controller: _link2Controller,
-                          keyboardType: TextInputType.url,
-                          textInputAction: TextInputAction.next,
-                          prefixIcon: const Icon(Icons.link),
-                        ),
+                          // Get link label based on index
+                          String linkLabel;
+                          if (index == 0) {
+                            linkLabel = l10n?.productLink ?? 'Ürün Linki';
+                          } else if (index == 1) {
+                            linkLabel = l10n?.productLink2 ?? 'Ürün Linki 2';
+                          } else if (index == 2) {
+                            linkLabel = l10n?.productLink3 ?? 'Ürün Linki 3';
+                          } else {
+                            linkLabel = '${l10n?.productLink ?? 'Ürün Linki'} ${index + 1}';
+                          }
 
-                        // Product Link 3
-                        AppTextInput(
-                          label: l10n?.productLink3 ?? 'Ürün Linki 3',
-                          hint: 'https://...',
-                          controller: _link3Controller,
-                          keyboardType: TextInputType.url,
-                          textInputAction: TextInputAction.done,
-                          prefixIcon: const Icon(Icons.link),
-                        ),
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: index < _linkControllers.length - 1 ? AppSpacing.sm : 0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: AppTextInput(
+                                    label: linkLabel,
+                                    hint: 'https://...',
+                                    controller: controller,
+                                    keyboardType: TextInputType.url,
+                                    textInputAction: isLast ? TextInputAction.done : TextInputAction.next,
+                                    prefixIcon: const Icon(Icons.link),
+                                    onChanged: (value) {
+                                      // Auto-add new field when typing in last field
+                                      if (isLast && value.isNotEmpty && _linkControllers.length < 5) {
+                                        _addLinkField();
+                                      }
+                                    },
+                                  ),
+                                ),
+                                if (_linkControllers.length > 1)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8, top: 20),
+                                    child: IconButton(
+                                      icon: const Icon(Icons.close, size: 20),
+                                      onPressed: () => _removeLinkField(index),
+                                      color: Theme.of(context).colorScheme.error,
+                                      style: IconButton.styleFrom(
+                                        padding: const EdgeInsets.all(8),
+                                        minimumSize: const Size(36, 36),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        }),
                       ],
                     ),
 
-                    AppSpacing.xl2.verticalSpace,
+                    AppSpacing.lg.verticalSpace,
 
                     // ─────────────────────────────────────────────────────
                     // PRIMARY ACTION - HICK YASASI: Sadece 1 primary button
@@ -492,7 +587,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       ),
                     ),
 
-                    AppSpacing.xl.verticalSpace,
+                    AppSpacing.md.verticalSpace,
                   ],
                 ),
               ),

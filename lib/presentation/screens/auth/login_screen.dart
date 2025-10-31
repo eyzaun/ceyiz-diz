@@ -20,6 +20,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_input.dart';
 import '../../widgets/common/loading_overlay.dart';
+import '../../widgets/common/language_selector.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -452,21 +453,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       isLoading: authProvider.status == AuthStatus.loading,
       child: Scaffold(
         body: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: Center(
-              child: SingleChildScrollView(
-                padding: context.safePaddingHorizontal,
-                child: ConstrainedBox(
-                  // Responsive: Web'de maksimum genişlik
-                  constraints: BoxConstraints(
-                    maxWidth: AppBreakpoints.maxFormWidth,
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+          child: Stack(
+            children: [
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: context.safePaddingHorizontal,
+                    child: ConstrainedBox(
+                      // Responsive: Web'de maksimum genişlik
+                      constraints: BoxConstraints(
+                        maxWidth: AppBreakpoints.maxFormWidth,
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                         // ─────────────────────────────────────────────────────
                         // LOGO VE BAŞLIK
                         // Gestalt: Gruplama - Logo + Başlık + Subtitle yakın
@@ -576,32 +579,43 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
                         AppSpacing.lg.verticalSpace,
 
-                        // ─────────────────────────────────────────────────────
-                        // SECONDARY LINK (Kayıt Olun)
-                        // Gestalt: Yakınlık - Soru + Link birlikte
-                        // ─────────────────────────────────────────────────────
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              l10n?.noAccount ?? 'Hesabınız yok mu?',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontSize: AppTypography.sizeBase,
-                              ),
-                            ),
-                            AppSpacing.xs.horizontalSpace,
-                            AppTextButton(
-                              label: l10n?.register ?? 'Kayıt Olun',
-                              onPressed: () => context.push('/register'),
+                            // ─────────────────────────────────────────────────────
+                            // SECONDARY LINK (Kayıt Olun)
+                            // Gestalt: Yakınlık - Soru + Link birlikte
+                            // ─────────────────────────────────────────────────────
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  l10n?.noAccount ?? 'Hesabınız yok mu?',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontSize: AppTypography.sizeBase,
+                                  ),
+                                ),
+                                AppSpacing.xs.horizontalSpace,
+                                AppTextButton(
+                                  label: l10n?.register ?? 'Kayıt Olun',
+                                  onPressed: () => context.push('/register'),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+
+              // ═══════════════════════════════════════════════════════════════
+              // LANGUAGE SELECTOR (Floating, top-right)
+              // Allows users to change language before logging in
+              // ═══════════════════════════════════════════════════════════════
+              const LanguageSelector(
+                alignment: Alignment.topRight,
+                isFloating: true,
+              ),
+            ],
           ),
         ),
       ),

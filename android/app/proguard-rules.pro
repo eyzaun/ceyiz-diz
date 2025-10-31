@@ -25,6 +25,16 @@
 -keep class com.google.firebase.auth.** { *; }
 -keepclassmembers class com.google.firebase.auth.** { *; }
 
+# Google Sign-In
+-keep class com.google.android.gms.auth.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+-keep class com.google.android.gms.signin.** { *; }
+-keepclassmembers class com.google.android.gms.auth.** { *; }
+-keepclassmembers class com.google.android.gms.common.** { *; }
+-keepclassmembers class com.google.android.gms.signin.** { *; }
+-dontwarn com.google.android.gms.auth.**
+-dontwarn com.google.android.gms.signin.**
+
 # Firebase Storage
 -keep class com.google.firebase.storage.** { *; }
 -keepclassmembers class com.google.firebase.storage.** { *; }

@@ -110,7 +110,11 @@ class AppRouter {
             path: 'trousseau/:id',
             builder: (context, state) {
               final trousseauId = state.pathParameters['id']!;
-              return TrousseauDetailScreen(trousseauId: trousseauId);
+              final hideSelector = state.uri.queryParameters['hideSelector'] == 'true';
+              return TrousseauDetailScreen(
+                trousseauId: trousseauId,
+                hideSelector: hideSelector,
+              );
             },
             routes: [
               GoRoute(

@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/category_model.dart';
 import '../../../core/services/kac_saat_calculator.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -43,7 +44,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   void _ensureInitialSelection() {
     final trProv = Provider.of<TrousseauProvider>(context, listen: false);
-    trProv.ensureSelection();
+    
+    // Only ensure selection if there is NO selection yet
+    // This preserves the selection made in TrousseauDetailScreen
+    if (trProv.selectedTrousseauId == null) {
+      trProv.ensureSelection();
+    }
     
     final selectedId = trProv.selectedTrousseauId;
     if (selectedId != null) {
@@ -81,7 +87,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final pinnedTrousseaus = trousseauProvider.pinnedTrousseaus;
     final kacSaatSettings = authProvider.currentUser?.kacSaatSettings;
 
-    // Empty state
+    // Loading state - show loading if initial data hasn't loaded yet
+    if (!trousseauProvider.hasInitialLoad) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n?.statistics ?? 'Statistics')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Empty state - only show if data has loaded AND list is empty
     if (pinnedTrousseaus.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: Text(l10n?.statistics ?? 'Statistics')),
@@ -171,7 +185,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: AppStatCard(
                   icon: Icons.account_balance_wallet,
                   title: l10n?.totalBudget ?? 'Total Budget',
-                  value: '₺${totalBudget.toStringAsFixed(0)}',
+                  value: CurrencyFormatter.formatWithSymbol(totalBudget),
                   color: theme.colorScheme.primary,
                 ),
               ),
@@ -180,8 +194,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: AppStatCard(
                   icon: Icons.shopping_cart,
                   title: l10n?.spent ?? 'Spent',
-                  value: '₺${totalSpent.toStringAsFixed(0)}',
-                  subtitle: totalBudget > 0 
+                  value: CurrencyFormatter.formatWithSymbol(totalSpent),
+                  subtitle: totalBudget > 0
                     ? '%${((totalSpent / totalBudget) * 100).toStringAsFixed(0)} ${l10n?.percentUsed ?? 'used'}'
                     : null,
                   color: theme.colorScheme.secondary,
@@ -199,10 +213,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: AppStatCard(
                   icon: remainingBudget >= 0 ? Icons.savings : Icons.warning,
                   title: l10n?.remainingBudget ?? 'Remaining Budget',
-                  value: '₺${remainingBudget.toStringAsFixed(0)}',
-                  subtitle: remainingBudget >= 0 
+                  value: CurrencyFormatter.formatWithSymbol(remainingBudget),
+                  subtitle: remainingBudget >= 0
                     ? l10n?.withinBudget ?? 'Within budget'
-                    : '₺${(-remainingBudget).toStringAsFixed(0)} ${l10n?.excess ?? 'excess'}',
+                    : '${CurrencyFormatter.formatWithSymbol(-remainingBudget)} ${l10n?.excess ?? 'excess'}',
                   color: remainingBudget >= 0 ? theme.colorScheme.tertiary : theme.colorScheme.error,
                 ),
               ),
@@ -211,8 +225,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: AppStatCard(
                   icon: Icons.calculate,
                   title: l10n?.plannedTotal ?? 'Planned Total',
-                  value: '₺${totalPlanned.toStringAsFixed(0)}',
-                  subtitle: totalBudget > 0 
+                  value: CurrencyFormatter.formatWithSymbol(totalPlanned),
+                  subtitle: totalBudget > 0
                     ? '%${((totalPlanned / totalBudget) * 100).toStringAsFixed(0)} ${l10n?.fromBudget ?? 'from budget'}'
                     : null,
                   color: theme.colorScheme.tertiary,
@@ -230,8 +244,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: AppStatCard(
                   icon: Icons.attach_money,
                   title: l10n?.averagePrice ?? 'Average Price',
-                  value: totalProducts > 0 
-                    ? '₺${(totalPlanned / totalProducts).toStringAsFixed(0)}'
+                  value: totalProducts > 0
+                    ? CurrencyFormatter.formatWithSymbol(totalPlanned / totalProducts)
                     : '₺0',
                   subtitle: l10n?.perProduct ?? 'Per product',
                   color: Colors.orange,
@@ -248,20 +262,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 ),
               ),
             ],
-          ),
-
-          AppSpacing.xl.verticalSpace,
-
-          // ═══════════════════════════════════════════════════════════════════
-          // BÜTÇE SAĞLIĞI KARTI
-          // ═══════════════════════════════════════════════════════════════════
-          _buildBudgetHealthCard(
-            context,
-            totalBudget,
-            totalSpent,
-            totalPlanned,
-            remainingBudget,
-            theme,
           ),
 
           AppSpacing.xl.verticalSpace,
@@ -311,21 +311,21 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     _progressStat(
                       context,
                       l10n?.totalProducts ?? 'Total Products',
-                      totalProducts.toString(),
+                      NumberFormat('#,##0', 'tr_TR').format(totalProducts),
                       Icons.inventory_2,
                       theme.colorScheme.primary,
                     ),
                     _progressStat(
                       context,
                       l10n?.completed ?? 'Completed',
-                      purchasedProducts.toString(),
+                      NumberFormat('#,##0', 'tr_TR').format(purchasedProducts),
                       Icons.check_circle,
                       theme.colorScheme.tertiary,
                     ),
                     _progressStat(
                       context,
                       l10n?.pending ?? 'Pending',
-                      (totalProducts - purchasedProducts).toString(),
+                      NumberFormat('#,##0', 'tr_TR').format(totalProducts - purchasedProducts),
                       Icons.pending,
                       theme.colorScheme.secondary,
                     ),
@@ -448,7 +448,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     AppInfoCard(
                       type: InfoCardType.error,
                       title: l10n?.budgetExceeded ?? 'Budget Exceeded!',
-                      message: '₺${(-remainingBudget).toStringAsFixed(0)} ${l10n?.excessSpent ?? 'excess spent.'}',
+                      message: '${CurrencyFormatter.formatWithSymbol(-remainingBudget)} ${l10n?.excessSpent ?? 'excess spent.'}',
                     ),
                   ],
                 ],
@@ -716,7 +716,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               ),
             ),
             Text(
-              '₺${amount.toStringAsFixed(0)} (${(percent * 100).toStringAsFixed(0)}%)',
+              '${CurrencyFormatter.formatWithSymbol(amount)} (${(percent * 100).toStringAsFixed(0)}%)',
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: AppTypography.bold,
                 color: color,
@@ -862,7 +862,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       ),
                       AppSpacing.xs.verticalSpace,
                       Text(
-                        '$count ürün • ₺${categorySpending.toStringAsFixed(0)}',
+                        '${NumberFormat('#,##0', 'tr_TR').format(count)} ürün • ${CurrencyFormatter.formatWithSymbol(categorySpending)}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface,
                           fontSize: AppTypography.sizeSM,
@@ -927,11 +927,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final products = productProvider.products;
     if (products.isEmpty) return '₺0';
 
-    final mostExpensive = products.reduce((a, b) => 
+    final mostExpensive = products.reduce((a, b) =>
       a.totalPrice > b.totalPrice ? a : b
     );
 
-    return '₺${mostExpensive.totalPrice.toStringAsFixed(0)}';
+    return CurrencyFormatter.formatWithSymbol(mostExpensive.totalPrice);
   }
 
   String? _getMostExpensiveProductName(ProductProvider productProvider) {
@@ -1432,194 +1432,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // BUDGET HEALTH CARD
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _buildBudgetHealthCard(
-    BuildContext context,
-    double totalBudget,
-    double totalSpent,
-    double totalPlanned,
-    double remainingBudget,
-    ThemeData theme,
-  ) {
-    final l10n = AppLocalizations.of(context);
-    
-    // Calculate health score (0-100)
-    int healthScore = 100;
-    String healthStatus = l10n?.budgetHealthPerfect ?? 'Perfect';
-    Color healthColor = Colors.green;
-    IconData healthIcon = Icons.sentiment_very_satisfied;
-    String healthMessage = l10n?.budgetHealthPerfect ?? 'You\'re managing your budget perfectly!';
-
-    if (totalBudget > 0) {
-      final spentPercent = (totalSpent / totalBudget) * 100;
-      final plannedPercent = (totalPlanned / totalBudget) * 100;
-
-      if (remainingBudget < 0) {
-        // Budget exceeded
-        healthScore = 0;
-        healthStatus = l10n?.budgetHealthCritical ?? 'Critical';
-        healthColor = theme.colorScheme.error;
-        healthIcon = Icons.sentiment_very_dissatisfied;
-        healthMessage = l10n?.budgetHealthCritical ?? 'You\'ve exceeded your budget! Review your spending.';
-      } else if (plannedPercent > 100) {
-        // Planned exceeds budget
-        healthScore = 30;
-        healthStatus = l10n?.budgetHealthRisky ?? 'Risky';
-        healthColor = Colors.orange;
-        healthIcon = Icons.sentiment_dissatisfied;
-        healthMessage = l10n?.budgetHealthRisky ?? 'Planned spending exceeds budget. Make a plan.';
-      } else if (spentPercent > 80) {
-        // 80%+ spent
-        healthScore = 50;
-        healthStatus = l10n?.beCareful ?? 'Be Careful';
-        healthColor = Colors.orange.shade700;
-        healthIcon = Icons.sentiment_neutral;
-        healthMessage = l10n?.budgetHealthBeCareful ?? 'You\'ve spent most of your budget. Proceed carefully.';
-      } else if (spentPercent > 60) {
-        // 60-80% spent
-        healthScore = 70;
-        healthStatus = l10n?.good ?? 'Good';
-        healthColor = Colors.lightGreen;
-        healthIcon = Icons.sentiment_satisfied;
-        healthMessage = l10n?.budgetHealthGood ?? 'Going well! Keep your spending under control.';
-      } else {
-        // <60% spent
-        healthScore = 100;
-        healthStatus = l10n?.budgetHealthPerfect ?? 'Perfect';
-        healthColor = Colors.green;
-        healthIcon = Icons.sentiment_very_satisfied;
-        healthMessage = l10n?.budgetHealthPerfect ?? 'You\'re managing your budget perfectly!';
-      }
-    }
-
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n?.budgetHealth ?? 'Budget Health',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: AppTypography.bold,
-                  fontSize: AppTypography.sizeLG,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: healthColor.withValues(alpha: 0.2),
-                  borderRadius: AppRadius.radiusXL,
-                  border: Border.all(
-                    color: healthColor.withValues(alpha: 0.5),
-                    width: 2,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      healthIcon,
-                      color: healthColor,
-                      size: AppDimensions.iconSizeMedium,
-                    ),
-                    AppSpacing.xs.horizontalSpace,
-                    Text(
-                      healthStatus,
-                      style: TextStyle(
-                        fontWeight: AppTypography.bold,
-                        color: healthColor,
-                        fontSize: AppTypography.sizeBase,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          AppSpacing.md.verticalSpace,
-          
-          // Health Score Progress
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n?.healthScore ?? 'Health Score',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: AppTypography.sizeSM,
-                      ),
-                    ),
-                    AppSpacing.xs.verticalSpace,
-                    LinearProgressIndicator(
-                      value: healthScore / 100,
-                      minHeight: 12,
-                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                      color: healthColor,
-                      borderRadius: AppRadius.radiusSM,
-                    ),
-                  ],
-                ),
-              ),
-              AppSpacing.md.horizontalSpace,
-              Text(
-                '$healthScore/100',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: AppTypography.bold,
-                  color: healthColor,
-                  fontSize: AppTypography.sizeXL,
-                ),
-              ),
-            ],
-          ),
-
-          AppSpacing.md.verticalSpace,
-
-          // Health Message
-          Container(
-            padding: AppSpacing.paddingMD,
-            decoration: BoxDecoration(
-              color: healthColor.withValues(alpha: 0.1),
-              borderRadius: AppRadius.radiusMD,
-              border: Border.all(
-                color: healthColor.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.lightbulb_outline,
-                  color: healthColor,
-                  size: AppDimensions.iconSizeMedium,
-                ),
-                AppSpacing.sm.horizontalSpace,
-                Expanded(
-                  child: Text(
-                    healthMessage,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface,
-                      fontSize: AppTypography.sizeSM,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
   // INFO DIALOG
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1653,13 +1465,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 '• Planned Total: Cost of all items\n'
                 '• Average Price: Amount per item\n'
                 '• Most Expensive: Highest priced item\n\n'
-                '💚 Budget Health\n\n'
-                '• Perfect (100): Spent less than 60%\n'
-                '• Good (70): 60-80% spending\n'
-                '• Be Careful (50): Over 80% used\n'
-                '• Risky (30): Planned exceeds budget\n'
-                '• Critical (0): Budget exceeded!\n\n'
-                '📅 Completion Estimate\n\n'
+                ' Completion Estimate\n\n'
                 'Estimates when you\'ll complete your trousseau based on current shopping speed.\n\n'
                 '🏆 Category Analysis\n\n'
                 'Categories with most/least products, average spending, and category-based statistics.',

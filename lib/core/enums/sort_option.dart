@@ -1,12 +1,4 @@
-/// Product Sort Options
-///
-/// Ürün sıralama seçenekleri:
-/// - purchasedFirst: Alınanlar önce (isPurchased = true)
-/// - notPurchasedFirst: Alınmayanlar önce (isPurchased = false)
-/// - priceHighToLow: Fiyat (Yüksekten Düşüğe)
-/// - priceLowToHigh: Fiyat (Düşükten Yükseğe)
-/// - nameAZ: İsim (A-Z)
-/// - nameZA: İsim (Z-A)
+
 
 enum ProductSortOption {
   purchasedFirst,

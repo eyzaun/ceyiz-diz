@@ -266,6 +266,7 @@ class ProductProvider extends ChangeNotifier {
     String link2 = '',
     String link3 = '',
     int quantity = 1,
+    bool isPurchased = false,
   }) async {
     if (_authProvider?.currentUser == null) return false;
     final fbUser = fb_auth.FirebaseAuth.instance.currentUser;
@@ -314,6 +315,7 @@ class ProductProvider extends ChangeNotifier {
         link2: link2,
         link3: link3,
         quantity: quantity,
+        isPurchased: isPurchased,
         addedBy: userId,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),

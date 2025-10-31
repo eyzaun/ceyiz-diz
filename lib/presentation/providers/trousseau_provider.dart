@@ -15,6 +15,7 @@ class TrousseauProvider extends ChangeNotifier {
   TrousseauModel? _selectedTrousseau;
   String? _selectedTrousseauId; // Shared selected trousseau ID for both tabs
   bool _isLoading = false;
+  bool _hasInitialLoad = false; // Track if initial data has been loaded
   String _errorMessage = '';
   AuthProvider? _authProvider;
   
@@ -28,6 +29,7 @@ class TrousseauProvider extends ChangeNotifier {
   TrousseauModel? get selectedTrousseau => _selectedTrousseau;
   String? get selectedTrousseauId => _selectedTrousseauId;
   bool get isLoading => _isLoading;
+  bool get hasInitialLoad => _hasInitialLoad;
   String get errorMessage => _errorMessage;
   String? get currentUserId => _authProvider?.currentUser?.uid;
   
@@ -73,6 +75,7 @@ class TrousseauProvider extends ChangeNotifier {
     _sharedTrousseaus = [];
     _selectedTrousseau = null;
     _selectedTrousseauId = null;
+    _hasInitialLoad = false;
     _errorMessage = '';
     notifyListeners();
   }
@@ -105,10 +108,12 @@ class TrousseauProvider extends ChangeNotifier {
           .toList();
       _syncSelected();
       _isLoading = false;
+      _hasInitialLoad = true; // Mark that initial data has been loaded
       notifyListeners();
     }, onError: (e) {
       _errorMessage = 'Failed to listen to trousseaus: $e'; // Will be localized in UI layer
       _isLoading = false;
+      _hasInitialLoad = true; // Even on error, we've attempted to load
       notifyListeners();
     });
 

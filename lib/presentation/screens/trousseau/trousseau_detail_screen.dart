@@ -16,7 +16,8 @@ import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../core/theme/design_tokens.dart';
-import '../../../core/services/excel_export_service.dart';
+import '../../../core/services/excel_export_service_v3.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/trousseau_provider.dart';
 import '../../providers/product_provider.dart';
@@ -31,10 +32,12 @@ import '../../../data/models/trousseau_model.dart';
 
 class TrousseauDetailScreen extends StatefulWidget {
   final String trousseauId;
+  final bool hideSelector;
 
   const TrousseauDetailScreen({
     super.key,
     required this.trousseauId,
+    this.hideSelector = false,
   });
 
   @override
@@ -54,9 +57,11 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
     _currentTrousseauId = widget.trousseauId;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      final trProv = Provider.of<TrousseauProvider>(context, listen: false);
+      // Update selected trousseau ID so statistics screen shows the same trousseau
+      trProv.setSelectedTrousseauId(_currentTrousseauId);
       Provider.of<ProductProvider>(context, listen: false)
           .loadProducts(_currentTrousseauId);
-      final trProv = Provider.of<TrousseauProvider>(context, listen: false);
       Provider.of<CategoryProvider>(context, listen: false)
           .bind(_currentTrousseauId, userId: trProv.currentUserId ?? '');
     });
@@ -69,6 +74,12 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
         widget.trousseauId != _currentTrousseauId) {
       setState(() {
         _currentTrousseauId = widget.trousseauId;
+      });
+      // Update selected trousseau ID when switching between trousseaus
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final trProv = Provider.of<TrousseauProvider>(context, listen: false);
+        trProv.setSelectedTrousseauId(_currentTrousseauId);
       });
       // Ürünler ve kategoriler stream ile güncellendiği için burada tekrar yüklemeye gerek yok.
     }
@@ -119,7 +130,7 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
         }
       }
 
-      await ExcelExportService.exportAndShareTrousseau(
+      await ExcelExportServiceV3.exportAndShareTrousseau(
         trousseau: trousseau,
         products: productProvider.products,
         categories: categoryProvider.allCategories,
@@ -301,13 +312,15 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                     // TROUSSEAU SELECTOR
                     // MILLER YASASI: Max 5 visible, scrollable
                     // GESTALT: Tab-like selector for multiple trousseaus
+                    // Hidden in shared trousseau detail screen
                     // ─────────────────────────────────────────────────────
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(AppSpacing.md),
-                        child: _buildTrousseauSelector(context, trousseauProvider),
+                    if (!widget.hideSelector)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSpacing.md),
+                          child: _buildTrousseauSelector(context, trousseauProvider),
+                        ),
                       ),
-                    ),
 
                     // ─────────────────────────────────────────────────────
                     // SEARCH BAR + SORT BUTTON
@@ -518,6 +531,29 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                           );
                         }
 
+                        // Show loading state while products are being fetched
+                        if (productProvider.isLoading && productProvider.filteredProducts.isEmpty) {
+                          return SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircularProgressIndicator(),
+                                  AppSpacing.md.verticalSpace,
+                                  Text(
+                                    'Ürünler yükleniyor...',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+
+                        // Show empty state only if NOT loading AND list is empty
                         if (productProvider.filteredProducts.isEmpty) {
                           return SliverFillRemaining(
                             hasScrollBody: false,
@@ -664,7 +700,12 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                       child: Consumer<ProductProvider>(
                         builder: (context, productProvider, _) {
                           return Container(
-                            padding: EdgeInsets.all(AppSpacing.md),
+                            padding: EdgeInsets.fromLTRB(
+                              AppSpacing.md,
+                              AppSpacing.xs,
+                              AppSpacing.md,
+                              AppSpacing.xs,
+                            ),
                             decoration: BoxDecoration(
                               color: theme.cardColor,
                               boxShadow: [
@@ -677,25 +718,32 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                             ),
                             child: SafeArea(
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
+                                mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   _buildSummaryItem(
                                     context,
                                     l10n?.total ?? 'Toplam',
-                                    '₺${productProvider.getTotalPlanned().toStringAsFixed(0)}',
+                                    CurrencyFormatter.formatWithSymbol(
+                                      productProvider.getTotalPlanned(),
+                                    ),
                                     theme.colorScheme.primary,
                                   ),
+                                  const SizedBox(width: AppSpacing.lg),
                                   _buildSummaryItem(
                                     context,
                                     l10n?.spent ?? 'Harcanan',
-                                    '₺${productProvider.getTotalSpent().toStringAsFixed(0)}',
+                                    CurrencyFormatter.formatWithSymbol(
+                                      productProvider.getTotalSpent(),
+                                    ),
                                     theme.colorScheme.tertiary,
                                   ),
+                                  const SizedBox(width: AppSpacing.lg),
                                   _buildSummaryItem(
                                     context,
                                     l10n?.remaining ?? 'Kalan',
-                                    '₺${(productProvider.getTotalPlanned() - productProvider.getTotalSpent()).toStringAsFixed(0)}',
+                                    CurrencyFormatter.formatWithSymbol(
+                                      productProvider.getTotalPlanned() - productProvider.getTotalSpent(),
+                                    ),
                                     theme.colorScheme.secondary,
                                   ),
                                 ],
@@ -777,11 +825,14 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                         setState(() {
                           _currentTrousseauId = trousseau.id;
                         });
-                        
+
+                        // Update selected trousseau ID for cross-tab synchronization
+                        trousseauProvider.setSelectedTrousseauId(trousseau.id);
+
                         // Yeni çeyiz seçildi, ürünleri yükle
                         final productProv = Provider.of<ProductProvider>(context, listen: false);
                         productProv.loadProducts(trousseau.id);
-                        
+
                         // Kategorileri de güncelle
                         final catProv = Provider.of<CategoryProvider>(context, listen: false);
                         catProv.bind(trousseau.id, userId: trousseauProvider.currentUserId ?? '');
@@ -862,20 +913,23 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
     final theme = Theme.of(context);
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
-            fontSize: AppTypography.sizeSM,
+            fontSize: AppTypography.sizeXS,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
-        AppSpacing.xs.verticalSpace,
+        const SizedBox(height: 2),
         Text(
           value,
           style: theme.textTheme.titleMedium?.copyWith(
             color: color,
             fontWeight: AppTypography.bold,
-            fontSize: AppTypography.sizeLG,
+            fontSize: AppTypography.sizeBase,
           ),
         ),
       ],

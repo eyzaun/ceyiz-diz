@@ -10,6 +10,7 @@ library;
 /// ✅ Gestalt: Form bölümleri gruplanmış, ilgili alanlar yakın
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/design_tokens.dart';
@@ -18,6 +19,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_input.dart';
 import '../../widgets/common/loading_overlay.dart';
+import '../../widgets/common/language_selector.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -137,7 +139,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     if (!_formKey.currentState!.validate()) return;
 
     if (!_acceptTerms) {
-      _showWarningSnackBar('⚠️ Kullanım koşullarını kabul etmelisiniz\n💡 Devam etmek için onay kutusunu işaretleyin');
+      final l10n = AppLocalizations.of(context);
+      _showWarningSnackBar(l10n?.mustAcceptTerms ?? 'Kullanım koşullarını kabul etmelisiniz');
       return;
     }
 
@@ -301,20 +304,22 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
           ),
         ),
         body: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: Center(
-              child: SingleChildScrollView(
-                padding: context.safePaddingHorizontal,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: AppBreakpoints.maxFormWidth,
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+          child: Stack(
+            children: [
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: context.safePaddingHorizontal,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: AppBreakpoints.maxFormWidth,
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                         // ─────────────────────────────────────────────────────
                         // LOGO VE BAŞLIK
                         // ─────────────────────────────────────────────────────
@@ -335,8 +340,9 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                             color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                             fontSize: AppTypography.sizeBase,
                           ),
-                          textAlign: TextAlign.center,
-                        ),                        AppSpacing.xl.verticalSpace,
+                        ),
+
+                        AppSpacing.xl.verticalSpace,
 
                         // ─────────────────────────────────────────────────────
                         // FORM SECTIONS
@@ -401,7 +407,9 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                           controller: _confirmPasswordController,
                           textInputAction: TextInputAction.done,
                           validator: _validateConfirmPassword,
-                        ),                        AppSpacing.md.verticalSpace,
+                        ),
+
+                        AppSpacing.md.verticalSpace,
 
                         // ─────────────────────────────────────────────────────
                         // TERMS CHECKBOX
@@ -416,17 +424,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                         // FITTS YASASI: 56dp height, full width
                         // ─────────────────────────────────────────────────────
                         AppPrimaryButton(
-                          label: 'Kayıt Ol',
-                          icon: Icons.person_add,
-                          isFullWidth: true,
-                          onPressed: _handleRegister,
-                          isLoading: authProvider.status == AuthStatus.loading,
-                        ),
-
-                        AppSpacing.lg.verticalSpace,
-
-                        // Primary Action Button
-                        AppPrimaryButton(
                           label: l10n?.createAccount ?? 'Kayıt Ol',
                           icon: Icons.person_add,
                           isFullWidth: true,
@@ -437,7 +434,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                         AppSpacing.lg.verticalSpace,
 
                         // ─────────────────────────────────────────────────────
-                        // Divider
+                        // DIVIDER
                         // ─────────────────────────────────────────────────────
                         Row(
                           children: [
@@ -457,33 +454,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
                         AppSpacing.lg.verticalSpace,
 
-                        // Google Sign-In Button
-                        AppSecondaryButton(
-                          label: l10n?.registerWithGoogle ?? 'Google ile Kayıt Ol',
-                          icon: Icons.g_mobiledata_rounded,
-                          isFullWidth: true,
-                          onPressed: _handleGoogleSignIn,
-                        ),
-
-                        AppSpacing.lg.verticalSpace,
-
-                        // Login Link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              l10n?.alreadyHaveAccount ?? 'Zaten hesabınız var mı?',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontSize: AppTypography.sizeBase,
-                              ),
-                            ),
-                            AppSpacing.xs.horizontalSpace,
-                            AppTextButton(
-                              label: l10n?.login ?? 'Giriş Yapın',
-                              onPressed: () => context.push('/login'),
-                            ),
-                          ],
-                        ),                        // ─────────────────────────────────────────────────────
+                        // ─────────────────────────────────────────────────────
                         // GOOGLE SIGN-IN BUTTON
                         // Material 3 uyumlu, outlined style
                         // ─────────────────────────────────────────────────────
@@ -497,31 +468,43 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
                         AppSpacing.lg.verticalSpace,
 
-                        // ─────────────────────────────────────────────────────
-                        // SECONDARY LINK (Giriş Yapın)
-                        // ─────────────────────────────────────────────────────
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Zaten hesabınız var mı?',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontSize: AppTypography.sizeBase,
-                              ),
-                            ),
-                            AppSpacing.xs.horizontalSpace,
-                            AppTextButton(
-                              label: 'Giriş Yapın',
-                              onPressed: () => context.push('/login'),
+                            // ─────────────────────────────────────────────────────
+                            // SECONDARY LINK (Giriş Yapın)
+                            // ─────────────────────────────────────────────────────
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  l10n?.alreadyHaveAccount ?? 'Zaten hesabınız var mı?',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontSize: AppTypography.sizeBase,
+                                  ),
+                                ),
+                                AppSpacing.xs.horizontalSpace,
+                                AppTextButton(
+                                  label: l10n?.login ?? 'Giriş Yapın',
+                                  onPressed: () => context.push('/login'),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+
+              // ═══════════════════════════════════════════════════════════════
+              // LANGUAGE SELECTOR (Floating, top-right)
+              // Allows users to change language before logging in
+              // ═══════════════════════════════════════════════════════════════
+              const LanguageSelector(
+                alignment: Alignment.topRight,
+                isFloating: true,
+                padding: EdgeInsets.only(top: 60, right: 16),
+              ),
+            ],
           ),
         ),
       ),
@@ -533,55 +516,119 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildTermsCheckbox(ThemeData theme, AppLocalizations? l10n) {
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _acceptTerms = !_acceptTerms;
-        });
-      },
-      borderRadius: AppRadius.radiusMD,
-      // FITTS YASASI: Tüm satır tıklanabilir, 48dp minimum yükseklik
-      child: Container(
-        constraints: const BoxConstraints(
-          minHeight: AppDimensions.touchTargetSize,
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xs,
-          vertical: AppSpacing.sm,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Checkbox
-            SizedBox(
-              width: AppDimensions.touchTargetSize,
-              height: AppDimensions.touchTargetSize,
-              child: Checkbox(
-                value: _acceptTerms,
-                onChanged: (value) {
-                  setState(() {
-                    _acceptTerms = value ?? false;
-                  });
-                },
-                // Gestalt: Checkbox rengi primary (benzerlik prensibi)
-                activeColor: theme.colorScheme.primary,
-              ),
+    return Container(
+      constraints: const BoxConstraints(
+        minHeight: AppDimensions.touchTargetSize,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.sm,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Checkbox
+          SizedBox(
+            width: AppDimensions.touchTargetSize,
+            height: AppDimensions.touchTargetSize,
+            child: Checkbox(
+              value: _acceptTerms,
+              onChanged: (value) {
+                setState(() {
+                  _acceptTerms = value ?? false;
+                });
+              },
+              // Gestalt: Checkbox rengi primary (benzerlik prensibi)
+              activeColor: theme.colorScheme.primary,
             ),
+          ),
 
-            AppSpacing.sm.horizontalSpace,
+          AppSpacing.sm.horizontalSpace,
 
-            // Text
-            Expanded(
-              child: Text(
-                l10n?.acceptTerms ?? 'Kullanım koşullarını ve gizlilik politikasını kabul ediyorum',
+          // Text with clickable links
+          Expanded(
+            child: Text.rich(
+              TextSpan(
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontSize: AppTypography.sizeBase,
                   color: theme.colorScheme.onSurface,
                 ),
+                children: [
+                  TextSpan(
+                    text: l10n?.termsOfService ?? 'Kullanım Koşulları',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.xl),
+                            ),
+                            title: Text(l10n?.termsOfService ?? 'Hizmet Şartları'),
+                            content: SizedBox(
+                              width: double.maxFinite,
+                              child: SingleChildScrollView(
+                                child: Text(
+                                  l10n?.termsOfServiceText ?? '',
+                                  style: const TextStyle(height: 1.5),
+                                ),
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(l10n?.close ?? 'Kapat'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                  ),
+                  TextSpan(text: ' ${l10n?.and ?? 've'} '),
+                  TextSpan(
+                    text: l10n?.privacyPolicy ?? 'Gizlilik Politikası',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.xl),
+                            ),
+                            title: Text(l10n?.privacyPolicy ?? 'Gizlilik Politikası'),
+                            content: SizedBox(
+                              width: double.maxFinite,
+                              child: SingleChildScrollView(
+                                child: Text(
+                                  l10n?.privacyPolicyText ?? '',
+                                  style: const TextStyle(height: 1.5),
+                                ),
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(l10n?.close ?? 'Kapat'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                  ),
+                  TextSpan(text: ' ${l10n?.iAccept ?? 'kabul ediyorum'}'),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

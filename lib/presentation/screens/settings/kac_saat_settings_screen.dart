@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/services/kac_saat_calculator.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_button.dart';
@@ -81,14 +82,14 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
         _quarterlyPrim = prefs.getBool('kacSaat_draft_quarterlyPrimEnabled') ?? settings.quarterlyPrim;
         _yearlyPrim = prefs.getBool('kacSaat_draft_yearlyPrimEnabled') ?? settings.yearlyPrim;
       } else {
-        _salaryController.text = settings.monthlySalary > 0 ? settings.monthlySalary.toStringAsFixed(0) : '';
+        _salaryController.text = settings.monthlySalary > 0 ? CurrencyFormatter.format(settings.monthlySalary) : '';
         _hoursController.text = settings.dailyHours > 0 ? settings.dailyHours.toString() : '8';
         _selectedDays = List.from(settings.workingDays);
         _hasPrim = settings.hasPrim;
         _quarterlyPrim = settings.quarterlyPrim;
         _yearlyPrim = settings.yearlyPrim;
-        _quarterlyPrimController.text = settings.quarterlyPrimAmount > 0 ? settings.quarterlyPrimAmount.toStringAsFixed(0) : '';
-        _yearlyPrimController.text = settings.yearlyPrimAmount > 0 ? settings.yearlyPrimAmount.toStringAsFixed(0) : '';
+        _quarterlyPrimController.text = settings.quarterlyPrimAmount > 0 ? CurrencyFormatter.format(settings.quarterlyPrimAmount) : '';
+        _yearlyPrimController.text = settings.yearlyPrimAmount > 0 ? CurrencyFormatter.format(settings.yearlyPrimAmount) : '';
       }
     });
   }
@@ -201,14 +202,14 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
 
       final settings = KacSaatSettings(
         enabled: _enabled,
-        monthlySalary: double.tryParse(_salaryController.text) ?? 0,
+        monthlySalary: CurrencyFormatter.parse(_salaryController.text) ?? 0,
         workingDays: _selectedDays,
         dailyHours: double.tryParse(_hoursController.text) ?? 8,
         hasPrim: _hasPrim,
         quarterlyPrim: _quarterlyPrim,
-        quarterlyPrimAmount: _quarterlyPrim ? (double.tryParse(_quarterlyPrimController.text) ?? 0) : 0,
+        quarterlyPrimAmount: _quarterlyPrim ? (CurrencyFormatter.parse(_quarterlyPrimController.text) ?? 0) : 0,
         yearlyPrim: _yearlyPrim,
-        yearlyPrimAmount: _yearlyPrim ? (double.tryParse(_yearlyPrimController.text) ?? 0) : 0,
+        yearlyPrimAmount: _yearlyPrim ? (CurrencyFormatter.parse(_yearlyPrimController.text) ?? 0) : 0,
       );
 
       await authProvider.updateKacSaatSettings(settings);
@@ -308,14 +309,14 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
               AppTextInput(
                 controller: _salaryController,
                 label: l10n?.monthlySalary ?? 'Monthly Salary',
-                hint: l10n?.forExample17000 ?? 'For example: 17000',
+                hint: l10n?.forExample17000 ?? 'For example: 17.000',
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                inputFormatters: [CurrencyInputFormatter()],
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return l10n?.salaryRequired ?? 'Salary is required';
                   }
-                  final salary = double.tryParse(value);
+                  final salary = CurrencyFormatter.parse(value);
                   if (salary == null || salary <= 0) {
                     return l10n?.enterValidSalary ?? 'Enter a valid salary';
                   }
@@ -456,7 +457,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                             label: l10n?.quarterlyBonusAmountTL ?? 'Quarterly Bonus Amount (TL)',
                             hint: l10n?.sameAsSalary ?? 'Same as salary',
                             keyboardType: TextInputType.number,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            inputFormatters: [CurrencyInputFormatter()],
                             validator: _quarterlyPrim
                                 ? (value) {
                                     if (value == null || value.isEmpty) {
@@ -495,7 +496,7 @@ class _KacSaatSettingsScreenState extends State<KacSaatSettingsScreen> {
                             label: l10n?.yearlyBonusAmountTL ?? 'Yearly Bonus Amount (TL)',
                             hint: l10n?.sameAsSalary ?? 'Same as salary',
                             keyboardType: TextInputType.number,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            inputFormatters: [CurrencyInputFormatter()],
                             validator: _yearlyPrim
                                 ? (value) {
                                     if (value == null || value.isEmpty) {

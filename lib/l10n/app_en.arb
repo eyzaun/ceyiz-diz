@@ -494,13 +494,13 @@
   "@privacyPolicy": {},
   "privacyPolicyContent": "Privacy policy text will be shown here.",
   "@privacyPolicyContent": {},
-  "privacyPolicyText": "Privacy policy text will be displayed here.",
+  "privacyPolicyText": "PRIVACY POLICY\n\nLast Updated: October 31, 2025\n\nAt Çeyiz Diz, we value your privacy. This privacy policy explains what information is collected when using the application, how it is used, and how it is protected.\n\nINFORMATION COLLECTED\n\n1. Account Information:\n• Email address: For account creation and authentication\n• Username: For profile display\n• Profile photo: Optional, for profile customization\n\n2. Trousseau Data:\n• Trousseau lists: Name and description of your created lists\n• Product information: Name, category, price, quantity, notes of added products\n• Product photos: Product images you upload\n• Product links: Web links associated with products\n• Budget information: Budget and expense data you set\n\n3. Technical Information:\n• Device information: Operating system, device model, app version\n• Usage statistics: Anonymous usage data\n• Error reports: Automatic error logs to detect issues\n\nUSE OF INFORMATION\n\nCollected information is used for:\n• Service Provision: To provide trousseau management features\n• Data Synchronization: To sync your data across devices\n• Account Security: To protect your account and prevent unauthorized access\n• App Improvement: To enhance user experience and fix bugs\n• Statistics: To provide personalized statistics and analysis\n\nDATA STORAGE AND SECURITY\n\nFirebase Infrastructure:\n• Your data is securely stored on Google Firebase cloud services\n• All data is transmitted over encrypted connections (SSL/TLS)\n• Uses Firebase Cloud Firestore and Firebase Storage\n• Protected by Google's security standards and infrastructure\n\nData Security:\n• Your data is protected by user authentication\n• Only data belonging to your account is shown to you\n• Passwords are securely hashed and stored\n• No payment information is stored (app is free)\n\nDATA SHARING\n\nWE DO NOT SHARE YOUR DATA WITH THIRD PARTIES.\n\n• Your trousseau lists, products, and photos remain only in your account\n• Other users cannot see your data\n• Your data is not used for advertising or marketing purposes\n• Your data is not shared unless legally required\n\nTHIRD PARTY SERVICES\n\nGoogle Firebase:\n• Authentication: Account creation and login\n• Database: Data storage with Cloud Firestore\n• Storage: Photo storage with Firebase Storage\n• Privacy: https://firebase.google.com/support/privacy\n\nGoogle Sign-In (Optional):\n• Quick login with your Google account\n• Only basic profile information (name, email, profile photo) is obtained\n• Privacy: https://policies.google.com/privacy\n\nUSER RIGHTS\n\nAccess to Your Data:\n• You can view all your data within the app\n• You can export your trousseau lists in Excel format\n\nData Editing:\n• You can update or delete your data at any time\n• You can change your profile information\n\nAccount Deletion:\n• You can delete your account via Settings > Delete Account\n• When account is deleted, all your data is permanently deleted:\n  - Trousseau lists\n  - Products and photos\n  - Budget information\n  - Profile information\n• THIS ACTION CANNOT BE UNDONE\n\nCHILDREN'S PRIVACY\n\n• Çeyiz Diz is for users aged 13 and above\n• We do not knowingly collect data from children under 13\n• If you are a parent or guardian and believe your child has provided us with information, please contact us\n\nCOOKIES AND TRACKING TECHNOLOGIES\n\n• The app uses cookies for basic functionality\n• Local storage is used to store session information\n• No ad tracking or third-party analytics tools are used\n\nDATA RETENTION PERIOD\n\n• Your data is stored as long as your account is active\n• When you delete your account, your data is permanently deleted within 30 days\n• Records required for legal obligations may be kept for the specified period\n\nINTERNATIONAL DATA TRANSFER\n\n• Your data is stored on Google Firebase's global infrastructure\n• Firebase processes data under the EU-US Privacy Shield framework\n• All data transfers are made through encrypted and secure connections\n\nLEGAL RIGHTS (GDPR COMPLIANCE)\n\nUnder the General Data Protection Regulation (GDPR), you have the right to:\n• Learn what purposes your data is processed for\n• Request access to and correction of your data\n• Request deletion or destruction of your data\n• Learn about third parties your data is transferred to\n• Learn about decisions made by automated systems based on your data\n\nCONTACT\n\nFor questions about our privacy policy:\n• App: You can reach us from Settings > Support section\n\nPRIVACY POLICY CHANGES\n\n• We may update this privacy policy from time to time\n• Changes will be published on this page\n• In-app notifications may be sent for significant changes\n• The last update date is always indicated at the top\n\nImportant Note: This privacy policy applies to the Çeyiz Diz mobile application. By using the app, you accept this policy.",
   "@privacyPolicyText": {},
   "termsOfService": "Terms of Service",
   "@termsOfService": {},
   "termsOfServiceContent": "Terms of service text will be shown here.",
   "@termsOfServiceContent": {},
-  "termsOfServiceText": "Terms of service text will be displayed here.",
+  "termsOfServiceText": "TERMS OF SERVICE\n\nLast Updated: October 31, 2025\n\nBy using the Çeyiz Diz application, you agree to the following terms of service. Please read these terms carefully.\n\n1. SERVICE DEFINITION\n\nÇeyiz Diz is a free mobile application that helps users manage their trousseau preparation process digitally.\n\nOffered Features:\n• Create and manage trousseau lists\n• Add, edit, and delete products\n• Categorize and filter products\n• Budget tracking and statistics\n• Upload product photos\n• Add product links\n• Excel export\n• Data synchronization (cloud backup)\n\nAccount Requirements:\n• You need to create an account to use the app\n• You can register with email/password or Google account\n• Suitable for users aged 13 and above\n• A user can only have one account\n\n2. TERMS OF USE\n\nPermitted Use:\n• Personal trousseau planning and tracking\n• Family organization\n• Budget management\n• Shopping list preparation\n\nProhibited Uses:\n• Commercial purposes or profit making\n• Disrupting or damaging the app's functionality\n• Unauthorized access to other users' data\n• Creating fake accounts or impersonation\n• Spreading spam, malware, or viruses\n• Sharing illegal content\n• Reverse engineering the app's source code\n• Using automated bots or scraping tools\n\nContent Responsibility:\n• You are responsible for all content you upload (photos, text, links)\n• You must not upload content that infringes copyright\n• You cannot share inappropriate, offensive, or illegal content\n• Product photos are for personal use only\n\n3. ACCOUNT SECURITY\n\nAccount Responsibility:\n• You are responsible for keeping your account information (email, password) secure\n• You are responsible for all activities in your account\n• We recommend changing your password regularly\n• Contact us immediately if you suspect your account has been compromised\n\nAccount Suspension/Closure:\nWe reserve the right to suspend or close your account in the following cases:\n• Violation of terms of service\n• Detection of illegal activity\n• Attempt to harm other users\n• Threatening the app's security\n\n4. INTELLECTUAL PROPERTY RIGHTS\n\nApplication Rights:\n• All rights to the Çeyiz Diz application are reserved\n• App design, logo, and content are protected by copyright\n• You cannot copy the app's source code\n• You cannot use the app name and logo without permission\n\nUser Content:\n• Copyright of uploaded content belongs to you\n• You grant us the right to store and process content you upload\n• You can delete your content at any time\n• Your content is deleted when you delete your account\n\n5. PRIVACY AND DATA PROTECTION\n\n• Your personal data is protected under our Privacy Policy\n• Your data is stored on Google Firebase secure servers\n• We do not share your data with third parties\n• We operate in compliance with GDPR\n\nPlease review the Privacy Policy page for detailed information.\n\n6. SERVICE INTERRUPTIONS\n\nMaintenance and Updates:\n• We may perform regular maintenance and updates on the app\n• Temporary interruptions may occur during updates\n• Prior notification is given for critical updates\n\nNo Service Guarantee:\n• We provide the app \"as is\"\n• We do not guarantee uninterrupted or error-free operation\n• We accept no responsibility for data loss\n• Users are advised to take regular backups\n\n7. LIABILITY LIMITATIONS\n\nApplication Liability:\nWe are not responsible for:\n• Incorrect product information or price calculations\n• User-caused data loss\n• Issues arising from third-party links (product links)\n• Internet connection or device problems\n• Interruptions caused by Firebase infrastructure\n\nThird Party Links:\n• Product links shared in the app are added by users\n• We are not responsible for the content of linked websites\n• You are responsible for your purchases on e-commerce sites\n• Product prices and stock status may change\n\nFinancial Liability:\n• Çeyiz Diz is a free application\n• We do not process any payments\n• Budget calculations are estimates, not exact\n• We are not responsible for your financial decisions\n\n8. PRICING\n\n• ÇEYİZ DİZ IS COMPLETELY FREE\n• There are no in-app purchases\n• There are no premium features or subscription plans\n• Users will be informed if paid features are added in the future\n\n9. CHANGES TO TERMS OF SERVICE\n\nRight to Update:\n• We may update these terms of service at any time\n• Significant changes will be announced via in-app notification\n• Updates will be published on this page\n• The last update date is always indicated\n\nAcceptance and Approval:\n• If you continue using the app after updates, you accept the new terms\n• If you do not accept the terms, you should stop using the app\n• You can delete your account at any time\n\n10. SERVICE TERMINATION\n\nBy User:\n• You can delete your account at any time\n• Use Settings > Delete Account option\n• All your data is permanently deleted after account deletion\n• This action cannot be undone\n\nBy Company:\nWe may terminate your account in the following cases:\n• Serious violation of terms of service\n• Not logging into your account for a long time (12+ months)\n• Detection of illegal activity\n• Abuse of the application\n\nMass Service Termination:\n• We may decide to shut down the application\n• At least 90 days notice will be given\n• Users will be given time to export their data\n• Data loss will be prevented as much as possible\n\n11. COMMUNICATION AND SUPPORT\n\nSupport Channels:\n• In-App: Settings > Support\n• Feedback: Feedback form in the app\n\nResponse Times:\n• Technical support requests: Within 48 hours\n• Account issues: Within 24 hours\n• General questions: Within 72 hours\n\n12. DISPUTE RESOLUTION\n\nApplicable Law:\n• These terms of service are subject to the laws of the Republic of Turkey\n• Disputes will be resolved in Turkish courts\n• Istanbul courts and enforcement offices have jurisdiction\n\nDispute Resolution:\n• Amicable resolution is preferred first\n• Formal complaint process may be applied\n• Right to resort to legal means is reserved\n\n13. MISCELLANEOUS PROVISIONS\n\n• Severability: If any of these terms is deemed invalid, the others remain in effect\n• Waiver: Non-exercise of a right does not mean waiver of that right\n• Assignment: You cannot transfer your rights under this agreement to another party\n• Entire Agreement: These terms of service and privacy policy constitute the entire agreement\n\nIMPORTANT REMINDERS\n\nMain Points You Accept:\n• You will use the app for personal use\n• Your account security is your responsibility\n• Content you upload must be appropriate and legal\n• We recommend backing up your data\n• Violating the terms of service may result in account closure\n\nThings You Cannot Do:\n• Commercial use\n• Copyright infringement\n• Harming other users\n• Threatening the app's security\n• Sharing spam or harmful content\n\nFinal Note: By accepting these terms of service, you commit to using the Çeyiz Diz application in accordance with legal and ethical rules. You are deemed to have accepted these terms when you start using the app.\n\nEffective Date: October 31, 2025",
   "@termsOfServiceText": {},
   "dangerZone": "Danger Zone",
   "@dangerZone": {},
@@ -618,17 +618,17 @@
   "@goToVerification": {},
   "passwordHint": "At least 6 characters",
   "@passwordHint": {},
-  "nameMinLength": "❌ Must be at least 3 characters",
+  "nameMinLength": "Must be at least 3 characters",
   "@nameMinLength": {},
-  "enterFullName": "💡 Enter your first and last name (e.g. John Doe)",
+  "enterFullName": "Enter your first and last name (e.g. John Doe)",
   "@enterFullName": {},
-  "passwordUpperCase": "❌ Must contain at least 1 uppercase letter (A-Z)",
+  "passwordUpperCase": "Must contain at least 1 uppercase letter (A-Z)",
   "@passwordUpperCase": {},
-  "passwordLowerCase": "❌ Must contain at least 1 lowercase letter (a-z)",
+  "passwordLowerCase": "Must contain at least 1 lowercase letter (a-z)",
   "@passwordLowerCase": {},
-  "passwordDigit": "❌ Must contain at least 1 digit (0-9)",
+  "passwordDigit": "Must contain at least 1 digit (0-9)",
   "@passwordDigit": {},
-  "confirmPasswordMismatch": "❌ Passwords do not match",
+  "confirmPasswordMismatch": "Passwords do not match",
   "@confirmPasswordMismatch": {},
   "personalInfo": "Personal Information",
   "@personalInfo": {},
@@ -778,7 +778,6 @@
   "@deleteAccountWarning": {},
   "trousseauDeleted": "Trousseau deleted",
   "@trousseauDeleted": {},
-  
   "giveEditPermissionSubtitle": "This person can add and edit products in the trousseau",
   "@giveEditPermissionSubtitle": {},
   "sharedPeople": "Shared With",
@@ -789,7 +788,6 @@
   "@removeSharingConfirm": {},
   "remove": "Remove",
   "@remove": {},
-  
   "sharedWithMe": "Shared With Me",
   "@sharedWithMe": {},
   "sharedItems": "Shared",
@@ -830,7 +828,6 @@
   "@accept": {},
   "invitationAcceptedWillAppear": "Invitation accepted! It will appear in the Shared tab.",
   "@invitationAcceptedWillAppear": {},
-  
   "nameAlreadyUsed": "This name is already used",
   "@nameAlreadyUsed": {},
   "add": "Add",
@@ -841,7 +838,6 @@
   "@clear": {},
   "apply": "Apply",
   "@apply": {},
-  
   "productNameRequired": "Product name is required",
   "@productNameRequired": {},
   "enterValidPrice": "Enter a valid price",
@@ -852,17 +848,14 @@
   "@invalid": {},
   "addingProduct": "Adding product...",
   "@addingProduct": {},
-  
   "letsGetStarted": "Let's Get Started!",
   "@letsGetStarted": {},
-  
   "basicInformation": "Basic Information",
   "@basicInformation": {},
   "productNameExample": "E.g: Cutlery Set",
   "@productNameExample": {},
   "productNotFound": "Product not found",
   "@productNotFound": {},
-  
   "additionalInformation": "Additional Information",
   "@additionalInformation": {},
   "optional": "Optional",
@@ -875,7 +868,6 @@
   "@productLink2": {},
   "productLink3": "Product Link 3",
   "@productLink3": {},
-  
   "selectTrousseau": "Which Trousseau to Add To?",
   "@selectTrousseau": {},
   "cancelAction": "Cancel",
@@ -886,7 +878,6 @@
   "@deleteProductWarning": {},
   "more": "More",
   "@more": {},
-  
   "edit": "Edit",
   "@edit": {},
   "total": "Total",
@@ -901,7 +892,6 @@
   "@trousseauNameExample": {},
   "budgetExample": "E.g: 50,000 (Optional)",
   "@budgetExample": {},
-  
   "processing": "Processing...",
   "@processing": {},
   "trousseauInformation": "Trousseau Information",
@@ -1177,6 +1167,12 @@
   "@confirmPasswordHint": {},
   "acceptTerms": "I accept the terms and conditions and privacy policy",
   "@acceptTerms": {},
+  "mustAcceptTerms": "You must accept the terms and conditions",
+  "@mustAcceptTerms": {},
+  "iAccept": "I accept",
+  "@iAccept": {},
+  "and": "and",
+  "@and": {},
   "emailNotVerifiedMessage": "You need to verify your email address to log in to your account.",
   "@emailNotVerifiedMessage": {},
   "updateRequiredMessage": "Update Required!",
@@ -1366,5 +1362,3 @@
   "sortNameZA": "Name (Z → A)",
   "@sortNameZA": {}
 }
-
-

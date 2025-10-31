@@ -185,14 +185,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
     final pinnedTrousseaus = trousseauProvider.pinnedTrousseaus;
 
-    // Loading state
-    if (trousseauProvider.isLoading) {
+    // Loading state - Show loading ONLY if we haven't loaded initial data yet
+    if (!trousseauProvider.hasInitialLoad) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    // Empty state
+    // Empty state - Only show if data has loaded AND list is empty
     if (pinnedTrousseaus.isEmpty) {
       final l10n = AppLocalizations.of(context);
       return Scaffold(
@@ -237,14 +237,9 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // Ensure a trousseau is selected (after build completes)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        trousseauProvider.ensureSelection();
-      }
-    });
-
     // Show selected trousseau detail
+    // Don't call ensureSelection here - let TrousseauDetailScreen handle it
+    // This preserves the selection when switching between tabs
     final id = trousseauProvider.selectedTrousseauId ?? pinnedTrousseaus.first.id;
     return TrousseauDetailScreen(trousseauId: id, key: ValueKey(id));
   }

@@ -17,6 +17,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../providers/onboarding_provider.dart';
 import '../../widgets/common/app_button.dart';
+import '../../widgets/common/language_selector.dart';
 import 'onboarding_data.dart';
 import 'onboarding_page_widget.dart';
 
@@ -76,109 +77,122 @@ class _NewOnboardingScreenState extends State<NewOnboardingScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // ═══════════════════════════════════════════════════════════════
-            // SKIP BUTTON (Sağ üst)
-            // HICK YASASI: 1 secondary action (Skip)
-            // FITTS YASASI: 48x48dp touch area
-            // ═══════════════════════════════════════════════════════════════
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Align(
-                alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: _skipOnboarding,
-                  style: TextButton.styleFrom(
-                    minimumSize: const Size(48, 48),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
+            Column(
+              children: [
+                // ═══════════════════════════════════════════════════════════════
+                // SKIP BUTTON (Sağ üst)
+                // HICK YASASI: 1 secondary action (Skip)
+                // FITTS YASASI: 48x48dp touch area
+                // ═══════════════════════════════════════════════════════════════
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: TextButton(
+                      onPressed: _skipOnboarding,
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                      ),
+                      child: Text(
+                        l10n?.skip ?? 'Geç',
+                        style: TextStyle(
+                          fontSize: AppTypography.sizeSM,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.primary,
+                          fontFamily: AppTypography.fontFamily,
+                        ),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    l10n?.skip ?? 'Geç',
-                    style: TextStyle(
-                      fontSize: AppTypography.sizeSM,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.primary,
-                      fontFamily: AppTypography.fontFamily,
+                ),
+
+                // ═══════════════════════════════════════════════════════════════
+                // PAGE VIEW (8 Sayfa)
+                // JAKOB YASASI: Standart horizontal swipe pattern
+                // ═══════════════════════════════════════════════════════════════
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPage = index;
+                      });
+                    },
+                    itemCount: OnboardingContent.pages.length,
+                    itemBuilder: (context, index) {
+                      return OnboardingPageWidget(
+                        pageData: OnboardingContent.pages[index],
+                      );
+                    },
+                  ),
+                ),
+
+                // ═══════════════════════════════════════════════════════════════
+                // PAGE INDICATOR
+                // smooth_page_indicator package kullanımı
+                // ═══════════════════════════════════════════════════════════════
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                  child: SmoothPageIndicator(
+                    controller: _pageController,
+                    count: OnboardingContent.pages.length,
+                    effect: WormEffect(
+                      dotWidth: 10,
+                      dotHeight: 10,
+                      spacing: 8,
+                      activeDotColor: colorScheme.primary,
+                      dotColor: colorScheme.outlineVariant,
                     ),
                   ),
                 ),
-              ),
+
+                // ═══════════════════════════════════════════════════════════════
+                // NEXT / START BUTTON
+                // FITTS YASASI: 56dp height, full width (easy tap)
+                // HICK YASASI: 1 primary action
+                // ═══════════════════════════════════════════════════════════════
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    AppSpacing.md,
+                    AppSpacing.xl,
+                    AppSpacing.xl,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: AppBreakpoints.maxFormWidth,
+                    ),
+                    child: AppPrimaryButton(
+                      label: _currentPage == OnboardingContent.pages.length - 1
+                          ? l10n?.letsGetStarted ?? 'Hadi Başlayalım!'
+                          : l10n?.next ?? 'İleri',
+                      icon: _currentPage == OnboardingContent.pages.length - 1
+                          ? Icons.rocket_launch_outlined
+                          : Icons.arrow_forward,
+                      onPressed: _nextPage,
+                      isFullWidth: true,
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             // ═══════════════════════════════════════════════════════════════
-            // PAGE VIEW (8 Sayfa)
-            // JAKOB YASASI: Standart horizontal swipe pattern
+            // LANGUAGE SELECTOR (Floating, top-left)
+            // Allows users to change language before logging in
             // ═══════════════════════════════════════════════════════════════
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index;
-                  });
-                },
-                itemCount: OnboardingContent.pages.length,
-                itemBuilder: (context, index) {
-                  return OnboardingPageWidget(
-                    pageData: OnboardingContent.pages[index],
-                  );
-                },
-              ),
-            ),
-
-            // ═══════════════════════════════════════════════════════════════
-            // PAGE INDICATOR
-            // smooth_page_indicator package kullanımı
-            // ═══════════════════════════════════════════════════════════════
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-              child: SmoothPageIndicator(
-                controller: _pageController,
-                count: OnboardingContent.pages.length,
-                effect: WormEffect(
-                  dotWidth: 10,
-                  dotHeight: 10,
-                  spacing: 8,
-                  activeDotColor: colorScheme.primary,
-                  dotColor: colorScheme.outlineVariant,
-                ),
-              ),
-            ),
-
-            // ═══════════════════════════════════════════════════════════════
-            // NEXT / START BUTTON
-            // FITTS YASASI: 56dp height, full width (easy tap)
-            // HICK YASASI: 1 primary action
-            // ═══════════════════════════════════════════════════════════════
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.xl,
-                AppSpacing.md,
-                AppSpacing.xl,
-                AppSpacing.xl,
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: AppBreakpoints.maxFormWidth,
-                ),
-                child: AppPrimaryButton(
-                  label: _currentPage == OnboardingContent.pages.length - 1
-                      ? l10n?.letsGetStarted ?? 'Hadi Başlayalım!'
-                      : l10n?.next ?? 'İleri',
-                  icon: _currentPage == OnboardingContent.pages.length - 1
-                      ? Icons.rocket_launch_outlined
-                      : Icons.arrow_forward,
-                  onPressed: _nextPage,
-                  isFullWidth: true,
-                ),
-              ),
+            const LanguageSelector(
+              alignment: Alignment.topLeft,
+              isFloating: true,
             ),
           ],
         ),

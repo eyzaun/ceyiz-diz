@@ -438,15 +438,20 @@ class AppFAB extends StatelessWidget {
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
         elevation: AppElevation.floating,
-        icon: Icon(icon, size: AppDimensions.iconSizeMedium),
+        icon: Icon(icon, size: 20),
         label: Text(
           label!,
           style: TextStyle(
-            fontSize: AppTypography.sizeBase,
+            fontSize: AppTypography.sizeSM,
             fontWeight: AppTypography.semiBold,
           ),
         ),
         tooltip: tooltip,
+        // Reduce padding to make FAB more compact
+        extendedPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 0,
+        ),
       );
     }
 

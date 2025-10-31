@@ -107,7 +107,7 @@ class _SharedTrousseauListScreenState extends State<SharedTrousseauListScreen> w
 
                 // FITTS YASASI: Card ile minimum 48dp touch area
                 return AppCard(
-                  onTap: () => context.push('/trousseau/${t.id}'),
+                  onTap: () => context.push('/trousseau/${t.id}?hideSelector=true'),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

@@ -492,7 +492,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         borderRadius: BorderRadius.circular(AppRadius.xl),
                       ),
                       title: Text(l10n.privacyPolicy),
-                      content: Text(l10n.privacyPolicyText),
+                      content: SizedBox(
+                        width: double.maxFinite,
+                        child: SingleChildScrollView(
+                          child: Text(
+                            l10n.privacyPolicyText,
+                            style: const TextStyle(height: 1.5),
+                          ),
+                        ),
+                      ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
@@ -514,7 +522,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         borderRadius: BorderRadius.circular(AppRadius.xl),
                       ),
                       title: Text(l10n.termsOfService),
-                      content: Text(l10n.termsOfServiceText),
+                      content: SizedBox(
+                        width: double.maxFinite,
+                        child: SingleChildScrollView(
+                          child: Text(
+                            l10n.termsOfServiceText,
+                            style: const TextStyle(height: 1.5),
+                          ),
+                        ),
+                      ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
@@ -533,6 +549,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             l10n.dangerZone,
             [
+              ListTile(
+                leading: const Icon(Icons.delete_forever, color: Colors.red),
+                title: Text(
+                  l10n.deleteAccount,
+                  style: const TextStyle(color: Colors.red),
+                ),
+                subtitle: Text(l10n.deleteAccountSubtitle),
+                onTap: () => _showDeleteAccountDialog(context),
+              ),
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.orange),
                 title: Text(
@@ -556,15 +581,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     }
                   }
                 },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete_forever, color: Colors.red),
-                title: Text(
-                  l10n.deleteAccount,
-                  style: const TextStyle(color: Colors.red),
-                ),
-                subtitle: Text(l10n.deleteAccountSubtitle),
-                onTap: () => _showDeleteAccountDialog(context),
               ),
             ],
           ),

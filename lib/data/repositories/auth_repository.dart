@@ -19,6 +19,7 @@ class AuthRepository {
 				_firestore = firestore ?? FirebaseFirestore.instance,
 				_googleSignIn = googleSignIn ?? GoogleSignIn(
 					// Web için client ID gerekli
+					// Android/iOS için google-services.json'dan otomatik alınır
 					clientId: kIsWeb 
 						? '95358046515-uav630b45kfo7i9fpd58ruu7oc8tcju2.apps.googleusercontent.com'
 						: null,
@@ -52,11 +53,15 @@ class AuthRepository {
 	Future<void> sendPasswordResetEmail(String email) => _auth.sendPasswordResetEmail(email: email);
 
 	/// Google Sign-In
-	/// 
+	///
 	/// Returns (User, UserModel) tuple on success
 	/// Throws FirebaseAuthException on failure
 	Future<(User, UserModel)> signInWithGoogle() async {
 		try {
+			// IMPORTANT: Sign out from Google first to force account picker
+			// This allows users to select different Google accounts each time
+			await _googleSignIn.signOut();
+
 			// Trigger Google Sign-In flow
 			final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 			

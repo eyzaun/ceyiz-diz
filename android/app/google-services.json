@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "95358046515-umr1rqkoes9ig5j8jdueg6ntvsajjpqi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.Loncagames.ceyizdiz",
+            "certificate_hash": "cdf537a9883c5d5d42c5d4307700e90df3210f74"
+          }
+        },
+        {
           "client_id": "95358046515-uav630b45kfo7i9fpd58ruu7oc8tcju2.apps.googleusercontent.com",
           "client_type": 3
         }
