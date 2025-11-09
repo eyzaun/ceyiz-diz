@@ -96,6 +96,7 @@ Tüm Rotalar:
   - `trousseau/:id` → `TrousseauDetailScreen`
     - `edit` → `EditTrousseauScreen`
     - `share` → `ShareTrousseauScreen`
+    - `manage` → `TrousseauManagementScreen` (YENİ: Çeyiz sıralama ekranı)
     - `products` → `ProductListScreen`
       - `categories` → `CategoryManagementScreen`
       - `add` → `AddProductScreen`
@@ -207,6 +208,7 @@ lib/
    │     ├─ create_trousseau_screen.dart
    │     ├─ edit_trousseau_screen.dart
    │     ├─ trousseau_detail_screen.dart
+   │     ├─ trousseau_management_screen.dart  # YENİ: Drag-drop sıralama
    │     ├─ share_trousseau_screen.dart
    │     └─ shared_trousseau_list_screen.dart
    └─ widgets/
@@ -260,10 +262,24 @@ Not: Aşağıdaki örnekler yönlendirici niteliktedir; gerçek alanlar model do
   "targetBudget": 50000,
   "sharedWith": ["U222"],
   "editors": ["U333"],
+  "sortOrder": 0,  // YENİ: Firestore'da saklanır (opsiyonel)
   "createdAt": <Timestamp>,
   "updatedAt": <Timestamp>
 }
 ```
+
+### user_preferences/{userId}  (YENİ)
+```
+{
+  "trousseauOrder": {
+    "T100": 0,
+    "T101": 1,
+    "T200": 2
+  },
+  "updatedAt": <Timestamp>
+}
+```
+Not: Kullanıcıya özel çeyiz sıralama tercihleri. TrousseauProvider `getSortedTrousseaus()` bu koleksiyondan okur.
 
 ### products/{productId}
 ```
@@ -311,6 +327,10 @@ Her repository, spesifik koleksiyonun CRUD ve iş kurallarını kapsar; provider
 
 - TrousseauRepository / Provider
   - create/update/delete, shareWith(email, permission), accept/decline, pin/unpin
+  - YENİ: `updateTrousseauOrder(trousseauId, sortOrder)` / `updateTrousseauOrders(Map<id,order>)` — batch sıralama güncellemesi
+  - YENİ: `getUserTrousseauOrder(userId)` / `updateUserTrousseauOrder(userId, Map<id,order>)` — kullanıcıya özel `user_preferences` entegrasyonu
+  - Provider: `getSortedTrousseaus()` — user_preferences veya model sortOrder'a göre sıralı liste döner
+  - Provider: `updateUserTrousseauOrders(Map<id,order>)` — kullanıcı sıralama tercihini kaydeder
   - Listeners: owner/shared listelerini stream olarak dinleyebilir
   - State: trousseaux, shared, pinned, loading, error
 
@@ -321,6 +341,9 @@ Her repository, spesifik koleksiyonun CRUD ve iş kurallarını kapsar; provider
 
 - CategoryRepository / Provider
   - default/custom kategoriler; add/edit/delete; ikon/renk seçme
+  - YENİ: `updateCategoryOrder(trousseauId, categoryId, newOrder)` — tek kategori sırası günceller
+  - YENİ: `updateCategoryOrders(trousseauId, Map<categoryId, order>)` — batch kategori sıralama güncellemesi
+  - Provider: CategoryManagementScreen ReorderableListView ile entegre
 
 - FeedbackRepository / Provider
   - sendFeedback, listMyFeedbacks; history ekranı ile entegre
@@ -341,9 +364,14 @@ Her repository, spesifik koleksiyonun CRUD ve iş kurallarını kapsar; provider
 - Kullanım: `AppLocalizations.of(context).<key>`
 
 Yeni anahtar ekleme adımları:
-1. Her iki ARB’ye aynı anahtarı ekleyin (açıklamalar `@key` altında olabilir).
+1. Her iki ARB'ye aynı anahtarı ekleyin (açıklamalar `@key` altında olabilir).
 2. Kaydedin → IDE `gen_l10n` tetikler (veya `flutter gen-l10n`).
-3. UI’da `AppLocalizations` üzerinden çağırın.
+3. UI'da `AppLocalizations` üzerinden çağırın.
+
+Son Eklenen Anahtarlar (YENİ - 9 adet):
+- `trousseauManagement`, `manageTrousseaus`, `reorderTrousseaus`
+- `holdAndDragToReorder`, `orderUpdated`, `noTrousseausYet`
+- `items`, `shared`, `view`
 
 Edge Cases:
 - Anahtar eksik: build sırasında uyarı; fallback için TR kullanılabilir (projede fallback Türkçe mantığı var).
@@ -384,6 +412,11 @@ Manifestler:
 
 Firebase Options (`lib/firebase_options.dart`):
 - Web ve Android için ayrı `FirebaseOptions` sabitleri tanımlı.
+
+Firestore Rules (`firestore.rules`):
+- `user_preferences/{userId}` → read/write: `isAuthed() && request.auth.uid == userId` (YENİ)
+- `trousseaus/{trousseauId}` → canRead/canWrite helper'larla owner/sharedWith/editors kontrol edilir
+- `app_versions/{versionId}` → herkese açık read (version check)
 
 ---
 
@@ -466,9 +499,9 @@ Quality Gates (hedef):
 
 ---
 
-## 16) Geliştirici Akışı — “Yeni Özellik Nasıl Eklenir?”
+## 16) Geliştirici Akışı — "Yeni Özellik Nasıl Eklenir?"
 
-Örnek: “Ürün kartına favori ekle”
+Örnek: "Ürün kartına favori ekle"
 1) Model: `product_model.dart` → `isFavorite: bool` alanı ekle
 2) Firestore: `product_repository.dart` create/update alanlarını güncelle
 3) Provider: `product_provider.dart` → `toggleFavorite(productId)` ekle
@@ -476,11 +509,22 @@ Quality Gates (hedef):
 5) ARB: `add/remove favorite` metinleri (TR/EN)
 6) Test: Provider fonksiyonunun state değişimini teyit et
 
-Örnek: “Yeni ayar ekranı”
+Örnek: "Yeni ayar ekranı"
 1) Ekran dosyası: `presentation/screens/settings/new_setting_screen.dart`
 2) Router: `app_router.dart` alt rota ekle (`/settings/new-setting`)
 3) Provider: `settings` ile entegre veya yeni provider
 4) ARB: Başlık/açıklama metinleri
+
+Gerçek Uygulama: "Çeyiz Sıralama Ekranı" (YENİ - Kasım 2025)
+1) Model: `trousseau_model.dart` → `sortOrder: int` alanı eklendi
+2) Koleksiyon: `user_preferences/{userId}` → `trousseauOrder: Map<id,order>` eklendi
+3) Repository: `trousseau_repository.dart` → `updateTrousseauOrder`, `updateTrousseauOrders`, `getUserTrousseauOrder`, `updateUserTrousseauOrder` eklendi
+4) Provider: `trousseau_provider.dart` → `getSortedTrousseaus()`, `updateUserTrousseauOrders(Map)`, `loadUserTrousseauOrder()` eklendi
+5) Ekran: `trousseau_management_screen.dart` → ReorderableListView + drag handle, view/edit/delete popup menu
+6) Router: `/trousseau/:id/manage` rotası eklendi
+7) ARB: 9 yeni anahtar (`trousseauManagement`, `manageTrousseaus`, `reorderTrousseaus`, `holdAndDragToReorder`, `orderUpdated`, `noTrousseausYet`, `items`, `shared`, `view`)
+8) Firestore Rules: `user_preferences/{userId}` read/write izni eklendi
+9) UI Entegrasyonu: `trousseau_detail_screen.dart` AppBar'da "Düzenle" butonu → "Çeyizleri Yönet" (Icons.reorder) olarak güncellendi
 
 ---
 
@@ -508,12 +552,52 @@ Quality Gates (hedef):
 
 ---
 
-## 19) Ekler
+## 19) Son Değişiklikler (Changelog)
+
+### 2025-11-09: Çeyiz ve Kategori Sıralama Özelliği
+**Özet:** Kullanıcılar artık çeyizlerini ve kategorilerini drag-drop ile yeniden sıralayabilir.
+
+**Değişiklikler:**
+- **Model:** `TrousseauModel` → `sortOrder: int` alanı eklendi
+- **Koleksiyon (YENİ):** `user_preferences/{userId}` → kullanıcıya özel çeyiz sıralaması
+- **Repository:**
+  - `TrousseauRepository`: `updateTrousseauOrder`, `updateTrousseauOrders`, `getUserTrousseauOrder`, `updateUserTrousseauOrder`
+  - `CategoryRepository`: `updateCategoryOrder`, `updateCategoryOrders`
+- **Provider:**
+  - `TrousseauProvider`: `getSortedTrousseaus()`, `updateUserTrousseauOrders()`, `loadUserTrousseauOrder()`
+  - `CategoryProvider`: `updateCategoryOrder()`, `updateCategoryOrders()`
+- **Ekran (YENİ):** `trousseau_management_screen.dart` → ReorderableListView, drag handle, view/edit/delete menu
+- **Router:** `/trousseau/:id/manage` rotası eklendi
+- **UI:** `trousseau_detail_screen.dart` AppBar'da "Düzenle" → "Çeyizleri Yönet" (Icons.reorder)
+- **UI:** `category_management_screen.dart` → ReorderableListView ile kategori sıralama
+- **Localization:** 9 yeni anahtar (trousseauManagement, manageTrousseaus, reorderTrousseaus, holdAndDragToReorder, orderUpdated, noTrousseausYet, items, shared, view)
+- **Firestore Rules:** `user_preferences/{userId}` read/write izni eklendi
+
+**Etkilenen Dosyalar:**
+- `lib/data/models/trousseau_model.dart`
+- `lib/data/repositories/trousseau_repository.dart`
+- `lib/data/repositories/category_repository.dart`
+- `lib/presentation/providers/trousseau_provider.dart`
+- `lib/presentation/providers/category_provider.dart`
+- `lib/presentation/router/app_router.dart`
+- `lib/presentation/screens/trousseau/trousseau_management_screen.dart` (YENİ)
+- `lib/presentation/screens/trousseau/trousseau_detail_screen.dart`
+- `lib/presentation/screens/product/category_management_screen.dart`
+- `lib/l10n/app_tr.arb`, `lib/l10n/app_en.arb`
+- `firestore.rules`
+
+**Silinen Dosyalar:**
+- `PRIVACY_POLICY.md`
+- `TERMS_OF_SERVICE.md`
+
+---
+
+## 20) Ekler
 
 - Build çıktıları:
   - APK: `build/app/outputs/flutter-apk/app-release.apk`
   - AAB: `build/app/outputs/bundle/release/app-release.aab`
-- VS Code Görevi: “Flutter run smoke build (apk)”
+- VS Code Görevi: "Flutter run smoke build (apk)"
 - Sürüm: `pubspec.yaml` `version: 1.1.1+34`
 
 Bu doküman “tek kaynak” olacak şekilde tasarlandı. Rota/Model/Repo/Provider/Servis/Widget eklemelerinde ilgili alt başlığı kısa notla güncelleyerek her değişiklikte belgeyi güncel tutun.
