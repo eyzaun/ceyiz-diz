@@ -16,6 +16,7 @@ class TrousseauModel {
   final double spentAmount;
   final String coverImage;
   final Map<String, dynamic> settings;
+  final int sortOrder;
 
   TrousseauModel({
     required this.id,
@@ -33,6 +34,7 @@ class TrousseauModel {
     this.spentAmount = 0.0,
     this.coverImage = '',
     this.settings = const {},
+    this.sortOrder = 0,
   });
 
   factory TrousseauModel.fromFirestore(DocumentSnapshot doc) {
@@ -53,6 +55,7 @@ class TrousseauModel {
       spentAmount: (data['spentAmount'] ?? 0.0).toDouble(),
       coverImage: data['coverImage'] ?? '',
       settings: Map<String, dynamic>.from(data['settings'] ?? {}),
+      sortOrder: data['sortOrder'] ?? 0,
     );
   }
 
@@ -72,6 +75,7 @@ class TrousseauModel {
       'spentAmount': spentAmount,
       'coverImage': coverImage,
       'settings': settings,
+      'sortOrder': sortOrder,
     };
   }
 
@@ -91,6 +95,7 @@ class TrousseauModel {
     double? spentAmount,
     String? coverImage,
     Map<String, dynamic>? settings,
+    int? sortOrder,
   }) {
     return TrousseauModel(
       id: id ?? this.id,
@@ -108,6 +113,7 @@ class TrousseauModel {
       spentAmount: spentAmount ?? this.spentAmount,
       coverImage: coverImage ?? this.coverImage,
       settings: settings ?? this.settings,
+      sortOrder: sortOrder ?? this.sortOrder,
     );
   }
 

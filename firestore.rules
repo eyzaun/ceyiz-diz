@@ -57,6 +57,11 @@ service cloud.firestore {
       }
     }
 
+    // User Preferences - Users can manage their own preferences
+    match /user_preferences/{userId} {
+      allow read, write: if isAuthed() && request.auth.uid == userId;
+    }
+
     // Trousseaus
     match /trousseaus/{trousseauId} {
       // Read directly checks the current document's data via resource

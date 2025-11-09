@@ -97,6 +97,9 @@ class TrousseauProvider extends ChangeNotifier {
     _errorMessage = '';
     notifyListeners();
     
+    // Load user-specific trousseau order
+    loadUserTrousseauOrder();
+    
     _ownedSub = _firestore
         .collection('trousseaus')
         .where('ownerId', isEqualTo: userId)
@@ -766,6 +769,79 @@ class TrousseauProvider extends ChangeNotifier {
       return await unpinSharedTrousseau(trousseauId);
     } else {
       return await pinSharedTrousseau(trousseauId);
+    }
+  }
+
+  // User-specific trousseau order (stored separately)
+  Map<String, int> _userTrousseauOrder = {};
+  
+  /// Load user-specific trousseau order from Firestore
+  Future<void> loadUserTrousseauOrder() async {
+    if (_authProvider?.currentUser == null) return;
+    
+    try {
+      final userId = _authProvider!.currentUser!.uid;
+      final doc = await _firestore
+          .collection('user_preferences')
+          .doc(userId)
+          .get();
+      
+      if (doc.exists && doc.data()?['trousseauOrder'] != null) {
+        final orderData = doc.data()!['trousseauOrder'] as Map<String, dynamic>;
+        _userTrousseauOrder = orderData.map((key, value) => MapEntry(key, value as int));
+        notifyListeners();
+      }
+    } catch (e) {
+      // Silently fail - order preferences are not critical
+    }
+  }
+  
+  /// Get sorted list of all trousseaus using user-specific order
+  List<TrousseauModel> getSortedTrousseaus() {
+    final allTrousseaus = [..._trousseaus, ..._sharedTrousseaus];
+    
+    // If no custom order, use default sortOrder from model
+    if (_userTrousseauOrder.isEmpty) {
+      allTrousseaus.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      return allTrousseaus;
+    }
+    
+    // Sort using user-specific order
+    allTrousseaus.sort((a, b) {
+      final aOrder = _userTrousseauOrder[a.id] ?? 999999;
+      final bOrder = _userTrousseauOrder[b.id] ?? 999999;
+      return aOrder.compareTo(bOrder);
+    });
+    
+    return allTrousseaus;
+  }
+
+  /// Update user-specific trousseau order (doesn't modify trousseau documents)
+  Future<bool> updateUserTrousseauOrders(Map<String, int> trousseauOrders) async {
+    if (_authProvider?.currentUser == null) return false;
+    
+    try {
+      _errorMessage = '';
+      final userId = _authProvider!.currentUser!.uid;
+      
+      // Update in Firestore
+      await _firestore
+          .collection('user_preferences')
+          .doc(userId)
+          .set({
+        'trousseauOrder': trousseauOrders,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      
+      // Update local cache
+      _userTrousseauOrder = trousseauOrders;
+      notifyListeners();
+      
+      return true;
+    } catch (e) {
+      _errorMessage = 'Failed to update orders: ${e.toString()}';
+      notifyListeners();
+      return false;
     }
   }
 }

@@ -146,4 +146,31 @@ class CategoryProvider with ChangeNotifier {
 			return false;
 		}
 	}
+
+	/// Update category sort order
+	Future<bool> updateCategoryOrder(String categoryId, int newOrder) async {
+		if (_trousseauId == null) return false;
+		try {
+			await _repo.updateCategoryOrder(_trousseauId!, categoryId, newOrder);
+			return true;
+		} catch (e) {
+			_error = e.toString();
+			notifyListeners();
+			return false;
+		}
+	}
+
+	/// Batch update category orders (for drag & drop reordering)
+	Future<bool> updateCategoryOrders(Map<String, int> categoryOrders) async {
+		if (_trousseauId == null) return false;
+		try {
+			await _repo.updateCategoryOrders(_trousseauId!, categoryOrders);
+			return true;
+		} catch (e) {
+			_error = e.toString();
+			notifyListeners();
+			return false;
+		}
+	}
 }
+

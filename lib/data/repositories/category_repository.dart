@@ -80,6 +80,25 @@ class CategoryRepository {
       await _col(trousseauId).doc(id).update(updates);
     }
   }
+
+  /// Update category sort order
+  Future<void> updateCategoryOrder(String trousseauId, String categoryId, int newOrder) async {
+    await _col(trousseauId).doc(categoryId).update({
+      'sortOrder': newOrder,
+    });
+  }
+
+  /// Batch update category orders (for reordering multiple categories at once)
+  Future<void> updateCategoryOrders(String trousseauId, Map<String, int> categoryOrders) async {
+    final batch = FirebaseService.firestore.batch();
+    
+    categoryOrders.forEach((categoryId, order) {
+      final docRef = _col(trousseauId).doc(categoryId);
+      batch.update(docRef, {'sortOrder': order});
+    });
+    
+    await batch.commit();
+  }
   
   /// Initialize default categories for a new trousseau
   Future<void> initializeDefaultCategories(String trousseauId) async {

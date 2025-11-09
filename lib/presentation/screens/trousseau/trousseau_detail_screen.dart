@@ -217,10 +217,10 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
                 ),
               if (canEdit)
                 AppIconButton(
-                  icon: Icons.edit,
+                  icon: Icons.reorder,
                   onPressed: () =>
-                      context.push('/trousseau/$_currentTrousseauId/edit'),
-                  tooltip: l10n?.edit ?? 'Düzenle',
+                      context.push('/trousseau/$_currentTrousseauId/manage'),
+                  tooltip: l10n?.manageTrousseaus ?? 'Çeyizleri Yönet',
                 ),
               if (isOwner)
                 PopupMenuButton<String>(

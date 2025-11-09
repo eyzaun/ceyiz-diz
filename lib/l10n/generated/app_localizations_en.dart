@@ -1897,4 +1897,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sortNameZA => 'Name (Z → A)';
+
+  @override
+  String get trousseauManagement => 'Trousseau Management';
+
+  @override
+  String get manageTrousseaus => 'Manage Trousseaus';
+
+  @override
+  String get reorderTrousseaus => 'Reorder Trousseaus';
+
+  @override
+  String get holdAndDragToReorder => 'Hold and drag to reorder';
+
+  @override
+  String get orderUpdated => 'Order updated';
+
+  @override
+  String get noTrousseausYet => 'No trousseaus yet';
+
+  @override
+  String get items => 'items';
+
+  @override
+  String get shared => 'Shared';
+
+  @override
+  String get view => 'View';
 }

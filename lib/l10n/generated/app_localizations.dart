@@ -3649,6 +3649,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Name (Z → A)'**
   String get sortNameZA;
+
+  /// No description provided for @trousseauManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Trousseau Management'**
+  String get trousseauManagement;
+
+  /// No description provided for @manageTrousseaus.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Trousseaus'**
+  String get manageTrousseaus;
+
+  /// No description provided for @reorderTrousseaus.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder Trousseaus'**
+  String get reorderTrousseaus;
+
+  /// No description provided for @holdAndDragToReorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold and drag to reorder'**
+  String get holdAndDragToReorder;
+
+  /// No description provided for @orderUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Order updated'**
+  String get orderUpdated;
+
+  /// No description provided for @noTrousseausYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No trousseaus yet'**
+  String get noTrousseausYet;
+
+  /// No description provided for @items.
+  ///
+  /// In en, this message translates to:
+  /// **'items'**
+  String get items;
+
+  /// No description provided for @shared.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared'**
+  String get shared;
+
+  /// No description provided for @view.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get view;
 }
 
 class _AppLocalizationsDelegate

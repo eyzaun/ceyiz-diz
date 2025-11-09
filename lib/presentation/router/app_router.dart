@@ -12,6 +12,7 @@ import '../screens/trousseau/trousseau_detail_screen.dart';
 import '../screens/trousseau/create_trousseau_screen.dart';
 import '../screens/trousseau/edit_trousseau_screen.dart';
 import '../screens/trousseau/share_trousseau_screen.dart';
+import '../screens/trousseau/trousseau_management_screen.dart';
 import '../screens/product/product_list_screen.dart';
 import '../screens/product/add_product_screen.dart';
 import '../screens/product/edit_product_screen.dart';
@@ -129,6 +130,13 @@ class AppRouter {
                 builder: (context, state) {
                   final trousseauId = state.pathParameters['id']!;
                   return ShareTrousseauScreen(trousseauId: trousseauId);
+                },
+              ),
+              GoRoute(
+                path: 'manage',
+                builder: (context, state) {
+                  final trousseauId = state.pathParameters['id']!;
+                  return TrousseauManagementScreen(trousseauId: trousseauId);
                 },
               ),
               GoRoute(

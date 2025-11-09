@@ -1900,4 +1900,32 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get sortNameZA => 'İsim (Z → A)';
+
+  @override
+  String get trousseauManagement => 'Çeyiz Yönetimi';
+
+  @override
+  String get manageTrousseaus => 'Çeyizleri Yönet';
+
+  @override
+  String get reorderTrousseaus => 'Çeyizleri Yeniden Sırala';
+
+  @override
+  String get holdAndDragToReorder =>
+      'Sıralamayı değiştirmek için basılı tutun ve sürükleyin';
+
+  @override
+  String get orderUpdated => 'Sıralama güncellendi';
+
+  @override
+  String get noTrousseausYet => 'Henüz çeyiz eklenmemiş';
+
+  @override
+  String get items => 'ürün';
+
+  @override
+  String get shared => 'Paylaşılan';
+
+  @override
+  String get view => 'Görüntüle';
 }
