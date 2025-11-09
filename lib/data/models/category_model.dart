@@ -7,7 +7,6 @@ class CategoryModel {
   final IconData icon;
   final Color color;
   final int sortOrder;
-  final bool isCustom;
 
   const CategoryModel({
     required this.id,
@@ -16,7 +15,6 @@ class CategoryModel {
     required this.icon,
     required this.color,
     required this.sortOrder,
-    this.isCustom = false,
   });
 
   static const List<CategoryModel> defaultCategories = [
@@ -81,7 +79,7 @@ class CategoryModel {
   /// Backwards-compatible alias for legacy code.
   static CategoryModel getCategoryById(String id) => getDefaultById(id);
 
-  /// Construct a custom category from Firestore data.
+  /// Construct a category from Firestore data.
   factory CategoryModel.fromMap(Map<String, dynamic> data, String id) {
     final name = (data['name'] ?? id).toString();
     final displayName = (data['displayName'] ?? name).toString();
@@ -89,38 +87,22 @@ class CategoryModel {
         ? data['sortOrder'] as int
         : int.tryParse('${data['sortOrder']}') ?? 1000;
     
-    // BACKWARD COMPATIBILITY: Determine isCustom
-    // 1. If field exists, use it
-    // 2. If ID contains '__', it's old format custom category
-    // 3. If ID is in default list, it's default
-    // 4. Otherwise, it's custom
-    bool isCustom;
-    if (data.containsKey('isCustom') && data['isCustom'] is bool) {
-      isCustom = data['isCustom'] as bool;
-    } else if (id.contains('__')) {
-      // Old format: userId__categoryId
-      isCustom = true;
-    } else {
-      // Check if it's a default category ID
-      isCustom = !defaultCategories.any((c) => c.id == id);
-    }
+    // Optional persisted visuals
+    final String? iconKey = data['iconKey'] as String?;
+    final int? iconCode = data['iconCode'] is int
+      ? data['iconCode'] as int
+      : int.tryParse('${data['iconCode']}');
+    final int? colorValue = data['colorValue'] is int
+      ? data['colorValue'] as int
+      : int.tryParse('${data['colorValue']}');
     
-  // Optional persisted visuals
-  final String? iconKey = data['iconKey'] as String?;
-  final int? iconCode = data['iconCode'] is int
-    ? data['iconCode'] as int
-    : int.tryParse('${data['iconCode']}');
-  final int? colorValue = data['colorValue'] is int
-    ? data['colorValue'] as int
-    : int.tryParse('${data['colorValue']}');
     return CategoryModel(
       id: id,
       name: name,
       displayName: displayName,
-    icon: _resolveIcon(iconKey: iconKey, iconCode: iconCode),
+      icon: _resolveIcon(iconKey: iconKey, iconCode: iconCode),
       color: colorValue != null ? Color(colorValue) : colorFromString(id),
       sortOrder: sortOrder,
-      isCustom: isCustom,
     );
   }
 
@@ -129,10 +111,10 @@ class CategoryModel {
       'name': name,
       'displayName': displayName,
       'sortOrder': sortOrder,
-      // Persist visuals for custom categories
+      // Persist visuals for all categories
       'iconCode': icon.codePoint,
       'iconKey': iconKeyFor(icon),
-  'colorValue': color.toARGB32(),
+      'colorValue': color.toARGB32(),
     };
   }
 

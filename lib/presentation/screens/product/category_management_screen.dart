@@ -49,129 +49,67 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
       ),
       body: categoryProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          : categoryProvider.allCategories.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
                     child: Text(
-                      l10n?.defaultCategories ?? 'Default Categories',
-                      style: Theme.of(context).textTheme.titleSmall,
+                      l10n?.noCustomCategoriesYet ?? 'Henüz kategori eklenmemiş.',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                  if (categoryProvider.defaultCategories.isNotEmpty)
-                    ReorderableListView(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      onReorder: (oldIndex, newIndex) async {
-                        if (!canEdit) return;
-                        
-                        // Adjust newIndex if necessary
-                        if (newIndex > oldIndex) {
-                          newIndex -= 1;
-                        }
+                )
+              : ReorderableListView(
+                  padding: const EdgeInsets.all(12),
+                  onReorder: (oldIndex, newIndex) async {
+                    if (!canEdit) return;
+                    
+                    // Adjust newIndex if necessary
+                    if (newIndex > oldIndex) {
+                      newIndex -= 1;
+                    }
 
-                        // Create a new list with the reordered items
-                        final reorderedList = List.from(categoryProvider.defaultCategories);
-                        final item = reorderedList.removeAt(oldIndex);
-                        reorderedList.insert(newIndex, item);
+                    // Create a new list with the reordered items
+                    final reorderedList = List.from(categoryProvider.allCategories);
+                    final item = reorderedList.removeAt(oldIndex);
+                    reorderedList.insert(newIndex, item);
 
-                        // Update sort orders for all categories
-                        final Map<String, int> orderUpdates = {};
-                        for (int i = 0; i < reorderedList.length; i++) {
-                          orderUpdates[reorderedList[i].id] = i;
-                        }
+                    // Update sort orders for all categories
+                    final Map<String, int> orderUpdates = {};
+                    for (int i = 0; i < reorderedList.length; i++) {
+                      orderUpdates[reorderedList[i].id] = i;
+                    }
 
-                        // Update in Firebase
-                        await categoryProvider.updateCategoryOrders(orderUpdates);
+                    // Update in Firebase
+                    await categoryProvider.updateCategoryOrders(orderUpdates);
 
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n?.orderUpdated ?? 'Sıralama güncellendi'),
-                              duration: const Duration(seconds: 1),
-                            ),
-                          );
-                        }
-                      },
-                      children: categoryProvider.defaultCategories.map((c) => _tile(
-                            context,
-                            c.displayName,
-                            c,
-                            canEdit: canEdit,
-                            key: ValueKey(c.id),
-                          )).toList(),
-                    ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                    child: Text(
-                      l10n?.customCategories ?? 'Custom Categories',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                  ),
-                  if (categoryProvider.customCategories.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Text(
-                        l10n?.noCustomCategoriesYet ?? 'No custom categories yet. You can add them from the top right.',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  if (categoryProvider.customCategories.isNotEmpty)
-                    ReorderableListView(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      onReorder: (oldIndex, newIndex) async {
-                        if (!canEdit) return;
-                        
-                        // Adjust newIndex if necessary
-                        if (newIndex > oldIndex) {
-                          newIndex -= 1;
-                        }
-
-                        // Create a new list with the reordered items
-                        final reorderedList = List.from(categoryProvider.customCategories);
-                        final item = reorderedList.removeAt(oldIndex);
-                        reorderedList.insert(newIndex, item);
-
-                        // Update sort orders - maintain offset from default categories
-                        final defaultCount = categoryProvider.defaultCategories.length;
-                        final Map<String, int> orderUpdates = {};
-                        for (int i = 0; i < reorderedList.length; i++) {
-                          orderUpdates[reorderedList[i].id] = defaultCount + i;
-                        }
-
-                        // Update in Firebase
-                        await categoryProvider.updateCategoryOrders(orderUpdates);
-
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n?.orderUpdated ?? 'Sıralama güncellendi'),
-                              duration: const Duration(seconds: 1),
-                            ),
-                          );
-                        }
-                      },
-                      children: categoryProvider.customCategories.map((c) => _tile(
-                            context,
-                            c.displayName,
-                            c,
-                            canEdit: canEdit,
-                            key: ValueKey(c.id),
-                          )).toList(),
-                    ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(l10n?.orderUpdated ?? 'Sıralama güncellendi'),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    }
+                  },
+                  children: categoryProvider.allCategories.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final c = entry.value;
+                    return _tile(
+                      context,
+                      c.displayName,
+                      c,
+                      index: index,
+                      canEdit: canEdit,
+                      key: ValueKey(c.id),
+                    );
+                  }).toList(),
+                ),
     );
   }
 
-  Widget _tile(BuildContext context, String title, dynamic c, {required bool canEdit, Key? key}) {
+  Widget _tile(BuildContext context, String title, dynamic c, {required int index, required bool canEdit, Key? key}) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     
@@ -184,7 +122,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
           children: [
             if (canEdit)
               ReorderableDragStartListener(
-                index: c.sortOrder,
+                index: index,
                 child: Icon(
                   Icons.drag_handle,
                   color: theme.colorScheme.onSurfaceVariant,
@@ -198,7 +136,6 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
           ],
         ),
         title: Text(title),
-        subtitle: Text(c.isCustom ? (l10n?.custom ?? 'Custom') : (l10n?.defaultText ?? 'Default')),
         trailing: canEdit
             ? Wrap(
                 spacing: 4,

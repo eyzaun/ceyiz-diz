@@ -2,7 +2,7 @@
 
 Bu doküman, projeyi devralan bir geliştiricinin yalnızca bu belgeye bakarak “nerede neyi, nasıl” değiştireceğine karar verebilmesi için derin bağlam, dosya eşlemesi, akış, veri modeli ve operasyonel rehber içerir. Her başlıkta ilgili dosya/dizinler ve dikkat notları verilir.
 
-Son güncelleme: 2025-11-01 • Sürüm: 1.1.1+34 • Depo: `eyzaun/ceyiz-diz`
+Son güncelleme: 2025-11-09 • Sürüm: 1.2.1+35 • Depo: `eyzaun/ceyiz-diz`
 
 ---
 
@@ -340,10 +340,14 @@ Her repository, spesifik koleksiyonun CRUD ve iş kurallarını kapsar; provider
   - State: list, selected, filters, sortMode, loading, error
 
 - CategoryRepository / Provider
-  - default/custom kategoriler; add/edit/delete; ikon/renk seçme
-  - YENİ: `updateCategoryOrder(trousseauId, categoryId, newOrder)` — tek kategori sırası günceller
-  - YENİ: `updateCategoryOrders(trousseauId, Map<categoryId, order>)` — batch kategori sıralama güncellemesi
-  - Provider: CategoryManagementScreen ReorderableListView ile entegre
+  - **ÖNEMLİ: "isCustom" alanı kaldırıldı (9 Kasım 2025)** — Artık tüm kategoriler eşit statüde, "default" vs "custom" ayrımı yok
+  - Model: `CategoryModel` → `id`, `name`, `displayName`, `icon`, `color`, `sortOrder` (isCustom kaldırıldı)
+  - Repository: `addCategory` → `isCustom` parametresi kaldırıldı; `initializeDefaultCategories` artık "starter categories" olarak isimlendiriliyor
+  - Provider: `allCategories` getter döner; `defaultCategories` ve `customCategories` getter'ları KALDIRILDI
+  - add/edit/delete; ikon/renk seçme (tüm kategoriler için icon/color persist edilir)
+  - `updateCategoryOrder(trousseauId, categoryId, newOrder)` — tek kategori sırası günceller
+  - `updateCategoryOrders(trousseauId, Map<categoryId, order>)` — batch kategori sıralama güncellemesi
+  - UI: CategoryManagementScreen artık tek liste gösterir (default/custom ayrımı yok), ReorderableListView ile entegre
 
 - FeedbackRepository / Provider
   - sendFeedback, listMyFeedbacks; history ekranı ile entegre
@@ -398,8 +402,12 @@ Komponentler:
 Android (`android/app/build.gradle.kts`):
 - `minifyEnabled = true` + `shrinkResources = true` (release)
 - Proguard aktif (`proguard-android-optimize.txt` + `proguard-rules.pro`)
+- **YENİ Proguard kuralları (9 Kasım):** Enhanced Firestore, SharedPreferences, SQLite/Room koruma kuralları eklendi
 - `multidexEnabled = true`
 - `applicationId = "com.Loncagames.ceyizdiz"`
+- **YENİ:** `packaging.jniLibs.useLegacyPackaging = true` (native lib uyumluluğu için)
+- **YENİ Manifest:** `allowBackup="true"`, `fullBackupContent="@xml/backup_rules"`, `dataExtractionRules="@xml/data_extraction_rules"`
+- **YENİ XML:** `android/app/src/main/res/xml/backup_rules.xml` ve `data_extraction_rules.xml` — kullanıcı verilerini uygulama güncellemelerinde korur (SharedPreferences, veritabanı, dosyalar)
 
 Web (`web/index.html`):
 - GIS: `<script src="https://accounts.google.com/gsi/client" async defer></script>`
@@ -554,7 +562,43 @@ Gerçek Uygulama: "Çeyiz Sıralama Ekranı" (YENİ - Kasım 2025)
 
 ## 19) Son Değişiklikler (Changelog)
 
-### 2025-11-09: Çeyiz ve Kategori Sıralama Özelliği
+### 2025-11-09b: Kategori Refactoring + Android Yedekleme (Sürüm 1.2.1+35)
+**Özet:** "isCustom" alanı kaldırıldı, tüm kategoriler eşit; Android Auto Backup/Restore eklendi.
+
+**Değişiklikler:**
+- **BREAKING: CategoryModel Refactoring**
+  - `isCustom: bool` alanı KALDIRILDI — artık default/custom ayrımı yok
+  - Tüm kategoriler eşit statüde; icon/color her kategori için persist edilir
+  - `CategoryProvider`: `defaultCategories` ve `customCategories` getter'ları KALDIRILDI → sadece `allCategories` kullanılıyor
+  - `CategoryRepository.addCategory`: `isCustom` parametresi kaldırıldı
+  - `CategoryRepository.initializeDefaultCategories`: "starter categories" mantığıyla; isCustom field'ı yok
+  - UI: `category_management_screen.dart` → tek liste (default/custom bölümü yok), tüm kategoriler ReorderableListView'da
+  - UI: `statistics_screen.dart` → dummy kategori oluştururken isCustom kullanmıyor
+- **Android:**
+  - `build.gradle.kts` → `packaging.jniLibs.useLegacyPackaging = true`
+  - `proguard-rules.pro` → Enhanced Firestore rules, SharedPreferences/SQLite koruma kuralları eklendi
+  - `AndroidManifest.xml` → `allowBackup="true"`, `fullBackupContent`, `dataExtractionRules` eklendi
+  - **YENİ XML:** `res/xml/backup_rules.xml` ve `data_extraction_rules.xml` — uygulama güncellemelerinde kullanıcı verilerini korur
+- **Sürüm:** 1.1.1+34 → 1.2.1+35
+
+**Etkilenen Dosyalar:**
+- `pubspec.yaml` (version bump)
+- `lib/data/models/category_model.dart` (isCustom kaldırıldı, fromMap/toMap güncellendi)
+- `lib/data/repositories/category_repository.dart` (isCustom parametresi kaldırıldı)
+- `lib/presentation/providers/category_provider.dart` (defaultCategories/customCategories getters kaldırıldı)
+- `lib/presentation/screens/product/category_management_screen.dart` (tek liste UI)
+- `lib/presentation/screens/home/statistics_screen.dart` (isCustom kullanımı kaldırıldı)
+- `android/app/build.gradle.kts` (packaging)
+- `android/app/proguard-rules.pro` (enhanced rules)
+- `android/app/src/main/AndroidManifest.xml` (backup config)
+- `android/app/src/main/res/xml/backup_rules.xml` (YENİ)
+- `android/app/src/main/res/xml/data_extraction_rules.xml` (YENİ)
+
+**Migration Notu:** Mevcut Firestore'daki kategorilerde `isCustom` alanı varsa uygulamada göz ardı edilir; yeni kategoriler bu alan olmadan yazılır. Geriye dönük uyumluluk korundu.
+
+---
+
+### 2025-11-09a: Çeyiz ve Kategori Sıralama Özelliği (Sürüm 1.1.1+34)
 **Özet:** Kullanıcılar artık çeyizlerini ve kategorilerini drag-drop ile yeniden sıralayabilir.
 
 **Değişiklikler:**

@@ -21,16 +21,8 @@ class CategoryProvider with ChangeNotifier {
 	String get errorMessage => _error;
 	String? get currentTrousseauId => _trousseauId;
 	
-	// All categories for this trousseau (default + custom)
+	// All categories for this trousseau
 	List<CategoryModel> get allCategories => List.unmodifiable(_categories);
-	
-	// Custom categories only (non-default)
-	List<CategoryModel> get customCategories => 
-		List.unmodifiable(_categories.where((c) => c.isCustom));
-	
-	// Default categories only
-	List<CategoryModel> get defaultCategories => 
-		List.unmodifiable(_categories.where((c) => !c.isCustom));
 
 	Set<String> get selectedCategories => Set.unmodifiable(_selected);
 
@@ -107,7 +99,6 @@ class CategoryProvider with ChangeNotifier {
 				sortOrder: sortOrder,
 				iconCode: icon?.codePoint,
 				colorValue: color?.toARGB32(),
-				isCustom: true,
 			);
 			return true;
 		} catch (e) {

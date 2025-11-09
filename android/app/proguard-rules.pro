@@ -17,9 +17,15 @@
 -dontwarn com.google.firebase.**
 -dontwarn com.google.android.gms.**
 
-# Firestore
+# Firestore - Enhanced rules for data persistence
 -keep class com.google.firebase.firestore.** { *; }
 -keepclassmembers class com.google.firebase.firestore.** { *; }
+-keep class com.google.firestore.** { *; }
+-keepnames class com.google.firebase.firestore.** { *; }
+-keepclassmembers class * {
+  @com.google.firebase.firestore.PropertyName <fields>;
+  @com.google.firebase.firestore.PropertyName <methods>;
+}
 
 # Firebase Auth
 -keep class com.google.firebase.auth.** { *; }
@@ -79,6 +85,17 @@
 -keep class androidx.** { *; }
 -keep interface androidx.** { *; }
 -dontwarn androidx.**
+
+# Shared Preferences - Prevent data loss during updates
+-keep class androidx.preference.** { *; }
+-keep class android.content.SharedPreferences { *; }
+-keep class android.content.SharedPreferences$** { *; }
+
+# SQLite/Room - If used internally
+-keep class androidx.sqlite.** { *; }
+-keep class androidx.room.** { *; }
+-dontwarn androidx.sqlite.**
+-dontwarn androidx.room.**
 
 # Google Play Core (for Flutter embedding engine)
 -keep class com.google.android.play.core.** { *; }

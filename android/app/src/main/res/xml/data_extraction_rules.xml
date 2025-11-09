@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Include all data by default for seamless updates -->
+        <include domain="sharedpref" path="."/>
+        <include domain="database" path="."/>
+        <include domain="file" path="."/>
+    </cloud-backup>
+    
+    <device-transfer>
+        <!-- Same rules for device transfer -->
+        <include domain="sharedpref" path="."/>
+        <include domain="database" path="."/>
+        <include domain="file" path="."/>
+    </device-transfer>
+</data-extraction-rules>

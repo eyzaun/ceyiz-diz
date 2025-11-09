@@ -27,7 +27,6 @@ class CategoryRepository {
     int sortOrder = 1000,
     int? iconCode,
     int? colorValue,
-    bool isCustom = false,
   }) async {
     final data = {
       'name': name,
@@ -35,7 +34,6 @@ class CategoryRepository {
       'sortOrder': sortOrder,
       'iconCode': iconCode,
       'colorValue': colorValue ?? CategoryModel.colorFromString(id).toARGB32(),
-      'isCustom': isCustom,
     };
 
     await _col(trousseauId).doc(id).set(data);
@@ -100,10 +98,11 @@ class CategoryRepository {
     await batch.commit();
   }
   
-  /// Initialize default categories for a new trousseau
+  /// Initialize starter categories for a new trousseau
   Future<void> initializeDefaultCategories(String trousseauId) async {
     final batch = FirebaseService.firestore.batch();
     
+    // Add starter categories (they're just regular categories, no special status)
     for (final category in CategoryModel.defaultCategories) {
       final docRef = _col(trousseauId).doc(category.id);
       batch.set(docRef, {
@@ -112,7 +111,6 @@ class CategoryRepository {
         'sortOrder': category.sortOrder,
         'iconCode': category.icon.codePoint,
         'colorValue': category.color.toARGB32(),
-        'isCustom': false,
       });
     }
     

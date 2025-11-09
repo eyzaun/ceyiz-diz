@@ -907,7 +907,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         icon: Icons.category,
         color: CategoryModel.colorFromString(id),
         sortOrder: 1000,
-        isCustom: true,
       );
     }
   }
