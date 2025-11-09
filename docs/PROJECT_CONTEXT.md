@@ -698,6 +698,6 @@ Bu sayede kullanıcının `user_preferences/{userId}` koleksiyonunda tanımladı
   - APK: `build/app/outputs/flutter-apk/app-release.apk`
   - AAB: `build/app/outputs/bundle/release/app-release.aab`
 - VS Code Görevi: "Flutter run smoke build (apk)"
-- Sürüm: `pubspec.yaml` `version: 1.2.2+36`
+- Sürüm: `pubspec.yaml` `version: 1.2.1+35`
 
 Bu doküman "tek kaynak" olacak şekilde tasarlandı. Rota/Model/Repo/Provider/Servis/Widget eklemelerinde ilgili alt başlığı kısa notla güncelleyerek her değişiklikte belgeyi güncel tutun.
