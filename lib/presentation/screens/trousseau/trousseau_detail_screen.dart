@@ -794,7 +794,12 @@ class _TrousseauDetailScreenState extends State<TrousseauDetailScreen> {
   Widget _buildTrousseauSelector(
       BuildContext context, TrousseauProvider trousseauProvider) {
     final theme = Theme.of(context);
-    final myTrousseaus = trousseauProvider.pinnedTrousseaus;
+    // YENİ: Kullanıcı sıralamasına göre sıralanmış çeyizleri al
+    final sortedTrousseaus = trousseauProvider.getSortedTrousseaus();
+    // Pinned çeyizleri sıralanmış listeden filtrele
+    final myTrousseaus = sortedTrousseaus.where((t) => 
+      trousseauProvider.pinnedTrousseaus.any((pinned) => pinned.id == t.id)
+    ).toList();
 
     return Container(
       height: 48,

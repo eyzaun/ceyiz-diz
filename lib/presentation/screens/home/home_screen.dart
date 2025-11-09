@@ -183,7 +183,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTrousseauTab(BuildContext context) {
     final trousseauProvider = Provider.of<TrousseauProvider>(context);
-    final pinnedTrousseaus = trousseauProvider.pinnedTrousseaus;
+    // YENİ: Kullanıcı sıralamasına göre sıralanmış çeyizleri al
+    final sortedTrousseaus = trousseauProvider.getSortedTrousseaus();
+    // Pinned çeyizleri sıralanmış listeden filtrele
+    final pinnedTrousseaus = sortedTrousseaus.where((t) => 
+      trousseauProvider.pinnedTrousseaus.any((pinned) => pinned.id == t.id)
+    ).toList();
 
     // Loading state - Show loading ONLY if we haven't loaded initial data yet
     if (!trousseauProvider.hasInitialLoad) {
