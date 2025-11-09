@@ -1914,6 +1914,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderUpdated => 'Order updated';
 
   @override
+  String get sortType => 'Sort Type';
+
+  @override
+  String get sortTypeManual => 'Manual';
+
+  @override
+  String get sortTypeOldestFirst => 'Oldest First';
+
+  @override
+  String get sortTypeNewestFirst => 'Newest First';
+
+  @override
+  String get sortTypeChanged => 'Sort type changed';
+
+  @override
   String get noTrousseausYet => 'No trousseaus yet';
 
   @override

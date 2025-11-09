@@ -22,10 +22,95 @@ class _TrousseauManagementScreenState extends State<TrousseauManagementScreen> {
     
     // Get all trousseaus (own + shared) sorted by user-specific order
     final allTrousseaus = trousseauProvider.getSortedTrousseaus();
+    final currentSortType = trousseauProvider.trousseauSortType;
+    final isManualSort = currentSortType == 'manual';
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n?.trousseauManagement ?? 'Çeyiz Yönetimi'),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.sort),
+            tooltip: l10n?.sortType ?? 'Sıralama Türü',
+            initialValue: currentSortType,
+            onSelected: (value) async {
+              await trousseauProvider.updateTrousseauSortType(value);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n?.sortTypeChanged ?? 'Sıralama türü değiştirildi'),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'manual',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.drag_handle,
+                      size: 20,
+                      color: currentSortType == 'manual' 
+                          ? Theme.of(context).colorScheme.primary 
+                          : null,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n?.sortTypeManual ?? 'Manuel',
+                      style: currentSortType == 'manual'
+                          ? TextStyle(color: Theme.of(context).colorScheme.primary)
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'oldest_first',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.arrow_upward,
+                      size: 20,
+                      color: currentSortType == 'oldest_first' 
+                          ? Theme.of(context).colorScheme.primary 
+                          : null,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n?.sortTypeOldestFirst ?? 'Eskiden Yeniye',
+                      style: currentSortType == 'oldest_first'
+                          ? TextStyle(color: Theme.of(context).colorScheme.primary)
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'newest_first',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.arrow_downward,
+                      size: 20,
+                      color: currentSortType == 'newest_first' 
+                          ? Theme.of(context).colorScheme.primary 
+                          : null,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n?.sortTypeNewestFirst ?? 'Yeniden Eskiye',
+                      style: currentSortType == 'newest_first'
+                          ? TextStyle(color: Theme.of(context).colorScheme.primary)
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: trousseauProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -40,10 +125,42 @@ class _TrousseauManagementScreenState extends State<TrousseauManagementScreen> {
                     ),
                   ),
                 )
-              : ReorderableListView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: allTrousseaus.length,
-                  onReorder: (oldIndex, newIndex) async {
+              : Column(
+                  children: [
+                    if (!isManualSort)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: Theme.of(context).colorScheme.onSecondaryContainer,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                currentSortType == 'oldest_first'
+                                    ? 'Çeyizler oluşturulma tarihine göre eskiden yeniye sıralanıyor'
+                                    : 'Çeyizler oluşturulma tarihine göre yeniden eskiye sıralanıyor',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    Expanded(
+                      child: isManualSort
+                          ? ReorderableListView.builder(
+                              padding: const EdgeInsets.all(12),
+                              itemCount: allTrousseaus.length,
+                              onReorder: (oldIndex, newIndex) async {
                     // Adjust newIndex if necessary
                     if (newIndex > oldIndex) {
                       newIndex -= 1;
@@ -84,20 +201,43 @@ class _TrousseauManagementScreenState extends State<TrousseauManagementScreen> {
                       }
                     }
                   },
-                  itemBuilder: (context, index) {
-                    final trousseau = allTrousseaus[index];
-                    final isOwner = trousseau.ownerId == trousseauProvider.currentUserId;
-                    final canEdit = trousseau.canEdit(trousseauProvider.currentUserId ?? '');
+                              itemBuilder: (context, index) {
+                                final trousseau = allTrousseaus[index];
+                                final isOwner = trousseau.ownerId == trousseauProvider.currentUserId;
+                                final canEdit = trousseau.canEdit(trousseauProvider.currentUserId ?? '');
 
-                    return _buildTrousseauTile(
-                      context,
-                      trousseau,
-                      l10n,
-                      index,
-                      isOwner,
-                      canEdit,
-                    );
-                  },
+                                return _buildTrousseauTile(
+                                  context,
+                                  trousseau,
+                                  l10n,
+                                  index,
+                                  isOwner,
+                                  canEdit,
+                                  isManualSort,
+                                );
+                              },
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(12),
+                              itemCount: allTrousseaus.length,
+                              itemBuilder: (context, index) {
+                                final trousseau = allTrousseaus[index];
+                                final isOwner = trousseau.ownerId == trousseauProvider.currentUserId;
+                                final canEdit = trousseau.canEdit(trousseauProvider.currentUserId ?? '');
+
+                                return _buildTrousseauTile(
+                                  context,
+                                  trousseau,
+                                  l10n,
+                                  index,
+                                  isOwner,
+                                  canEdit,
+                                  isManualSort,
+                                );
+                              },
+                            ),
+                    ),
+                  ],
                 ),
     );
   }
@@ -109,6 +249,7 @@ class _TrousseauManagementScreenState extends State<TrousseauManagementScreen> {
     int index,
     bool isOwner,
     bool canEdit,
+    bool isManualSort,
   ) {
     final theme = Theme.of(context);
     
@@ -116,13 +257,18 @@ class _TrousseauManagementScreenState extends State<TrousseauManagementScreen> {
       key: ValueKey(trousseau.id),
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: ReorderableDragStartListener(
-          index: index,
-          child: Icon(
-            Icons.drag_handle,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
+        leading: isManualSort
+            ? ReorderableDragStartListener(
+                index: index,
+                child: Icon(
+                  Icons.drag_handle,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              )
+            : Icon(
+                Icons.calendar_today,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
         title: Text(
           trousseau.name,
           style: theme.textTheme.titleMedium?.copyWith(

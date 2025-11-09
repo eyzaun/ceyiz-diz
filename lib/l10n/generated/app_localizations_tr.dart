@@ -1918,6 +1918,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String get orderUpdated => 'Sıralama güncellendi';
 
   @override
+  String get sortType => 'Sıralama Türü';
+
+  @override
+  String get sortTypeManual => 'Manuel';
+
+  @override
+  String get sortTypeOldestFirst => 'Eskiden Yeniye';
+
+  @override
+  String get sortTypeNewestFirst => 'Yeniden Eskiye';
+
+  @override
+  String get sortTypeChanged => 'Sıralama türü değiştirildi';
+
+  @override
   String get noTrousseausYet => 'Henüz çeyiz eklenmemiş';
 
   @override

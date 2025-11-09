@@ -3680,6 +3680,36 @@ abstract class AppLocalizations {
   /// **'Order updated'**
   String get orderUpdated;
 
+  /// No description provided for @sortType.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort Type'**
+  String get sortType;
+
+  /// No description provided for @sortTypeManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get sortTypeManual;
+
+  /// No description provided for @sortTypeOldestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest First'**
+  String get sortTypeOldestFirst;
+
+  /// No description provided for @sortTypeNewestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest First'**
+  String get sortTypeNewestFirst;
+
+  /// No description provided for @sortTypeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort type changed'**
+  String get sortTypeChanged;
+
   /// No description provided for @noTrousseausYet.
   ///
   /// In en, this message translates to:

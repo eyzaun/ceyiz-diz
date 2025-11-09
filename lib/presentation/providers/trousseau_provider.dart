@@ -774,6 +774,9 @@ class TrousseauProvider extends ChangeNotifier {
 
   // User-specific trousseau order (stored separately)
   Map<String, int> _userTrousseauOrder = {};
+  String _trousseauSortType = 'manual'; // 'manual', 'oldest_first', 'newest_first'
+  
+  String get trousseauSortType => _trousseauSortType;
   
   /// Load user-specific trousseau order from Firestore
   Future<void> loadUserTrousseauOrder() async {
@@ -786,9 +789,14 @@ class TrousseauProvider extends ChangeNotifier {
           .doc(userId)
           .get();
       
-      if (doc.exists && doc.data()?['trousseauOrder'] != null) {
-        final orderData = doc.data()!['trousseauOrder'] as Map<String, dynamic>;
-        _userTrousseauOrder = orderData.map((key, value) => MapEntry(key, value as int));
+      if (doc.exists) {
+        if (doc.data()?['trousseauOrder'] != null) {
+          final orderData = doc.data()!['trousseauOrder'] as Map<String, dynamic>;
+          _userTrousseauOrder = orderData.map((key, value) => MapEntry(key, value as int));
+        }
+        if (doc.data()?['trousseauSortType'] != null) {
+          _trousseauSortType = doc.data()!['trousseauSortType'] as String;
+        }
         notifyListeners();
       }
     } catch (e) {
@@ -796,24 +804,64 @@ class TrousseauProvider extends ChangeNotifier {
     }
   }
   
-  /// Get sorted list of all trousseaus using user-specific order
+  /// Get sorted list of all trousseaus using user-specific order or date-based sorting
   List<TrousseauModel> getSortedTrousseaus() {
     final allTrousseaus = [..._trousseaus, ..._sharedTrousseaus];
     
-    // If no custom order, use default sortOrder from model
-    if (_userTrousseauOrder.isEmpty) {
-      allTrousseaus.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-      return allTrousseaus;
+    // Apply sorting based on sort type
+    switch (_trousseauSortType) {
+      case 'oldest_first':
+        allTrousseaus.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        break;
+      case 'newest_first':
+        allTrousseaus.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        break;
+      case 'manual':
+      default:
+        // If no custom order, use default sortOrder from model
+        if (_userTrousseauOrder.isEmpty) {
+          allTrousseaus.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        } else {
+          // Sort using user-specific order
+          allTrousseaus.sort((a, b) {
+            final aOrder = _userTrousseauOrder[a.id] ?? 999999;
+            final bOrder = _userTrousseauOrder[b.id] ?? 999999;
+            return aOrder.compareTo(bOrder);
+          });
+        }
+        break;
     }
     
-    // Sort using user-specific order
-    allTrousseaus.sort((a, b) {
-      final aOrder = _userTrousseauOrder[a.id] ?? 999999;
-      final bOrder = _userTrousseauOrder[b.id] ?? 999999;
-      return aOrder.compareTo(bOrder);
-    });
-    
     return allTrousseaus;
+  }
+  
+  /// Update trousseau sort type
+  Future<bool> updateTrousseauSortType(String sortType) async {
+    if (_authProvider?.currentUser == null) return false;
+    
+    try {
+      _errorMessage = '';
+      final userId = _authProvider!.currentUser!.uid;
+      
+      // Update in Firestore
+      await _firestore
+          .collection('user_preferences')
+          .doc(userId)
+          .set({
+        'trousseauSortType': sortType,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      
+      // Update local cache
+      _trousseauSortType = sortType;
+      notifyListeners();
+      
+      return true;
+    } catch (e) {
+      _errorMessage = 'Failed to update sort type: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
   }
 
   /// Update user-specific trousseau order (doesn't modify trousseau documents)

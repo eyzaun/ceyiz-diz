@@ -654,12 +654,40 @@ Bu sayede kullanıcının `user_preferences/{userId}` koleksiyonunda tanımladı
 
 ---
 
+### 2025-11-09d: Tarih Bazlı Çeyiz Sıralama Özelliği (v1.2.2+36)
+
+**Özellik:** Kullanıcılar artık çeyizlerini 3 farklı şekilde sıralayabilir:
+1. **Manuel** - Sürükle-bırak ile özel sıralama (mevcut özellik)
+2. **Eskiden Yeniye** - Oluşturulma tarihine göre artan sıralama
+3. **Yeniden Eskiye** - Oluşturulma tarihine göre azalan sıralama
+
+**Uygulama:**
+- `user_preferences/{userId}` koleksiyonunda `trousseauSortType` alanı eklendi ('manual', 'oldest_first', 'newest_first')
+- `TrousseauProvider.getSortedTrousseaus()` metodu sıralama tipine göre dinamik sıralama yapıyor
+- `TrousseauManagementScreen` AppBar'ına sort ikonu eklendi, PopupMenu ile sıralama tipi seçiliyor
+- Tarih bazlı sıralamada bilgi notu gösteriliyor, manuel sıralamada ReorderableListView aktif
+
+**Etkilenen Dosyalar:**
+- `lib/core/enums/trousseau_sort_type.dart` (YENİ)
+- `lib/presentation/providers/trousseau_provider.dart`
+- `lib/presentation/screens/trousseau/trousseau_management_screen.dart`
+- `lib/l10n/app_tr.arb`, `lib/l10n/app_en.arb` (5 yeni key)
+
+**Lokalizasyon Eklemeleri:**
+- `sortType`: "Sıralama Türü" / "Sort Type"
+- `sortTypeManual`: "Manuel" / "Manual"
+- `sortTypeOldestFirst`: "Eskiden Yeniye" / "Oldest First"
+- `sortTypeNewestFirst`: "Yeniden Eskiye" / "Newest First"
+- `sortTypeChanged`: "Sıralama türü değiştirildi" / "Sort type changed"
+
+---
+
 ## 20) Ekler
 
 - Build çıktıları:
   - APK: `build/app/outputs/flutter-apk/app-release.apk`
   - AAB: `build/app/outputs/bundle/release/app-release.aab`
 - VS Code Görevi: "Flutter run smoke build (apk)"
-- Sürüm: `pubspec.yaml` `version: 1.2.1+35`
+- Sürüm: `pubspec.yaml` `version: 1.2.2+36`
 
 Bu doküman "tek kaynak" olacak şekilde tasarlandı. Rota/Model/Repo/Provider/Servis/Widget eklemelerinde ilgili alt başlığı kısa notla güncelleyerek her değişiklikte belgeyi güncel tutun.
