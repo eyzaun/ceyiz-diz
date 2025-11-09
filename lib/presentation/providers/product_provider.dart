@@ -185,6 +185,14 @@ class ProductProvider extends ChangeNotifier {
     final sortedList = List<ProductModel>.from(products);
     
     switch (sortOption) {
+      case ProductSortOption.dateOldToNew:
+        sortedList.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        break;
+        
+      case ProductSortOption.dateNewToOld:
+        sortedList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        break;
+        
       case ProductSortOption.purchasedFirst:
         sortedList.sort((a, b) {
           if (a.isPurchased == b.isPurchased) return 0;

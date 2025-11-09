@@ -1881,6 +1881,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortBy => 'Sort';
 
   @override
+  String get sortDateOldToNew => 'Date (Oldest First)';
+
+  @override
+  String get sortDateNewToOld => 'Date (Newest First)';
+
+  @override
   String get sortPurchasedFirst => 'Purchased First';
 
   @override
@@ -1912,21 +1918,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orderUpdated => 'Order updated';
-
-  @override
-  String get sortType => 'Sort Type';
-
-  @override
-  String get sortTypeManual => 'Manual';
-
-  @override
-  String get sortTypeOldestFirst => 'Oldest First';
-
-  @override
-  String get sortTypeNewestFirst => 'Newest First';
-
-  @override
-  String get sortTypeChanged => 'Sort type changed';
 
   @override
   String get noTrousseausYet => 'No trousseaus yet';

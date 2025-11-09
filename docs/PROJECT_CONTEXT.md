@@ -654,31 +654,41 @@ Bu sayede kullanıcının `user_preferences/{userId}` koleksiyonunda tanımladı
 
 ---
 
-### 2025-11-09d: Tarih Bazlı Çeyiz Sıralama Özelliği (v1.2.2+36)
+### 2025-11-09d: Ürün Tarih Bazlı Sıralama Özelliği (v1.2.1+35)
 
-**Özellik:** Kullanıcılar artık çeyizlerini 3 farklı şekilde sıralayabilir:
-1. **Manuel** - Sürükle-bırak ile özel sıralama (mevcut özellik)
-2. **Eskiden Yeniye** - Oluşturulma tarihine göre artan sıralama
-3. **Yeniden Eskiye** - Oluşturulma tarihine göre azalan sıralama
+**Özellik:** Ürün listesine iki yeni sıralama seçeneği eklendi ve **tarih bazlı sıralama diğer seçeneklerin en üstüne konumlandırıldı**:
+1. **Tarih (Eskiden Yeniye)** - Ürünlerin oluşturulma tarihine göre artan sıralama
+2. **Tarih (Yeniden Eskiye)** - Ürünlerin oluşturulma tarihine göre azalan sıralama
 
 **Uygulama:**
-- `user_preferences/{userId}` koleksiyonunda `trousseauSortType` alanı eklendi ('manual', 'oldest_first', 'newest_first')
-- `TrousseauProvider.getSortedTrousseaus()` metodu sıralama tipine göre dinamik sıralama yapıyor
-- `TrousseauManagementScreen` AppBar'ına sort ikonu eklendi, PopupMenu ile sıralama tipi seçiliyor
-- Tarih bazlı sıralamada bilgi notu gösteriliyor, manuel sıralamada ReorderableListView aktif
+- `ProductSortOption` enum'una `dateOldToNew` ve `dateNewToOld` değerleri eklendi (en üstte)
+- `ProductProvider._applySorting()` metoduna tarih bazlı sıralama mantığı eklendi (`createdAt` alanı kullanılıyor)
+- `SortBottomSheet` widget'ında yeni seçenekler **en üstte** gösteriliyor, bir divider ile diğer seçeneklerden ayrıldı
+- İkonlar: `Icons.access_time` (Eskiden Yeniye), `Icons.schedule` (Yeniden Eskiye)
+
+**Sıralama Seçenekleri Sırası (Güncel):**
+1. Tarih (Eskiden Yeniye) ⏰
+2. Tarih (Yeniden Eskiye) 🕐
+3. --- Divider ---
+4. Alınanlar Önce ✓
+5. Alınmayanlar Önce ○
+6. --- Divider ---
+7. Fiyat (Yüksek → Düşük) ↓
+8. Fiyat (Düşük → Yüksek) ↑
+9. --- Divider ---
+10. İsim (A → Z) 🔤
+11. İsim (Z → A) 🔤
 
 **Etkilenen Dosyalar:**
-- `lib/core/enums/trousseau_sort_type.dart` (YENİ)
-- `lib/presentation/providers/trousseau_provider.dart`
-- `lib/presentation/screens/trousseau/trousseau_management_screen.dart`
-- `lib/l10n/app_tr.arb`, `lib/l10n/app_en.arb` (5 yeni key)
+- `lib/core/enums/sort_option.dart` (2 yeni enum değeri)
+- `lib/presentation/providers/product_provider.dart` (sıralama mantığı)
+- `lib/presentation/widgets/dialogs/sort_bottom_sheet.dart` (UI seçenekleri)
+- `lib/l10n/app_tr.arb`, `lib/l10n/app_en.arb` (4 yeni key: sortDateOldToNew, sortDateNewToOld)
+- `lib/l10n/generated/app_localizations*.dart` (auto-generated)
 
-**Lokalizasyon Eklemeleri:**
-- `sortType`: "Sıralama Türü" / "Sort Type"
-- `sortTypeManual`: "Manuel" / "Manual"
-- `sortTypeOldestFirst`: "Eskiden Yeniye" / "Oldest First"
-- `sortTypeNewestFirst`: "Yeniden Eskiye" / "Newest First"
-- `sortTypeChanged`: "Sıralama türü değiştirildi" / "Sort type changed"
+**Lokalizasyon:**
+- TR: "Tarih (Eskiden Yeniye)", "Tarih (Yeniden Eskiye)"
+- EN: "Date (Oldest First)", "Date (Newest First)"
 
 ---
 

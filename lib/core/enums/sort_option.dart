@@ -1,6 +1,8 @@
 
 
 enum ProductSortOption {
+  dateOldToNew,
+  dateNewToOld,
   purchasedFirst,
   notPurchasedFirst,
   priceHighToLow,
@@ -12,6 +14,10 @@ enum ProductSortOption {
 extension ProductSortOptionExtension on ProductSortOption {
   String get key {
     switch (this) {
+      case ProductSortOption.dateOldToNew:
+        return 'dateOldToNew';
+      case ProductSortOption.dateNewToOld:
+        return 'dateNewToOld';
       case ProductSortOption.purchasedFirst:
         return 'purchasedFirst';
       case ProductSortOption.notPurchasedFirst:

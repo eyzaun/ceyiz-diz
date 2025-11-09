@@ -1884,6 +1884,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sortBy => 'Sırala';
 
   @override
+  String get sortDateOldToNew => 'Tarih (Eskiden Yeniye)';
+
+  @override
+  String get sortDateNewToOld => 'Tarih (Yeniden Eskiye)';
+
+  @override
   String get sortPurchasedFirst => 'Alınanlar Önce';
 
   @override
@@ -1916,21 +1922,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get orderUpdated => 'Sıralama güncellendi';
-
-  @override
-  String get sortType => 'Sıralama Türü';
-
-  @override
-  String get sortTypeManual => 'Manuel';
-
-  @override
-  String get sortTypeOldestFirst => 'Eskiden Yeniye';
-
-  @override
-  String get sortTypeNewestFirst => 'Yeniden Eskiye';
-
-  @override
-  String get sortTypeChanged => 'Sıralama türü değiştirildi';
 
   @override
   String get noTrousseausYet => 'Henüz çeyiz eklenmemiş';

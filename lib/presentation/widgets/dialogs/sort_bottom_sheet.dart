@@ -77,6 +77,25 @@ class SortBottomSheet extends StatelessWidget {
             // Sort Options
             _buildSortOption(
               context,
+              icon: Icons.access_time,
+              title: l10n?.sortDateOldToNew ?? 'Tarih (Eskiden Yeniye)',
+              option: ProductSortOption.dateOldToNew,
+              isSelected: currentSort == ProductSortOption.dateOldToNew,
+            ),
+            _buildSortOption(
+              context,
+              icon: Icons.schedule,
+              title: l10n?.sortDateNewToOld ?? 'Tarih (Yeniden Eskiye)',
+              option: ProductSortOption.dateNewToOld,
+              isSelected: currentSort == ProductSortOption.dateNewToOld,
+            ),
+            Divider(
+              height: AppSpacing.md,
+              indent: AppSpacing.lg,
+              endIndent: AppSpacing.lg,
+            ),
+            _buildSortOption(
+              context,
               icon: Icons.check_circle,
               title: l10n?.sortPurchasedFirst ?? 'Alınanlar Önce',
               option: ProductSortOption.purchasedFirst,
