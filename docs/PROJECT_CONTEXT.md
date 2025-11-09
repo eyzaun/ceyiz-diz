@@ -636,12 +636,30 @@ Gerçek Uygulama: "Çeyiz Sıralama Ekranı" (YENİ - Kasım 2025)
 
 ---
 
+### 2025-11-09c: Çeyiz Sıralama Hatasının Düzeltilmesi (v1.2.1+35)
+
+**Sorun:** Çeyiz Yönetim ekranında (`TrousseauManagementScreen`) yapılan sıralama değişiklikleri ana sayfa (`HomeScreen`) ve detay ekranındaki yatay seçicide (`TrousseauDetailScreen`) yansımıyordu. Her iki ekran da `pinnedTrousseaus` listesini doğrudan kullanıyordu, bu liste Firestore'dan gelen sırayla döndüğü için kullanıcının belirlediği özel sıralamayı göstermiyordu.
+
+**Çözüm:**
+- `HomeScreen._buildTrousseauTab()`: `pinnedTrousseaus` yerine `getSortedTrousseaus()` metodunu kullanıp ardından pinned olanları filtreledik
+- `TrousseauDetailScreen._buildTrousseauSelector()`: Aynı yaklaşım uygulandı
+
+Bu sayede kullanıcının `user_preferences/{userId}` koleksiyonunda tanımladığı sıralama tüm ekranlarda tutarlı şekilde görüntüleniyor.
+
+**Etkilenen Dosyalar:**
+- `lib/presentation/screens/home/home_screen.dart`
+- `lib/presentation/screens/trousseau/trousseau_detail_screen.dart`
+
+**Commit:** `0386438` (2025-11-09)
+
+---
+
 ## 20) Ekler
 
 - Build çıktıları:
   - APK: `build/app/outputs/flutter-apk/app-release.apk`
   - AAB: `build/app/outputs/bundle/release/app-release.aab`
 - VS Code Görevi: "Flutter run smoke build (apk)"
-- Sürüm: `pubspec.yaml` `version: 1.1.1+34`
+- Sürüm: `pubspec.yaml` `version: 1.2.1+35`
 
-Bu doküman “tek kaynak” olacak şekilde tasarlandı. Rota/Model/Repo/Provider/Servis/Widget eklemelerinde ilgili alt başlığı kısa notla güncelleyerek her değişiklikte belgeyi güncel tutun.
+Bu doküman "tek kaynak" olacak şekilde tasarlandı. Rota/Model/Repo/Provider/Servis/Widget eklemelerinde ilgili alt başlığı kısa notla güncelleyerek her değişiklikte belgeyi güncel tutun.
